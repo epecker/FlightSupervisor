@@ -1,3 +1,12 @@
+/**
+ *	\brief		An atomic model representing the reposition model.
+ *	\details	This header file define the reposition model as
+				an atomic model for use in the Cadmium DEVS
+				simulation software.
+ *	\author		Tanner Trautrim
+ *	\author		James Horner
+ */
+
 #ifndef REPO_HPP
 #define REPO_HPP
 
@@ -10,7 +19,7 @@
 
 #include "../data_structures/message.hpp"
 
-// Macros for the time advance functions
+ // Macros for the time advance functions
 #define LP_REPOSITION_TIME "00:02:00:000"
 #define CODE_LANDING 9
 #define CODE_PILOT_HANDOVER 8
@@ -40,6 +49,17 @@ public:
 		NOTIFY_LAND,
 		LAND,
 		LP_HOVER
+	};
+
+	// String names of the Repo_states enum.
+	// Must be in the same order as the enum.
+	string state_names[] = {
+		"IDLE",
+		"LP_REPO",
+		"NEW_LP_REPO",
+		"NOTIFY_LAND",
+		"LAND",
+		"LP_HOVER"
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -76,20 +96,20 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case NEW_LP_REPO:
-				state.current_state = LP_REPO;
-				state.next_internal = TIME(LP_REPOSITION_TIME);
-				break;
-			case LP_REPO:
-				state.current_state = LP_HOVER;
-				state.next_internal = std::numeric_limits<TIME>::infinity();
-				break;
-			case NOTIFY_LAND:
-				state.current_state = LAND;
-				state.next_internal = std::numeric_limits<TIME>::infinity();
-				break;
-			default:
-				break;
+		case NEW_LP_REPO:
+			state.current_state = LP_REPO;
+			state.next_internal = TIME(LP_REPOSITION_TIME);
+			break;
+		case LP_REPO:
+			state.current_state = LP_HOVER;
+			state.next_internal = std::numeric_limits<TIME>::infinity();
+			break;
+		case NOTIFY_LAND:
+			state.current_state = LAND;
+			state.next_internal = std::numeric_limits<TIME>::infinity();
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -98,33 +118,33 @@ public:
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		switch (state.current_state) {
-			case IDLE:
-				bool received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+		case IDLE:
+			bool received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
 
-				if (received_lp_new) {
-					state.current_state = LP_REPO;
-					state.next_internal = TIME(LP_REPOSITION_TIME);
-				}
-				break;
+			if (received_lp_new) {
+				state.current_state = LP_REPO;
+				state.next_internal = TIME(LP_REPOSITION_TIME);
+			}
+			break;
 
-			case LP_REPO:
-				bool received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
-				bool received_lp_crit_met = get_messages<typename Repo_defs::lp_crit_met_in>(mbs).size() >= 1;
+		case LP_REPO:
+			bool received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+			bool received_lp_crit_met = get_messages<typename Repo_defs::lp_crit_met_in>(mbs).size() >= 1;
 
-				// Receiving a new landing point takes precedence over meeting the landing criteria 
-				if (received_lp_new) {
-					vector<Message_t> new_landing_points = get_messages<typename Repo_defs::lp_new_in>(mbs)
+			// Receiving a new landing point takes precedence over meeting the landing criteria 
+			if (received_lp_new) {
+				vector<Message_t> new_landing_points = get_messages<typename Repo_defs::lp_new_in>(mbs)
 					state.landing_point = new_landing_points[0]; // set the new Landing 
-					state.current_state = NEW_LP_REPO;
-					state.next_internal = TIME("00:00:00:000");
-				} else if (received_lp_crit_met) {
-					state.current_state = NOTIFY_LAND;
-					state.next_internal = TIME("00:00:00:000");
-				}
-				break;
+				state.current_state = NEW_LP_REPO;
+				state.next_internal = TIME("00:00:00:000");
+			} else if (received_lp_crit_met) {
+				state.current_state = NOTIFY_LAND;
+				state.next_internal = TIME("00:00:00:000");
+			}
+			break;
 
-			default:
-				break;
+		default:
+			break;
 		}
 	}
 
@@ -139,19 +159,19 @@ public:
 		switch (state.current_state) {
 			typename make_message_bags<output_ports>::type bags;
 
-			case NOTIFY_LAND:
-				get_messages<typename Repo::land_out>bags.push_back(CODE_LANDING);
-				break;
-			case LP_HOVER:
-				get_messages<typename Repo::pilot_handover_out>bags.push_back(CODE_PILOT_HANDOVER);
-				break;
-			case NEW_LP_REPO:
-				Message_t landing_point_message;
-				landing_point_message = state.landing_point;
-				get_messages<typename Repo::lp_repo_new_out>bags.push_back(landing_point_message);
-				break;
-			default:
-				break;
+		case NOTIFY_LAND:
+			get_messages<typename Repo::land_out>bags.push_back(CODE_LANDING);
+			break;
+		case LP_HOVER:
+			get_messages<typename Repo::pilot_handover_out>bags.push_back(CODE_PILOT_HANDOVER);
+			break;
+		case NEW_LP_REPO:
+			Message_t landing_point_message;
+			landing_point_message = state.landing_point;
+			get_messages<typename Repo::lp_repo_new_out>bags.push_back(landing_point_message);
+			break;
+		default:
+			break;
 		}
 
 		return bags;
@@ -164,7 +184,7 @@ public:
 	}
 
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Receiver<TIME>::state_type& i) {
-		os << "State: " << state_names[i.cur_state] << "\tLP: " << i.lp;
+		os << "State: " << state_names[i.current_state] << "\tLP: " << i.lp;
 		return os;
 	}
 };
