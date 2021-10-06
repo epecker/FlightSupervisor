@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <iostream>
 #include <string>
+#include <math.h>
 
 using namespace std;
 
@@ -19,6 +20,21 @@ struct Message_t{
   	double	lat;
 	double	lon;
 	double	alt;
+
+	double separation(Message_t i_lp) {
+		//Radius of the earth in meters.
+		float R = 6371000;
+
+		double my_x = R * cos(lat) * cos(lon);
+		double my_y = R * cos(lat) * sin(lon);
+		double my_z = R * sin(lat);
+
+		double i_x = R * cos(i_lp.lat) * cos(i_lp.lon);
+		double i_y = R * cos(i_lp.lat) * sin(i_lp.lon);
+		double i_z = R * sin(i_lp.lat);
+
+		return sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2))
+	};
 };
 
 istream& operator>> (istream& is, Message_t& msg);

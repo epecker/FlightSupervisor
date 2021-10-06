@@ -26,3 +26,5 @@ istream& operator>> (istream& is, Message_t& msg) {
 	is >> msg.alt;
 	return is;
 }
+
+
