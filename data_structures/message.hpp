@@ -33,7 +33,7 @@ struct Message_t{
 		double i_y = R * cos(i_lp.lat) * sin(i_lp.lon);
 		double i_z = R * sin(i_lp.lat);
 
-		return sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2))
+		return sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2));
 	};
 };
 
