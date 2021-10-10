@@ -14,7 +14,7 @@
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
 #include "../atomic_models/man.hpp"
-#include "../atomic_models/repo.hpp"
+#include "../atomic_models/Repo.hpp"
 
 //C++ headers
 #include <chrono>
