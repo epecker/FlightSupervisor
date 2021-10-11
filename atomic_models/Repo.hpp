@@ -18,6 +18,7 @@
 #include <string>
 
 #include "../data_structures/message.hpp"
+#include "../data_structures/enum_string_conversion.hpp"
 
  // Macros for the time advance functions
 #define LP_REPOSITION_TIME "00:02:00:000"
@@ -40,14 +41,14 @@ template<typename TIME> class Repo {
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
-	enum Repo_states {
-		IDLE,
-		LP_REPO,
-		NEW_LP_REPO,
-		NOTIFY_LAND,
-		LAND,
-		LP_HOVER
-	};
+	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
+		(IDLE)
+		(LP_REPO)
+		(NEW_LP_REPO)
+		(NOTIFY_LAND)
+		(LAND)
+		(LP_HOVER)
+	)
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
@@ -65,7 +66,7 @@ public:
 	// This is used to track the state of the atomic model. 
 	// (required for the simulator)
 	struct state_type {
-		Repo_states current_state;
+		States current_state;
 		Message_t landing_point;
 		TIME next_internal;
 	};
@@ -172,7 +173,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Repo<TIME>::state_type& i) {
-		os << "State: " << i.current_state << "\tLP: " << i.landing_point;
+		os << "State: " << enumToString(i.current_state) << "\tLP: " << i.landing_point;
 		return os;
 	}
 };

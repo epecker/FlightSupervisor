@@ -23,6 +23,7 @@
 #include <string>
 
 #include "../data_structures/message.hpp"
+#include "../data_structures/enum_string_conversion.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -40,14 +41,14 @@ template<typename TIME>
 class Man {
 public:
 	// Enum of the automata-like states of the atomic model.
-	enum Man_states {
-		WAYPOINT_MET,
-		LZE_SCAN,
-		PLP_HOVER,
-		NOTIFY_LP,
-		LP_APPROACH,
-		LP_ACCEPT_EXP
-	};
+	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
+		(WAYPOINT_MET)
+		(LZE_SCAN)
+		(PLP_HOVER)
+		(NOTIFY_LP)
+		(LP_APPROACH)
+		(LP_ACCEPT_EXP)
+	)
 
 	// ports definition
 	using input_ports = tuple<
@@ -63,7 +64,7 @@ public:
 
 	// state definition
 	struct state_type {
-		Man_states cur_state;
+		States cur_state;
 		bool hasLP;
 		Message_t lp;
 		TIME lp_accept_time_prev;
@@ -216,7 +217,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Man<TIME>::state_type& i) {
-		os << "State: " << i.cur_state << "\tLP: " << i.lp;
+		os << "State: " << enumToString(i.cur_state) << "\tLP: " << i.lp;
 		return os;
 	}
 };
