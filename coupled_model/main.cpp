@@ -31,7 +31,7 @@ using TIME = NDTime;
 int main(int argc, char* argv[])
 {
 	shared_ptr<dynamic::modeling::model> repo = dynamic::translate::make_dynamic_atomic_model<Repo, TIME>("repo");
-	shared_ptr<dynamic::modeling::model> man = dynamic::translate::make_dynamic_atomic_model<LandingPointManager, TIME>("man");
+	shared_ptr<dynamic::modeling::model> man = dynamic::translate::make_dynamic_atomic_model<Man, TIME>("man");
 
 	return 0;
 }
