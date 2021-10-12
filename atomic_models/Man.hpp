@@ -30,11 +30,13 @@ using namespace std;
 
 //Port definition
 struct Man_defs {
-	struct LP_recv : public in_port<Message_t> {};
-	struct PLP_ach : public in_port<int> {};
-	struct LP_new : public out_port<Message_t> {};
-	struct PLP_pilot_handover : public out_port<int> {};
-	struct LP_expired : public out_port<int> {};
+	struct lp_recv_in : public in_port<Message_t> {};
+	struct plp_ach_in : public in_port<Message_t> {};
+	struct pilot_takeover_in : public in_port<Message_t> {};
+
+	struct lp_new_out : public out_port<Message_t> {};
+	struct pilot_handover_out : public out_port<Message_t> {};
+	struct lp_expired_out : public out_port<Message_t> {};
 };
 
 template<typename TIME>
@@ -44,7 +46,7 @@ public:
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(WAYPOINT_MET)
 		(LZE_SCAN)
-		(PLP_HOVER)
+		(PILOT_CONTROL)
 		(NOTIFY_LP)
 		(LP_APPROACH)
 		(LP_ACCEPT_EXP)
@@ -52,20 +54,21 @@ public:
 
 	// ports definition
 	using input_ports = tuple<
-		typename Man_defs::LP_recv,
-		typename Man_defs::PLP_ach
+		typename Man_defs::lp_recv_in,
+		typename Man_defs::plp_ach_in,
+		typename Man_defs::pilot_takeover_in
 	>;
 
 	using output_ports = tuple<
-		typename Man_defs::LP_new,
-		typename Man_defs::PLP_pilot_handover,
-		typename Man_defs::LP_expired
+		typename Man_defs::lp_new_out,
+		typename Man_defs::pilot_handover_out,
+		typename Man_defs::lp_expired_out
 	>;
 
 	// state definition
 	struct state_type {
 		States cur_state;
-		bool hasLP;
+		bool lp_recvd;
 		Message_t lp;
 		TIME lp_accept_time_prev;
 	};
@@ -75,14 +78,14 @@ public:
 	Man() {
 		state.cur_state = WAYPOINT_MET;
 		state.lp_accept_time_prev = TIME(LP_APPROACH_TIME);
-		state.hasLP = false;
+		state.lp_recvd = false;
 	}
 
 	// internal transition
 	void internal_transition() {
 		switch (state.cur_state) {
 			case LZE_SCAN:
-				state.cur_state = PLP_HOVER;
+				state.cur_state = PILOT_CONTROL;
 				break;
 			case NOTIFY_LP:
 				state.cur_state = LP_APPROACH;
@@ -98,19 +101,23 @@ public:
 
 	// external transition
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+		//If we get any messages on the pilot takeover port in any state, immediately transition into the pilot in control state.
+		if (get_messages<typename Man_defs::pilot_takeover_in>(mbs).size() >= 1)
+			state.cur_state = PILOT_CONTROL;
+
 		//If we are in a state that can receive a landing point input,
 		if (state.cur_state == WAYPOINT_MET || state.cur_state == LZE_SCAN || state.cur_state == LP_APPROACH) {
 			//If there are landing points that have been received,
-			if (get_messages<typename Man_defs::LP_recv>(mbs).size() >= 1) {
+			if (get_messages<typename Man_defs::lp_recv_in>(mbs).size() >= 1) {
 				//Store the landing points in a vector.
 				vector<Message_t> landing_points;
-				landing_points = get_messages<typename Man_defs::LP_recv>(mbs);
+				landing_points = get_messages<typename Man_defs::lp_recv_in>(mbs);
 
 				//Create a flag for if one of them is a valid landing point to be transitioned to.
 				bool valid_lp_recv = false;
 
 				//If there was a previous landing point,
-				if (!state.hasLP) {
+				if (!state.lp_recvd) {
 					//For each of the landing points received,
 					for (Message_t new_lp : landing_points) {
 						//If the landing point is far enough away from the previous landing point,
@@ -153,7 +160,7 @@ public:
 		//If we are in a state that can receive a planned landing point acheived input,
 		if (state.cur_state == WAYPOINT_MET) {
 			//If there is at least one PLP acheived message,
-			if (get_messages<typename Man_defs::PLP_ach>(mbs).size() >= 1) {
+			if (get_messages<typename Man_defs::plp_ach_in>(mbs).size() >= 1) {
 				state.cur_state = LZE_SCAN;
 			}
 		}
@@ -161,28 +168,39 @@ public:
 
 	// confluence transition
 	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		internal_transition();
-		external_transition(TIME(), move(mbs));
+		//If the external input is a pilot takeover messasge,
+		if (get_messages<typename Man_defs::pilot_takeover_in>(mbs).size() >= 1) {
+			//Execute the external transition first, then the internal.
+			external_transition(TIME(), move(mbs));
+			internal_transition();
+		}
+		else {
+			internal_transition();
+			external_transition(TIME(), move(mbs));
+		}
 	}
 
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<Message_t> message_out;
+		Message_t temp_lp;
 		vector<int> integer_out;
 
 		switch (state.cur_state) {
 			case NOTIFY_LP:
 				message_out.push_back(state.lp);
-				get_messages<typename Man_defs::LP_new>(bags) = message_out;
+				get_messages<typename Man_defs::lp_new_out>(bags) = message_out;
 				break;
-			case PLP_HOVER:
-				integer_out.push_back(PLP_HANDOVER_CODE);
-				get_messages<typename Man_defs::PLP_pilot_handover>(bags) = integer_out;
+			case PILOT_CONTROL:
+				temp_lp = { PLP_HANDOVER_CODE, 0, 0, 0 };
+				message_out.push_back(temp_lp);
+				get_messages<typename Man_defs::pilot_handover_out>(bags) = message_out;
 				break;
 			case LP_ACCEPT_EXP:
-				integer_out.push_back(LP_TIME_EXPIRED_CODE);
-				get_messages<typename Man_defs::LP_expired>(bags) = integer_out;
+				temp_lp = { LP_TIME_EXPIRED_CODE, 0, 0, 0 };
+				message_out.push_back(temp_lp);
+				get_messages<typename Man_defs::lp_expired_out>(bags) = message_out;
 				break;
 			default:
 				assert(false && "Unhandled output after internal transition.");
@@ -197,7 +215,7 @@ public:
 		TIME next_internal;
 
 		switch (state.cur_state) {
-			case WAYPOINT_MET: case PLP_HOVER: case LP_ACCEPT_EXP:
+			case WAYPOINT_MET: case PILOT_CONTROL: case LP_ACCEPT_EXP:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case NOTIFY_LP:
