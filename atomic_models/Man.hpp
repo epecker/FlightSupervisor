@@ -192,12 +192,12 @@ public:
 				message_out.push_back(state.lp);
 				get_messages<typename Man_defs::lp_new_out>(bags) = message_out;
 				break;
-			case PILOT_CONTROL:
+			case LZE_SCAN:
 				temp_lp = { PLP_HANDOVER_CODE, 0, 0, 0 };
 				message_out.push_back(temp_lp);
 				get_messages<typename Man_defs::pilot_handover_out>(bags) = message_out;
 				break;
-			case LP_ACCEPT_EXP:
+			case LP_APPROACH:
 				temp_lp = { LP_TIME_EXPIRED_CODE, 0, 0, 0 };
 				message_out.push_back(temp_lp);
 				get_messages<typename Man_defs::lp_expired_out>(bags) = message_out;

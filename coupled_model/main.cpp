@@ -111,8 +111,8 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_EIC<lp_recv_in, Man_defs::lp_recv_in>("man"),
 		dynamic::translate::make_EIC<plp_ach_in, Man_defs::lp_recv_in>("man"),
 		dynamic::translate::make_EIC<pilot_takeover_in, Hand_defs::pilot_takeover_in>("hand"),
-		dynamic::translate::make_EIC<pilot_takeover_in, Hand_defs::pilot_takeover_in>("man"),
-		dynamic::translate::make_EIC<pilot_takeover_in, Hand_defs::pilot_takeover_in>("repo"),
+		dynamic::translate::make_EIC<pilot_takeover_in, Man_defs::pilot_takeover_in>("man"),
+		dynamic::translate::make_EIC<pilot_takeover_in, Repo_defs::pilot_takeover_in>("repo"),
 		dynamic::translate::make_EIC<hover_criteria_met_in, Hand_defs::hover_criteria_met_in>("hand"),
 		dynamic::translate::make_EIC<lp_crit_met_in, Repo_defs::lp_crit_met_in>("repo")
 	};
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
 
 	//Define the one coupling from the input reader to the landing point receipt port on the Supervisor.
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<Message_t>::out, lp_recv_in>("input_reader","Supervisor")
+		dynamic::translate::make_IC<iestream_input_defs<Message_t>::out, lp_recv_in>("input_reader", "Supervisor")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER;
