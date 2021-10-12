@@ -52,11 +52,11 @@ public:
 	)
 
 		// Create a tuple of input ports (required for the simulator)
-		using input_ports = tuple<
+	using input_ports = tuple<
 		typename Repo_defs::lp_crit_met_in,
 		typename Repo_defs::lp_new_in,
 		typename Repo_defs::pilot_takeover_in
-		>;
+	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<

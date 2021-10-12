@@ -1,0 +1,5 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define DEFINE_ENUM_WITH_STRING_CONVERSIONS(name, enumerators) enum name { BOOST_PP_SEQ_ENUM(enumerators) }; inline const static char* enumToString(name v) { switch (v) { BOOST_PP_SEQ_FOR_EACH( X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE, name, enumerators ) default: return "[Unknown " BOOST_PP_STRINGIZE(name) "]"; } }
+#define DEFINE_ENUM_WITH_STRING_CONVERSIONS(name, enumerators) enum class name { BOOST_PP_SEQ_ENUM(enumerators) }; inline const static char* enumToString(name v) { switch (v) { BOOST_PP_SEQ_FOR_EACH( X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE, name, enumerators ) default: return "[Unknown " BOOST_PP_STRINGIZE(name) "]"; } }
