@@ -17,6 +17,9 @@
 #include "../atomic_models/Man.hpp"
 #include "../atomic_models/Repo.hpp"
 
+// Project information headers this is created by cmake at generation time!!!!
+#include "../include/SupervisorConfig.hpp"
+
 //C++ headers
 #include <chrono>
 #include <algorithm>
@@ -109,7 +112,7 @@ int main(int argc, char* argv[]) {
 	//Define the external to internal couplings for the Supervisor.
 	dynamic::modeling::EICs eics_Supervisor = {
 		dynamic::translate::make_EIC<lp_recv_in, Man_defs::lp_recv_in>("man"),
-		dynamic::translate::make_EIC<plp_ach_in, Man_defs::lp_recv_in>("man"),
+		dynamic::translate::make_EIC<plp_ach_in, Man_defs::plp_ach_in>("man"),
 		dynamic::translate::make_EIC<pilot_takeover_in, Hand_defs::pilot_takeover_in>("hand"),
 		dynamic::translate::make_EIC<pilot_takeover_in, Man_defs::pilot_takeover_in>("man"),
 		dynamic::translate::make_EIC<pilot_takeover_in, Repo_defs::pilot_takeover_in>("repo"),
@@ -167,13 +170,19 @@ int main(int argc, char* argv[]) {
 	);
 
 	/*************** Loggers *******************/
-	static ofstream out_messages("../simulation_results/output_messages.txt");
+	string out_directory = string(PROJECT_DIRECTORY) + string("/simulation_results");
+	string out_messages_file = string(PROJECT_DIRECTORY) + string("/simulation_results/output_messages.txt");
+	string out_state_file = string(PROJECT_DIRECTORY) + string("/simulation_results/output_state.txt");
+
+	filesystem::create_directory(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
+
+	static ofstream out_messages(out_messages_file.c_str());
 	struct oss_sink_messages {
 		static ostream& sink() {
 			return out_messages;
 		}
 	};
-	static ofstream out_state("../simulation_results/output_state.txt");
+	static ofstream out_state(out_state_file.c_str());
 	struct oss_sink_state {
 		static ostream& sink() {
 			return out_state;

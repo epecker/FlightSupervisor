@@ -5,6 +5,9 @@ project(supervisor)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Setup configured header file
+configure_file("${CMAKE_SOURCE_DIR}/include/SupervisorConfig.hpp.in" "${CMAKE_SOURCE_DIR}/include/SupervisorConfig.hpp")
+
 # Setup dependancies
 include(deps/boost.cmake)
 include(deps/cadmium.cmake)
