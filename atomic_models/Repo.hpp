@@ -124,7 +124,7 @@ public:
 				}
 				break;
 			case LAND:
-				received_pilot_takeover = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = PILOT_CONTROL;
@@ -134,7 +134,7 @@ public:
 			case LP_REPO:
 				received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
 				received_lp_crit_met = get_messages<typename Repo_defs::lp_crit_met_in>(mbs).size() >= 1;
-				received_pilot_takeover = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = PILOT_CONTROL;
@@ -150,7 +150,7 @@ public:
 				}
 				break;
 			case NEW_LP_REPO:
-				received_pilot_takeover = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = PILOT_CONTROL;
@@ -158,7 +158,7 @@ public:
 				}
 				break;
 			case NOTIFY_LAND:
-				received_pilot_takeover = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = PILOT_CONTROL;
