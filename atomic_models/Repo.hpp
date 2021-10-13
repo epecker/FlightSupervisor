@@ -113,7 +113,7 @@ public:
 		switch (state.current_state) {
 			case IDLE:
 				received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
-				received_pilot_takeover = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = PILOT_CONTROL;
