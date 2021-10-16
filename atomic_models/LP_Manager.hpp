@@ -6,15 +6,6 @@
 #ifndef Man_HPP
 #define Man_HPP
 
-//Macro for the distance that subsequent landing points should be separated by in meters.
-#define LP_SEPARATION (10.0)
-
-//Macros for the time in the states.
-#define LZE_SCAN_TIME "00:01:00:000"
-#define LP_APPROACH_TIME "00:01:00:000"
-#define PLP_HANDOVER_CODE 0
-#define LP_TIME_EXPIRED_CODE 0
-
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
 
@@ -24,6 +15,7 @@
 
 #include "../data_structures/message.hpp"
 #include "../data_structures/enum_string_conversion.hpp"
+#include "../include/Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
