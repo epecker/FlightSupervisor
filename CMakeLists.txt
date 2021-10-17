@@ -13,5 +13,5 @@ include(deps/boost.cmake)
 include(deps/cadmium.cmake)
 include(deps/destimes.cmake)
 
-add_executable(supervisor "${CMAKE_SOURCE_DIR}/coupled_model/main.cpp" "${CMAKE_SOURCE_DIR}/data_structures/message.cpp" "include/Constants.hpp" "data_structures/hover_criteria_message.cpp" "data_structures/hover_criteria_message.hpp")
+add_executable(supervisor "${CMAKE_SOURCE_DIR}/coupled_model/main.cpp")
 target_include_directories(supervisor PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})

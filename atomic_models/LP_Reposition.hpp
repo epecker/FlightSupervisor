@@ -17,65 +17,70 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
-#include "../data_structures/message.hpp"
-#include "../data_structures/enum_string_conversion.hpp"
+// Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
+#include "../include/enum_string_conversion.hpp"
 
  // Macros for the time advance functions
-#define LP_REPOSITION_TIME "00:02:00:000"
+#define LP_REPOSITION_TIME "00:00:60:000"
+#define LAND_OUTPUT true
+#define PILOT_HANDOVER true
 
 using namespace cadmium;
 using namespace std;
 
 // Input and output port definition
-struct Repo_defs {
-	struct lp_new_in : public in_port<Message_t> {};
-	struct lp_crit_met_in : public in_port<Message_t> {};
-	struct pilot_takeover_in : public in_port<Message_t> {};
+struct LP_Reposition_defs {
+	struct i_control_yielded : public in_port<bool> {};
+	struct i_lp_crit_met : public in_port<bool> {};
+	struct i_lp_new : public in_port<Message_t> {};
+	struct i_pilot_takeover : public in_port<bool> {};
 
-	struct lp_repo_new_out : public out_port<Message_t> {};
-	struct pilot_handover_out : public out_port<Message_t> {};
-	struct land_out : public out_port<Message_t> {};
+	struct o_land : public out_port<bool> {};
+	struct o_pilot_handover : public out_port<bool> {};
 };
 
 // Atomic Model
-template<typename TIME> class Repo {
+template<typename TIME> class LP_Reposition {
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(LAND)
 		(LP_REPO)
 		(NEW_LP_REPO)
-		(NOTIFY_LAND)
+		(TRIGGER_LAND)
+		(HANDOVER_CTRL)
+		(LANDING_ROUTINE)
 		(PILOT_CONTROL)
-	)
+	);
 
-		// Create a tuple of input ports (required for the simulator)
+	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Repo_defs::lp_crit_met_in,
-		typename Repo_defs::lp_new_in,
-		typename Repo_defs::pilot_takeover_in
+		typename LP_Reposition_defs::i_control_yielded,
+		typename LP_Reposition_defs::i_lp_crit_met,
+		typename LP_Reposition_defs::i_lp_new,
+		typename LP_Reposition_defs::i_pilot_takeover
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Repo_defs::lp_repo_new_out,
-		typename Repo_defs::pilot_handover_out,
-		typename Repo_defs::land_out
+		typename LP_Reposition_defs::o_land,
+		typename LP_Reposition_defs::o_pilot_handover
 	>;
 
 	// This is used to track the state of the atomic model. 
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		Message_t landing_point;
 		TIME next_internal;
+
+		Message_t landing_point;
 	};
+
 	state_type state;
 
 	// Default constructor
-	Repo() {
+	LP_Reposition() {
 		state.current_state = IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
 	}
@@ -93,8 +98,8 @@ public:
 				state.current_state = PILOT_CONTROL;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case NOTIFY_LAND:
-				state.current_state = LAND;
+			case TRIGGER_LAND:
+				state.current_state = LANDING_ROUTINE;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
@@ -106,67 +111,50 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+		bool received_control_yielded;
 		bool received_lp_new;
 		bool received_lp_crit_met;
 		bool received_pilot_takeover;
 
-		switch (state.current_state) {
-			case IDLE:
-				received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
-				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
+		received_pilot_takeover = get_messages<typename LP_Reposition_defs::i_pilot_takeover>(mbs).size() >= 1;
 
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				} else if (received_lp_new) {
-					state.current_state = LP_REPO;
-					state.next_internal = TIME(LP_REPOSITION_TIME);
-				}
-				break;
-			case LAND:
-				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
+		if (received_pilot_takeover) {
+			state.current_state = PILOT_CONTROL;
+			state.next_internal = numeric_limits<TIME>::infinity();
+		} else {
+			switch (state.current_state) {
+				case IDLE:
+					received_lp_new = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs).size() >= 1;
+					if (received_lp_new) {
+						state.current_state = LP_REPO;
+						state.next_internal = TIME(LP_REPOSITION_TIME);
+					}
+					break;
+				case LP_REPO:
+					received_lp_new = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs).size() >= 1;
+					received_lp_crit_met = get_messages<typename LP_Reposition_defs::i_lp_crit_met>(mbs).size() >= 1;
 
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				}
-				break;
-			case LP_REPO:
-				received_lp_new = get_messages<typename Repo_defs::lp_new_in>(mbs).size() >= 1;
-				received_lp_crit_met = get_messages<typename Repo_defs::lp_crit_met_in>(mbs).size() >= 1;
-				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
+					if (received_lp_new) {
+						vector<Message_t> new_landing_points = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs);
+						state.landing_point = new_landing_points[0]; // set the new Landing 
+						state.current_state = NEW_LP_REPO;
+						state.next_internal = TIME("00:00:00:000");
+					} else if (received_lp_crit_met) {
+						state.current_state = TRIGGER_LAND;
+						state.next_internal = TIME("00:00:00:000");
+					}
+					break;
+				case HANDOVER_CTRL:
+					received_control_yielded = get_messages<typename LP_Reposition_defs::i_control_yielded>(mbs).size() >= 1;
 
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				} else if (received_lp_new) {
-					vector<Message_t> new_landing_points = get_messages<typename Repo_defs::lp_new_in>(mbs);
-					state.landing_point = new_landing_points[0]; // set the new Landing 
-					state.current_state = NEW_LP_REPO;
-					state.next_internal = TIME("00:00:00:000");
-				} else if (received_lp_crit_met) {
-					state.current_state = NOTIFY_LAND;
-					state.next_internal = TIME("00:00:00:000");
-				}
-				break;
-			case NEW_LP_REPO:
-				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
-
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				}
-				break;
-			case NOTIFY_LAND:
-				received_pilot_takeover = get_messages<typename Repo_defs::pilot_takeover_in>(mbs).size() >= 1;
-
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				}
-				break;
-			default:
-				break;
+					if (received_control_yielded) {
+						state.current_state = PILOT_CONTROL;
+						state.next_internal = numeric_limits<TIME>::infinity();
+					}
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
@@ -180,20 +168,16 @@ public:
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<Message_t> bag_port_out;
+		vector<bool> bag_port_out;
 
 		switch (state.current_state) {
-			case NOTIFY_LAND:
-				bag_port_out.push_back(state.landing_point);
-				get_messages<typename Repo_defs::land_out>(bags) = bag_port_out;
+			case LANDING_ROUTINE:
+				bag_port_out.push_back(LAND_OUTPUT);
+				get_messages<typename LP_Reposition_defs::o_land>(bags) = bag_port_out;
 				break;
-			case PILOT_CONTROL:
-				bag_port_out.push_back(state.landing_point);
-				get_messages<typename Repo_defs::pilot_handover_out>(bags) = bag_port_out;
-				break;
-			case NEW_LP_REPO:
-				bag_port_out.push_back(state.landing_point);
-				get_messages<typename Repo_defs::lp_repo_new_out>(bags) = bag_port_out;
+			case HANDOVER_CTRL:
+				bag_port_out.push_back(PILOT_HANDOVER);
+				get_messages<typename LP_Reposition_defs::o_pilot_handover>(bags) = bag_port_out;
 				break;
 			default:
 				break;
@@ -208,7 +192,7 @@ public:
 		return state.next_internal;
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Repo<TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename LP_Reposition<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state) << "\tLP: " << i.landing_point;
 		return os;
 	}

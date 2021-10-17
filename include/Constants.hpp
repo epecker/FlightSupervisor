@@ -1,8 +1,10 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-// Macros for the time advance functions
-#define LP_REPOSITION_TIME "00:02:00:000"
+// Macros for LP_Reposition.hpp
+#define LP_REPOSITION_TIME "00:00:60:000"
+#define LAND_OUTPUT true
+#define PILOT_HANDOVER true
 
 //Macro for the distance that subsequent landing points should be separated by in meters.
 #define LP_SEPARATION (10.0)

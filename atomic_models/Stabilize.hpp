@@ -19,7 +19,7 @@
 
 #include "../data_structures/message.hpp"
 #include "../data_structures/hover_criteria_message.hpp"
-#include "../data_structures/enum_string_conversion.hpp"
+#include "../include/enum_string_conversion.hpp"
 #include "../include/Constants.hpp"
 
 using namespace cadmium;
