@@ -1,5 +1,5 @@
 /**
- *	\brief		An atomic model representing the handover control model.
+ *	\brief		An atomic model representing the landing routine model.
  *	\details	This header file define the handover control model as
 				an atomic model for use in the Cadmium DEVS
 				simulation software.
@@ -7,8 +7,8 @@
  *	\author		James Horner
  */
 
-#ifndef HANDOVER_CTRL_HPP
-#define HANDOVER_CTRL_HPP
+#ifndef LANDING_ROUTING_HPP
+#define LANDING_ROUTING_HPP
 
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
@@ -27,40 +27,43 @@ using namespace cadmium;
 using namespace std;
 
 // Input and output port definition
-struct Handover_Ctrl_defs {
-	struct i_lp_crit_met : public in_port<bool> {};
-	struct i_pilot_handover : public in_port<bool> {};
+struct Landing_Routine_defs {
+	struct i_landing_achieved : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
+	struct i_hover_crit_met : public in_port<bool> {};
+	struct i_land : public in_port<bool> {};
 
-	struct o_notify_pilot : public out_port<bool> {};
-	struct o_control_yielded : public out_port<bool> {};
+	struct o_land_requested : public out_port<bool> {};
+	struct o_mission_complete : public out_port<bool> {};
 };
 
 // Atomic Model
-template<typename TIME> class Handover_Ctrl {
+template<typename TIME> class Landing_Routine {
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(STABILIZING)
-		(NOTIFY_PILOT)
-		(WAIT_FOR_PILOT)
-		(YIELD_CONTROL)
+		(REQUEST_LAND)
+		(LANDING)
+		(NOTIFY_LANDED)
+		(LANDED)
 		(PILOT_CONTROL)
 	);
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Handover_Ctrl_defs::i_lp_crit_met,
-		typename Handover_Ctrl_defs::i_pilot_handover,
-		typename Handover_Ctrl_defs::i_pilot_takeover
+		typename Landing_Routine_defs::i_landing_achieved,
+		typename Landing_Routine_defs::i_pilot_takeover,
+		typename Landing_Routine_defs::i_hover_crit_met,
+		typename Landing_Routine_defs::i_land
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Handover_Ctrl_defs::o_notify_pilot,
-		typename Handover_Ctrl_defs::o_control_yielded
+		typename Landing_Routine_defs::o_land_requested,
+		typename Landing_Routine_defs::o_mission_complete
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -75,7 +78,7 @@ public:
 	state_type state;
 
 	// Default constructor
-	Handover_Ctrl() {
+	Landing_Routine() {
 		state.current_state = IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
 	}
@@ -85,12 +88,12 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case NOTIFY_PILOT:
-				state.current_state = WAIT_FOR_PILOT;
+			case REQUEST_LAND:
+				state.current_state = LANDING;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case YIELD_CONTROL:
-				state.current_state = PILOT_CONTROL;
+			case NOTIFY_LANDED:
+				state.current_state = LANDED;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
@@ -102,45 +105,45 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_pilot_handover;
+		bool received_landing_achieved;
 		bool received_pilot_takeover;
 		bool received_hover_crit_met;
+		bool received_land;
 
-		switch (state.current_state) {
-			case IDLE:
-				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
-				received_pilot_handover = get_messages<typename Handover_Ctrl_defs::i_pilot_handover>(mbs).size() >= 1;
+		received_pilot_takeover = get_messages<typename Landing_Routine_defs::i_pilot_takeover>(mbs).size() >= 1;
 
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				} else if (received_pilot_handover) {
-					state.current_state = STABILIZING;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				}
-				break;
-			case STABILIZING:
-				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
-				received_hover_crit_met = get_messages<typename Handover_Ctrl_defs::i_pilot_handover>(mbs).size() >= 1;
+		if (received_pilot_takeover) {
+			state.current_state = PILOT_CONTROL;
+			state.next_internal = numeric_limits<TIME>::infinity();
+		} else {
+			switch (state.current_state) {
+				case IDLE:
+					received_land = get_messages<typename Landing_Routine_defs::i_land>(mbs).size() >= 1;
 
-				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
-				} else if (received_hover_crit_met) {
-					state.current_state = NOTIFY_PILOT;
-					state.next_internal = TIME("00:00:00:000");
-				}
-				break;
-			case WAIT_FOR_PILOT:
-				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
+					if (received_land) {
+						state.current_state = STABILIZING;
+						state.next_internal = numeric_limits<TIME>::infinity();
+					}
+					break;
+				case STABILIZING:
+					received_hover_crit_met = get_messages<typename Landing_Routine_defs::i_hover_crit_met>(mbs).size() >= 1;
 
-				if (received_pilot_takeover) {
-					state.current_state = YIELD_CONTROL;
-					state.next_internal = TIME("00:00:00:000");
-				}
-				break;
-			default:
-				break;
+					if (received_hover_crit_met) {
+						state.current_state = REQUEST_LAND;
+						state.next_internal = TIME("00:00:00:000");
+					}
+					break;
+				case LANDING:
+					received_landing_achieved = get_messages<typename Landing_Routine_defs::i_landing_achieved>(mbs).size() >= 1;
+
+					if (received_landing_achieved) {
+						state.current_state = NOTIFY_LANDED;
+						state.next_internal = TIME("00:00:00:000");
+					}
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
@@ -157,13 +160,13 @@ public:
 		vector<bool> bag_port_out;
 
 		switch (state.current_state) {
-			case WAIT_FOR_PILOT:
+			case LANDING:
 				bag_port_out.push_back(true);
-				get_messages<typename Handover_Ctrl_defs::o_notify_pilot>(bags) = bag_port_out;
+				get_messages<typename Landing_Routine_defs::o_land_requested>(bags) = bag_port_out;
 				break;
-			case PILOT_CONTROL:
+			case LANDED:
 				bag_port_out.push_back(true);
-				get_messages<typename Handover_Ctrl_defs::o_control_yielded>(bags) = bag_port_out;
+				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
 				break;
 			default:
 				break;
@@ -178,10 +181,10 @@ public:
 		return state.next_internal;
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Ctrl<TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename Landing_Routine<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
 };
 
-#endif // HANDOVER_CTRL_HPP
+#endif // LANDING_ROUTING_HPP

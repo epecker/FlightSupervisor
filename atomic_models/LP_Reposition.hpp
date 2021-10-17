@@ -7,8 +7,8 @@
  *	\author		James Horner
  */
 
-#ifndef REPO_HPP
-#define REPO_HPP
+#ifndef LP_REPOSITION_HPP
+#define LP_REPOSITION_HPP
 
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
@@ -201,4 +201,4 @@ public:
 	}
 };
 
-#endif // REPO_HPP
+#endif // LP_REPOSITION_HPP
