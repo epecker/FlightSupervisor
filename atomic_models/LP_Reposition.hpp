@@ -17,10 +17,13 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
-// Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
+ // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "../include/enum_string_conversion.hpp"
 
- // Macros for the time advance functions
+// Data structures that are used in message transport
+#include "../data_structures/message.hpp"
+
+// Macros
 #define LP_REPOSITION_TIME "00:00:60:000"
 #define LAND_OUTPUT true
 #define PILOT_HANDOVER true
