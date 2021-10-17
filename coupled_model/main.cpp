@@ -13,9 +13,11 @@
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
-#include "../atomic_models/Hand.hpp"
-#include "../atomic_models/Man.hpp"
-#include "../atomic_models/Repo.hpp"
+#include "../atomic_models/Handover_Ctrl.hpp"
+#include "../atomic_models/Landing_Routine.hpp"
+#include "../atomic_models/LP_Manager.hpp"
+#include "../atomic_models/LP_Reposition.hpp"
+#include "../atomic_models/Stabilize.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "../include/SupervisorConfig.hpp"
@@ -34,15 +36,18 @@ using namespace cadmium::basic_models::pdevs;
 using TIME = NDTime;
 
 /***** Define input port for coupled models *****/
-struct lp_recv_in : public in_port<Message_t> {};
-struct plp_ach_in : public in_port<Message_t> {};
-struct pilot_takeover_in : public in_port<Message_t> {};
-struct hover_criteria_met_in : public in_port<Message_t> {};
-struct lp_crit_met_in : public in_port<Message_t> {};
+struct i_lp_criteria_met : public in_port<Message_t> {};
+struct i_pilot_takeover : public in_port<Message_t> {};
+struct i_lp_recv : public in_port<Message_t> {};
+struct i_plp_ach : public in_port<Message_t> {};
+struct i_hover_criteria : public in_port<Message_t> {};
+struct i_landing_achieved : public in_port<Message_t> {};
 
 /***** Define output ports for coupled model *****/
-struct repo_new_LP_out : public out_port<Message_t> {};
-struct land_out : public out_port<Message_t> {};
+struct o_control_yielded : public out_port<Message_t> {};
+struct o_notify_pilot : public out_port<Message_t> {};
+struct o_land_requested : public out_port<Message_t> {};
+struct o_mission_complete : public out_port<Message_t> {};
 
 
 /**
@@ -74,63 +79,91 @@ int main(int argc, char* argv[]) {
 	const char* i_input = input.c_str();
 	shared_ptr<dynamic::modeling::model> input_reader = dynamic::translate::make_dynamic_atomic_model<InputReader_Message_t, TIME, const char* >("input_reader", move(i_input));
 
-	/* 
+	/*
 	 * ==========================================================
 	 * SUPERVISOR COUPLED MODEL
-	 * ========================================================== 
+	 * ==========================================================
 	 */
 
-	/**
-	* Instantiate the Man, Repo, and Hand Atomic models.
-	*/
-	shared_ptr<dynamic::modeling::model> hand = dynamic::translate::make_dynamic_atomic_model<Hand, TIME>("hand");
-	shared_ptr<dynamic::modeling::model> repo = dynamic::translate::make_dynamic_atomic_model<Repo, TIME>("repo");
-	shared_ptr<dynamic::modeling::model> man = dynamic::translate::make_dynamic_atomic_model<Man, TIME>("man");
+	 /**
+	 * Instantiate the Man, Repo, and Hand Atomic models.
+	 */
+	shared_ptr<dynamic::modeling::model> handover_ctrl = dynamic::translate::make_dynamic_atomic_model<Handover_Ctrl, TIME>("handover_ctrl");
+	shared_ptr<dynamic::modeling::model> landing_routine = dynamic::translate::make_dynamic_atomic_model<Landing_Routine, TIME>("landing_routine");
+	shared_ptr<dynamic::modeling::model> lp_manager = dynamic::translate::make_dynamic_atomic_model<LP_Manager, TIME>("lp_manager");
+	shared_ptr<dynamic::modeling::model> lp_reposition = dynamic::translate::make_dynamic_atomic_model<LP_Reposition, TIME>("lp_reposition");
+	shared_ptr<dynamic::modeling::model> stabilize = dynamic::translate::make_dynamic_atomic_model<Stabilize, TIME>("stabilize");
+
 
 	//Define the inputs to the Supervisor coupled model.
-	dynamic::modeling::Ports iports_Supervisor = { 
-		typeid(lp_recv_in),
-		typeid(plp_ach_in),
-		typeid(pilot_takeover_in),
-		typeid(hover_criteria_met_in),
-		typeid(lp_crit_met_in)
+	dynamic::modeling::Ports iports_Supervisor = {
+		typeid(i_lp_criteria_met),
+		typeid(i_pilot_takeover),
+		typeid(i_lp_recv),
+		typeid(i_plp_ach),
+		typeid(i_hover_criteria),
+		typeid(i_landing_achieved)
 	};
 
 	//Define the outputs of the Supervisor coupled model.
-	dynamic::modeling::Ports oports_Supervisor = { 
-		typeid(repo_new_LP_out),
-		typeid(land_out)
+	dynamic::modeling::Ports oports_Supervisor = {
+		typeid(o_control_yielded),
+		typeid(o_notify_pilot),
+		typeid(o_land_requested),
+		typeid(o_mission_complete)
 	};
 
 	//Define the sub-models that make up the Supervisor coupled model.
-	dynamic::modeling::Models submodels_Supervisor = { 
-		hand,
-		repo,
-		man
+	dynamic::modeling::Models submodels_Supervisor = {
+		handover_ctrl,
+		landing_routine,
+		lp_manager,
+		lp_reposition,
+		stabilize
 	};
 
 	//Define the external to internal couplings for the Supervisor.
 	dynamic::modeling::EICs eics_Supervisor = {
-		dynamic::translate::make_EIC<lp_recv_in, Man_defs::lp_recv_in>("man"),
-		dynamic::translate::make_EIC<plp_ach_in, Man_defs::plp_ach_in>("man"),
-		dynamic::translate::make_EIC<pilot_takeover_in, Hand_defs::pilot_takeover_in>("hand"),
-		dynamic::translate::make_EIC<pilot_takeover_in, Man_defs::pilot_takeover_in>("man"),
-		dynamic::translate::make_EIC<pilot_takeover_in, Repo_defs::pilot_takeover_in>("repo"),
-		dynamic::translate::make_EIC<hover_criteria_met_in, Hand_defs::hover_criteria_met_in>("hand"),
-		dynamic::translate::make_EIC<lp_crit_met_in, Repo_defs::lp_crit_met_in>("repo")
+		// handover_ctrl
+		dynamic::translate::make_EIC<i_pilot_takeover, Handover_Ctrl_defs::i_pilot_takeover>("handover_ctrl"),
+		// landing_routine
+		dynamic::translate::make_EIC<i_pilot_takeover, Landing_Routine_defs::i_pilot_takeover>("landing_routine"),
+		dynamic::translate::make_EIC<i_landing_achieved, Landing_Routine_defs::i_landing_achieved>("landing_routine"),
+		// lp_manager
+		dynamic::translate::make_EIC<i_lp_recv, LP_Manager_defs::i_lp_recv>("lp_manager"),
+		dynamic::translate::make_EIC<i_plp_ach, LP_Manager_defs::i_plp_ach>("lp_manager"),
+		dynamic::translate::make_EIC<i_pilot_takeover, LP_Manager_defs::i_pilot_takeover>("lp_manager"),
+		// lp_reposition
+		dynamic::translate::make_EIC<i_lp_criteria_met, LP_Reposition_defs::i_lp_crit_met>("lp_reposition"),
+		dynamic::translate::make_EIC<i_pilot_takeover, LP_Reposition_defs::i_pilot_takeover>("lp_reposition"),
+		// stabilize
+		dynamic::translate::make_EIC<i_hover_criteria, Stabilize_defs::i_hover_criteria>("stabilize")
 	};
 
 	//Define the internal to external couplings for the Supervisor.
 	dynamic::modeling::EOCs eocs_Supervisor = {
-		dynamic::translate::make_EOC<Repo_defs::lp_repo_new_out, repo_new_LP_out>("repo"),
-		dynamic::translate::make_EOC<Repo_defs::land_out, land_out>("repo")
+		// handover_ctrl
+		dynamic::translate::make_EOC<Handover_Ctrl_defs::o_control_yielded, o_control_yielded>("handover_ctrl"),
+		dynamic::translate::make_EOC<Handover_Ctrl_defs::o_notify_pilot, o_notify_pilot>("handover_ctrl"),
+		// landing_routine
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested, o_land_requested>("landing_routine"),
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested, o_land_requested>("landing_routine")
+		// lp_manager
+		// lp_reposition
+		// stabilize
 	};
 
 	//Define the internal to internal couplings for the Supervisor.
 	dynamic::modeling::ICs ics_Supervisor = {
-		dynamic::translate::make_IC<Man_defs::lp_new_out, Repo_defs::lp_new_in>("man","repo"),
-		dynamic::translate::make_IC<Man_defs::pilot_handover_out, Hand_defs::pilot_handover_in>("man","hand"),
-		dynamic::translate::make_IC<Repo_defs::pilot_handover_out, Hand_defs::pilot_handover_in>("repo","hand")
+		// handover_ctrl
+		// dynamic::translate::make_IC<Handover_Ctrl_defs::o_control_yielded, LP_Manager_defs::>("handover_ctrl","lp_manager"), // TODO
+		// dynamic::translate::make_IC<Handover_Ctrl_defs::o_control_yielded, LP_Reposition_defs::i_control_yielded>("handover_ctrl","lp_reposition"),
+		// landing_routine
+		// lp_manager
+		// dynamic::translate::make_IC<LP_Manager_defs::o_control_yielded, LP_Manager_defs::>("handover_ctrl","lp_manager"), // TODO
+		// lp_reposition
+
+		// stabilize
 	};
 
 	//Declare an object for the Supervisor.
@@ -161,7 +194,7 @@ int main(int argc, char* argv[]) {
 
 	//Define the one coupling from the input reader to the landing point receipt port on the Supervisor.
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<Message_t>::out, lp_recv_in>("input_reader", "Supervisor")
+		dynamic::translate::make_IC<iestream_input_defs<Message_t>::out, i_lp_criteria_met>("input_reader", "Supervisor")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER;
