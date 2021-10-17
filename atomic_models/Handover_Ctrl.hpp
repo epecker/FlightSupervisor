@@ -76,7 +76,7 @@ public:
 
 	// Default constructor
 	Handover_Ctrl() {
-		state.current_state = IDLE;
+		state.current_state = States::IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
 	}
 
@@ -85,12 +85,12 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case NOTIFY_PILOT:
-				state.current_state = WAIT_FOR_PILOT;
+			case States::NOTIFY_PILOT:
+				state.current_state = States::WAIT_FOR_PILOT;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case YIELD_CONTROL:
-				state.current_state = PILOT_CONTROL;
+			case States::YIELD_CONTROL:
+				state.current_state = States::PILOT_CONTROL;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
@@ -107,35 +107,35 @@ public:
 		bool received_hover_crit_met;
 
 		switch (state.current_state) {
-			case IDLE:
+			case States::IDLE:
 				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
 				received_pilot_handover = get_messages<typename Handover_Ctrl_defs::i_pilot_handover>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
+					state.current_state = States::PILOT_CONTROL;
 					state.next_internal = numeric_limits<TIME>::infinity();
 				} else if (received_pilot_handover) {
-					state.current_state = STABILIZING;
+					state.current_state = States::STABILIZING;
 					state.next_internal = numeric_limits<TIME>::infinity();
 				}
 				break;
-			case STABILIZING:
+			case States::STABILIZING:
 				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
 				received_hover_crit_met = get_messages<typename Handover_Ctrl_defs::i_pilot_handover>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
-					state.current_state = PILOT_CONTROL;
+					state.current_state = States::PILOT_CONTROL;
 					state.next_internal = numeric_limits<TIME>::infinity();
 				} else if (received_hover_crit_met) {
-					state.current_state = NOTIFY_PILOT;
+					state.current_state = States::NOTIFY_PILOT;
 					state.next_internal = TIME("00:00:00:000");
 				}
 				break;
-			case WAIT_FOR_PILOT:
+			case States::WAIT_FOR_PILOT:
 				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
-					state.current_state = YIELD_CONTROL;
+					state.current_state = States::YIELD_CONTROL;
 					state.next_internal = TIME("00:00:00:000");
 				}
 				break;
@@ -157,11 +157,11 @@ public:
 		vector<bool> bag_port_out;
 
 		switch (state.current_state) {
-			case WAIT_FOR_PILOT:
+			case States::WAIT_FOR_PILOT:
 				bag_port_out.push_back(true);
 				get_messages<typename Handover_Ctrl_defs::o_notify_pilot>(bags) = bag_port_out;
 				break;
-			case PILOT_CONTROL:
+			case States::PILOT_CONTROL:
 				bag_port_out.push_back(true);
 				get_messages<typename Handover_Ctrl_defs::o_control_yielded>(bags) = bag_port_out;
 				break;

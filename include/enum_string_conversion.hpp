@@ -4,10 +4,10 @@
 #include <boost/preprocessor.hpp>
 
 #define X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE(r, data, elem)    \
-    case elem : return BOOST_PP_STRINGIZE(elem);
+    case data::elem : return BOOST_PP_STRINGIZE(elem);
 
 #define DEFINE_ENUM_WITH_STRING_CONVERSIONS(name, enumerators)                \
-    enum name {                                                               \
+    enum class name {                                                         \
         BOOST_PP_SEQ_ENUM(enumerators)                                        \
     };                                                                        \
                                                                               \

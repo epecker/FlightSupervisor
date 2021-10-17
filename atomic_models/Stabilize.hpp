@@ -27,9 +27,10 @@ using namespace std;
 
 // Input and output port definition
 struct Stabilize_defs {
-	struct stabilize_in : public in_port<HoverCriteriaMessage_t> {};
-	struct hover_criteria_in : public in_port<HoverCriteriaMessage_t> {};
-	struct hover_criteria_met_out : public out_port<Message_t> {};
+	struct i_stabilize : public in_port<HoverCriteriaMessage_t> {};
+	struct i_hover_criteria : public in_port<HoverCriteriaMessage_t> {};
+
+	struct o_hover_criteria_met : public out_port<Message_t> {};
 };
 
 // Atomic Model
@@ -46,13 +47,13 @@ public:
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Stabilize_defs::stabilize_in,
-		typename Stabilize_defs::hover_criteria_in
+		typename Stabilize_defs::i_stabilize,
+		typename Stabilize_defs::i_hover_criteria
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Stabilize_defs::hover_criteria_met_out
+		typename Stabilize_defs::o_hover_criteria_met
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -65,7 +66,7 @@ public:
 
 	// Default constructor
 	Stabilize() {
-		state.current_state = IDLE;
+		state.current_state = States::IDLE;
 		state.hover_criteria = HoverCriteriaMessage_t();
 	}
 
@@ -75,11 +76,11 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case CRIT_CHECK_FAILED:
-				state.current_state = STABILIZING;
+			case States::CRIT_CHECK_FAILED:
+				state.current_state = States::STABILIZING;
 				break;
-			case STABILIZING:
-				state.current_state = HOVER;
+			case States::STABILIZING:
+				state.current_state = States::HOVER;
 				break;
 			default:
 				break;
@@ -93,18 +94,18 @@ public:
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 
 		switch (state.current_state) {
-			case IDLE:
-				if (get_messages<typename Stabilize_defs::stabilize_in>(mbs).size() >= 1) {
-					state.hover_criteria = get_messages<typename Stabilize_defs::stabilize_in>(mbs)[0];
-					state.current_state = STABILIZING;
+			case States::IDLE:
+				if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
+					state.hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
+					state.current_state = States::STABILIZING;
 				}
 				break;
-			case STABILIZING:
-				if (get_messages<typename Stabilize_defs::hover_criteria_in>(mbs).size() >= 1) {
-					state.hover_criteria = get_messages<typename Stabilize_defs::hover_criteria_in>(mbs)[0];
+			case States::STABILIZING:
+				if (get_messages<typename Stabilize_defs::i_hover_criteria>(mbs).size() >= 1) {
+					state.hover_criteria = get_messages<typename Stabilize_defs::i_hover_criteria>(mbs)[0];
 					bool hover_criteria_met = calculate_hover_criteria_met(state.hover_criteria);
 					if (!hover_criteria_met) {
-						state.current_state = CRIT_CHECK_FAILED;
+						state.current_state = States::CRIT_CHECK_FAILED;
 					}
 				}
 				break;
@@ -128,9 +129,9 @@ public:
 		Message_t success;
 
 		switch (state.current_state) {
-			case HOVER:
+			case States::HOVER:
 				message_out.push_back(success);
-				get_messages<typename Stabilize_defs::hover_criteria_met_out>(bags) = message_out;
+				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
 				break;
 			default:
 				break;
@@ -144,13 +145,13 @@ public:
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
-			case IDLE: case HOVER:
+			case States::IDLE: case States::HOVER:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case CRIT_CHECK_FAILED:
+			case States::CRIT_CHECK_FAILED:
 				next_internal = TIME("00:00:00:000");
 				break;
-			case STABILIZING:
+			case States::STABILIZING:
 				next_internal = calculate_time_from_double_seconds(state.hover_criteria.timeTol);
 				break;
 			default:
