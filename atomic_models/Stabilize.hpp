@@ -66,7 +66,7 @@ public:
 	// Default constructor
 	Stabilize() {
 		state.current_state = IDLE;
-		state.next_internal = numeric_limits<TIME>::infinity();
+		state.hover_criteria = HoverCriteriaMessage_t();
 	}
 
 	// Internal transitions
@@ -143,7 +143,7 @@ public:
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
 		TIME next_internal;
-		switch (state.cur_state) {
+		switch (state.current_state) {
 			case IDLE: case HOVER:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
@@ -169,12 +169,12 @@ public:
 		return true;
 	}
 
-	TIME calculate_time_from_double_seconds(double time) {
+	static TIME calculate_time_from_double_seconds(double time) {
 		int hours = time / 3600;
 		int mins = (time - hours) / 60;
 		int secs = (time - hours - mins);
 		int millis = (time - hours - mins - secs) * 100;
-		return TIME(hours + ":" + mins + ":" + secs + ":" + millis);
+		return TIME(to_string(hours) + ":" + to_string(mins) + ":" + to_string(secs) + ":" + to_string(millis));
 	}
 };
 

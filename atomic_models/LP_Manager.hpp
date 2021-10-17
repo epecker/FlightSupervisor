@@ -3,8 +3,8 @@
 *
 */
 
-#ifndef Man_HPP
-#define Man_HPP
+#ifndef LP_MANAGER_HPP
+#define LP_MANAGER_HPP
 
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
@@ -21,7 +21,7 @@ using namespace cadmium;
 using namespace std;
 
 //Port definition
-struct Man_defs {
+struct LP_Manager_defs {
 	struct lp_recv_in : public in_port<Message_t> {};
 	struct plp_ach_in : public in_port<Message_t> {};
 	struct pilot_takeover_in : public in_port<Message_t> {};
@@ -32,7 +32,7 @@ struct Man_defs {
 };
 
 template<typename TIME>
-class Man {
+class LP_Manager {
 public:
 	// Enum of the automata-like states of the atomic model.
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
@@ -46,15 +46,15 @@ public:
 
 	// ports definition
 	using input_ports = tuple<
-		typename Man_defs::lp_recv_in,
-		typename Man_defs::plp_ach_in,
-		typename Man_defs::pilot_takeover_in
+		typename LP_Manager_defs::lp_recv_in,
+		typename LP_Manager_defs::plp_ach_in,
+		typename LP_Manager_defs::pilot_takeover_in
 	>;
 
 	using output_ports = tuple<
-		typename Man_defs::lp_new_out,
-		typename Man_defs::pilot_handover_out,
-		typename Man_defs::lp_expired_out
+		typename LP_Manager_defs::lp_new_out,
+		typename LP_Manager_defs::pilot_handover_out,
+		typename LP_Manager_defs::lp_expired_out
 	>;
 
 	// state definition
@@ -67,7 +67,7 @@ public:
 	state_type state;
 
 	// default constructor
-	Man() {
+	LP_Manager() {
 		state.cur_state = WAYPOINT_MET;
 		state.lp_accept_time_prev = TIME(LP_APPROACH_TIME);
 		state.lp_recvd = false;
@@ -94,16 +94,16 @@ public:
 	// external transition
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		//If we get any messages on the pilot takeover port in any state, immediately transition into the pilot in control state.
-		if (get_messages<typename Man_defs::pilot_takeover_in>(mbs).size() >= 1)
+		if (get_messages<typename LP_Manager_defs::pilot_takeover_in>(mbs).size() >= 1)
 			state.cur_state = PILOT_CONTROL;
 
 		//If we are in a state that can receive a landing point input,
 		if (state.cur_state == WAYPOINT_MET || state.cur_state == LZE_SCAN || state.cur_state == LP_APPROACH) {
 			//If there are landing points that have been received,
-			if (get_messages<typename Man_defs::lp_recv_in>(mbs).size() >= 1) {
+			if (get_messages<typename LP_Manager_defs::lp_recv_in>(mbs).size() >= 1) {
 				//Store the landing points in a vector.
 				vector<Message_t> landing_points;
-				landing_points = get_messages<typename Man_defs::lp_recv_in>(mbs);
+				landing_points = get_messages<typename LP_Manager_defs::lp_recv_in>(mbs);
 
 				//Create a flag for if one of them is a valid landing point to be transitioned to.
 				bool valid_lp_recv = false;
@@ -152,7 +152,7 @@ public:
 		//If we are in a state that can receive a planned landing point acheived input,
 		if (state.cur_state == WAYPOINT_MET) {
 			//If there is at least one PLP acheived message,
-			if (get_messages<typename Man_defs::plp_ach_in>(mbs).size() >= 1) {
+			if (get_messages<typename LP_Manager_defs::plp_ach_in>(mbs).size() >= 1) {
 				state.cur_state = LZE_SCAN;
 			}
 		}
@@ -161,7 +161,7 @@ public:
 	// confluence transition
 	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		//If the external input is a pilot takeover messasge,
-		if (get_messages<typename Man_defs::pilot_takeover_in>(mbs).size() >= 1) {
+		if (get_messages<typename LP_Manager_defs::pilot_takeover_in>(mbs).size() >= 1) {
 			//Execute the external transition first, then the internal.
 			external_transition(TIME(), move(mbs));
 			internal_transition();
@@ -182,17 +182,17 @@ public:
 		switch (state.cur_state) {
 			case NOTIFY_LP:
 				message_out.push_back(state.lp);
-				get_messages<typename Man_defs::lp_new_out>(bags) = message_out;
+				get_messages<typename LP_Manager_defs::lp_new_out>(bags) = message_out;
 				break;
 			case LZE_SCAN:
 				temp_lp = { PLP_HANDOVER_CODE, 0, 0, 0 };
 				message_out.push_back(temp_lp);
-				get_messages<typename Man_defs::pilot_handover_out>(bags) = message_out;
+				get_messages<typename LP_Manager_defs::pilot_handover_out>(bags) = message_out;
 				break;
 			case LP_APPROACH:
 				temp_lp = { LP_TIME_EXPIRED_CODE, 0, 0, 0 };
 				message_out.push_back(temp_lp);
-				get_messages<typename Man_defs::lp_expired_out>(bags) = message_out;
+				get_messages<typename LP_Manager_defs::lp_expired_out>(bags) = message_out;
 				break;
 			default:
 				assert(false && "Unhandled output after internal transition.");
@@ -226,10 +226,10 @@ public:
 		return next_internal;
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Man<TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename LP_Manager<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.cur_state) << "\tLP: " << i.lp;
 		return os;
 	}
 };
 
-#endif // Man_HPP
+#endif // LP_MANAGER_HPP
