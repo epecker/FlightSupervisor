@@ -27,7 +27,7 @@ using namespace cadmium;
 using namespace std;
 
 // Input and output port definition
-struct Handover_Ctrl_defs {
+struct Handover_Control_defs {
 	struct i_lp_crit_met : public in_port<bool> {};
 	struct i_pilot_handover : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
@@ -37,7 +37,7 @@ struct Handover_Ctrl_defs {
 };
 
 // Atomic Model
-template<typename TIME> class Handover_Ctrl {
+template<typename TIME> class Handover_Control {
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
@@ -52,15 +52,15 @@ public:
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Handover_Ctrl_defs::i_lp_crit_met,
-		typename Handover_Ctrl_defs::i_pilot_handover,
-		typename Handover_Ctrl_defs::i_pilot_takeover
+		typename Handover_Control_defs::i_lp_crit_met,
+		typename Handover_Control_defs::i_pilot_handover,
+		typename Handover_Control_defs::i_pilot_takeover
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Handover_Ctrl_defs::o_notify_pilot,
-		typename Handover_Ctrl_defs::o_control_yielded
+		typename Handover_Control_defs::o_notify_pilot,
+		typename Handover_Control_defs::o_control_yielded
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -75,7 +75,7 @@ public:
 	state_type state;
 
 	// Default constructor
-	Handover_Ctrl() {
+	Handover_Control() {
 		state.current_state = States::IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
 	}
@@ -108,8 +108,8 @@ public:
 
 		switch (state.current_state) {
 			case States::IDLE:
-				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
-				received_pilot_handover = get_messages<typename Handover_Ctrl_defs::i_pilot_handover>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
+				received_pilot_handover = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = States::PILOT_CONTROL;
@@ -120,8 +120,8 @@ public:
 				}
 				break;
 			case States::STABILIZING:
-				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
-				received_hover_crit_met = get_messages<typename Handover_Ctrl_defs::i_pilot_handover>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
+				received_hover_crit_met = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = States::PILOT_CONTROL;
@@ -132,7 +132,7 @@ public:
 				}
 				break;
 			case States::WAIT_FOR_PILOT:
-				received_pilot_takeover = get_messages<typename Handover_Ctrl_defs::i_pilot_takeover>(mbs).size() >= 1;
+				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = States::YIELD_CONTROL;
@@ -159,11 +159,11 @@ public:
 		switch (state.current_state) {
 			case States::WAIT_FOR_PILOT:
 				bag_port_out.push_back(true);
-				get_messages<typename Handover_Ctrl_defs::o_notify_pilot>(bags) = bag_port_out;
+				get_messages<typename Handover_Control_defs::o_notify_pilot>(bags) = bag_port_out;
 				break;
 			case States::PILOT_CONTROL:
 				bag_port_out.push_back(true);
-				get_messages<typename Handover_Ctrl_defs::o_control_yielded>(bags) = bag_port_out;
+				get_messages<typename Handover_Control_defs::o_control_yielded>(bags) = bag_port_out;
 				break;
 			default:
 				break;
@@ -178,7 +178,7 @@ public:
 		return state.next_internal;
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Ctrl<TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
