@@ -79,7 +79,7 @@ public:
 
 	// Default constructor
 	Landing_Routine() {
-		state.current_state = IDLE;
+		state.current_state = States::IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
 	}
 
@@ -88,12 +88,12 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case REQUEST_LAND:
-				state.current_state = LANDING;
+			case States::REQUEST_LAND:
+				state.current_state = States::LANDING;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case NOTIFY_LANDED:
-				state.current_state = LANDED;
+			case States::NOTIFY_LANDED:
+				state.current_state = States::LANDED;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
@@ -113,31 +113,31 @@ public:
 		received_pilot_takeover = get_messages<typename Landing_Routine_defs::i_pilot_takeover>(mbs).size() >= 1;
 
 		if (received_pilot_takeover) {
-			state.current_state = PILOT_CONTROL;
+			state.current_state = States::PILOT_CONTROL;
 			state.next_internal = numeric_limits<TIME>::infinity();
 		} else {
 			switch (state.current_state) {
-				case IDLE:
+				case States::IDLE:
 					received_land = get_messages<typename Landing_Routine_defs::i_land>(mbs).size() >= 1;
 
 					if (received_land) {
-						state.current_state = STABILIZING;
+						state.current_state = States::STABILIZING;
 						state.next_internal = numeric_limits<TIME>::infinity();
 					}
 					break;
-				case STABILIZING:
+				case States::STABILIZING:
 					received_hover_crit_met = get_messages<typename Landing_Routine_defs::i_hover_crit_met>(mbs).size() >= 1;
 
 					if (received_hover_crit_met) {
-						state.current_state = REQUEST_LAND;
+						state.current_state = States::REQUEST_LAND;
 						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
-				case LANDING:
+				case States::LANDING:
 					received_landing_achieved = get_messages<typename Landing_Routine_defs::i_landing_achieved>(mbs).size() >= 1;
 
 					if (received_landing_achieved) {
-						state.current_state = NOTIFY_LANDED;
+						state.current_state = States::NOTIFY_LANDED;
 						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
@@ -160,11 +160,11 @@ public:
 		vector<bool> bag_port_out;
 
 		switch (state.current_state) {
-			case LANDING:
+			case States::LANDING:
 				bag_port_out.push_back(true);
 				get_messages<typename Landing_Routine_defs::o_land_requested>(bags) = bag_port_out;
 				break;
-			case LANDED:
+			case States::LANDED:
 				bag_port_out.push_back(true);
 				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
 				break;

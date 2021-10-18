@@ -22,7 +22,21 @@ struct HoverCriteriaMessage_t {
 	double  hoverCompleted;             // Flag that hover is completed
 	int     manCtrlRequiredAfterCritMet;// Allows supervisor to flag display system that MAN CTRL needed – pilot in control
 
-	HoverCriteriaMessage_t() {}
+	HoverCriteriaMessage_t():
+		desiredLat(0.0),
+		desiredLon(0.0),
+		desiredAltMSL(0.0),
+		desiredHdgDeg(0.0),
+		horDistTolFt(0.0),
+		vertDistTolFt(0.0),
+		velTolKts(0.0),
+		hdgToleranceDeg(0.0),
+		timeTol(0.0),
+		timeCritFirstMet(0.0),
+		hoverCompleted(0.0),
+		manCtrlRequiredAfterCritMet(0)
+	{}
+
 	HoverCriteriaMessage_t(
 		double  i_desiredLat,
 		double  i_desiredLon,

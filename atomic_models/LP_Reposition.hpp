@@ -84,7 +84,7 @@ public:
 
 	// Default constructor
 	LP_Reposition() {
-		state.current_state = IDLE;
+		state.current_state = States::IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
 	}
 
@@ -93,16 +93,16 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case NEW_LP_REPO:
-				state.current_state = LP_REPO;
+			case States::NEW_LP_REPO:
+				state.current_state = States::LP_REPO;
 				state.next_internal = TIME(LP_REPOSITION_TIME);
 				break;
-			case LP_REPO:
-				state.current_state = PILOT_CONTROL;
+			case States::LP_REPO:
+				state.current_state = States::PILOT_CONTROL;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case TRIGGER_LAND:
-				state.current_state = LANDING_ROUTINE;
+			case States::TRIGGER_LAND:
+				state.current_state = States::LANDING_ROUTINE;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
@@ -122,36 +122,36 @@ public:
 		received_pilot_takeover = get_messages<typename LP_Reposition_defs::i_pilot_takeover>(mbs).size() >= 1;
 
 		if (received_pilot_takeover) {
-			state.current_state = PILOT_CONTROL;
+			state.current_state = States::PILOT_CONTROL;
 			state.next_internal = numeric_limits<TIME>::infinity();
 		} else {
 			switch (state.current_state) {
-				case IDLE:
+				case States::IDLE:
 					received_lp_new = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
-						state.current_state = LP_REPO;
+						state.current_state = States::LP_REPO;
 						state.next_internal = TIME(LP_REPOSITION_TIME);
 					}
 					break;
-				case LP_REPO:
+				case States::LP_REPO:
 					received_lp_new = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs).size() >= 1;
 					received_lp_crit_met = get_messages<typename LP_Reposition_defs::i_lp_crit_met>(mbs).size() >= 1;
 
 					if (received_lp_new) {
 						vector<Message_t> new_landing_points = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
-						state.current_state = NEW_LP_REPO;
+						state.current_state = States::NEW_LP_REPO;
 						state.next_internal = TIME("00:00:00:000");
 					} else if (received_lp_crit_met) {
-						state.current_state = TRIGGER_LAND;
+						state.current_state = States::TRIGGER_LAND;
 						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
-				case HANDOVER_CTRL:
+				case States::HANDOVER_CTRL:
 					received_control_yielded = get_messages<typename LP_Reposition_defs::i_control_yielded>(mbs).size() >= 1;
 
 					if (received_control_yielded) {
-						state.current_state = PILOT_CONTROL;
+						state.current_state = States::PILOT_CONTROL;
 						state.next_internal = numeric_limits<TIME>::infinity();
 					}
 					break;
@@ -174,11 +174,11 @@ public:
 		vector<bool> bag_port_out;
 
 		switch (state.current_state) {
-			case LANDING_ROUTINE:
+			case States::LANDING_ROUTINE:
 				bag_port_out.push_back(LAND_OUTPUT);
 				get_messages<typename LP_Reposition_defs::o_land>(bags) = bag_port_out;
 				break;
-			case HANDOVER_CTRL:
+			case States::HANDOVER_CTRL:
 				bag_port_out.push_back(PILOT_HANDOVER);
 				get_messages<typename LP_Reposition_defs::o_pilot_handover>(bags) = bag_port_out;
 				break;
