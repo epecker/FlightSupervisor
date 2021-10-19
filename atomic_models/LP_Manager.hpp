@@ -24,16 +24,16 @@ using namespace std;
 //Port definition
 struct LP_Manager_defs {
 	struct i_lp_recv : public in_port<LPMessage_t> {};
-	struct i_plp_ach : public in_port<LPMessage_t> {};
-	struct i_pilot_takeover : public in_port<LPMessage_t> {};
-	struct i_hover_criteria_met : public in_port<LPMessage_t> {};
-	struct i_control_yielded : public in_port<LPMessage_t> {};
+	struct i_plp_ach : public in_port<PLPMessage_t> {};
+	struct i_pilot_takeover : public in_port<bool> {};
+	struct i_hover_criteria_met : public in_port<bool> {};
+	struct i_control_yielded : public in_port<bool> {};
 
 	struct o_lp_new : public out_port<LPMessage_t> {};
 	struct o_lp_expired : public out_port<LPMessage_t> {};
-	struct o_pilot_handover : public out_port<LPMessage_t> {};
-	struct o_stabilize : public out_port<LPMessage_t> {};
-	struct o_start_lze_scan : public out_port<LPMessage_t> {};
+	struct o_pilot_handover : public out_port<bool> {};
+	struct o_stabilize : public out_port<bool> {};
+	struct o_start_lze_scan : public out_port<bool> {};
 };
 
 template<typename TIME>
@@ -213,23 +213,22 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 		vector<LPMessage_t> message_out;
 		LPMessage_t temp_lp;
-		vector<int> integer_out;
+		vector<bool> bool_out;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
-				message_out.push_back(state.lp);
-				get_messages<typename LP_Manager_defs::o_stabilize>(bags) = message_out;
+				bool_out.push_back(true);
+				get_messages<typename LP_Manager_defs::o_stabilize>(bags) = bool_out;
 				break;
 
 			case States::START_LZE_SCAN:
-				message_out.push_back(state.lp);
-				get_messages<typename LP_Manager_defs::o_start_lze_scan>(bags) = message_out;
+				bool_out.push_back(true);
+				get_messages<typename LP_Manager_defs::o_start_lze_scan>(bags) = bool_out;
 				break;
 
 			case States::LZE_SCAN:
-				temp_lp = { PLP_HANDOVER_CODE, 0, 0, 0 };
-				message_out.push_back(temp_lp);
-				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = message_out;
+				bool_out.push_back(PILOT_HANDOVER);
+				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = bool_out;
 				break;
 
 			case States::NOTIFY_LP:
@@ -238,8 +237,7 @@ public:
 				break;
 
 			case States::LP_APPROACH:
-				temp_lp = { LP_TIME_EXPIRED_CODE, 0, 0, 0 };
-				message_out.push_back(temp_lp);
+				message_out.push_back(state.lp);
 				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = message_out;
 				break;
 

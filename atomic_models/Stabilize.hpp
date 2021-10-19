@@ -30,7 +30,7 @@ struct Stabilize_defs {
 	struct i_stabilize : public in_port<HoverCriteriaMessage_t> {};
 	struct i_hover_criteria : public in_port<HoverCriteriaMessage_t> {};
 
-	struct o_hover_criteria_met : public out_port<Message_t> {};
+	struct o_hover_criteria_met : public out_port<bool> {};
 };
 
 // Atomic Model
@@ -125,12 +125,11 @@ public:
 	// Nothing to output
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<Message_t> message_out;
-		Message_t success;
+		vector<bool> message_out;
 
 		switch (state.current_state) {
 			case States::HOVER:
-				message_out.push_back(success);
+				message_out.push_back(true);
 				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
 				break;
 			default:
