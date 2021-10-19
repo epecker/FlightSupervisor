@@ -21,7 +21,7 @@
 #include "../include/enum_string_conversion.hpp"
 
 // Data structures that are used in message transport
-#include "../data_structures/message.hpp"
+#include "../data_structures/lp_message.hpp"
 
 // Macros
 #define LP_REPOSITION_TIME "00:00:60:000"
@@ -35,7 +35,7 @@ using namespace std;
 struct LP_Reposition_defs {
 	struct i_control_yielded : public in_port<bool> {};
 	struct i_lp_crit_met : public in_port<bool> {};
-	struct i_lp_new : public in_port<Message_t> {};
+	struct i_lp_new : public in_port<LPMessage_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 
 	struct o_land : public out_port<bool> {};
@@ -77,7 +77,7 @@ public:
 		States current_state;
 		TIME next_internal;
 
-		Message_t landing_point;
+		LPMessage_t landing_point;
 	};
 
 	state_type state;
@@ -138,7 +138,7 @@ public:
 					received_lp_crit_met = get_messages<typename LP_Reposition_defs::i_lp_crit_met>(mbs).size() >= 1;
 
 					if (received_lp_new) {
-						vector<Message_t> new_landing_points = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs);
+						vector<LPMessage_t> new_landing_points = get_messages<typename LP_Reposition_defs::i_lp_new>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::NEW_LP_REPO;
 						state.next_internal = TIME("00:00:00:000");
