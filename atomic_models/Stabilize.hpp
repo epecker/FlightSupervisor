@@ -27,7 +27,7 @@ using namespace std;
 
 // Input and output port definition
 struct Stabilize_defs {
-	struct i_stabilize : public in_port<HoverCriteriaMessage_t> {};
+	struct i_stabilize : public in_port<bool> {};
 	struct i_hover_criteria : public in_port<HoverCriteriaMessage_t> {};
 
 	struct o_hover_criteria_met : public out_port<bool> {};
@@ -96,7 +96,6 @@ public:
 		switch (state.current_state) {
 			case States::IDLE:
 				if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
-					state.hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
 					state.current_state = States::STABILIZING;
 				}
 				break;

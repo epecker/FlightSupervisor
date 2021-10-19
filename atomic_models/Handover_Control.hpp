@@ -28,7 +28,7 @@ using namespace std;
 
 // Input and output port definition
 struct Handover_Control_defs {
-	struct i_lp_crit_met : public in_port<bool> {};
+	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_pilot_handover : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 
@@ -52,7 +52,7 @@ public:
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Handover_Control_defs::i_lp_crit_met,
+		typename Handover_Control_defs::i_hover_criteria_met,
 		typename Handover_Control_defs::i_pilot_handover,
 		typename Handover_Control_defs::i_pilot_takeover
 	>;
