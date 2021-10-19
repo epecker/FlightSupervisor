@@ -40,6 +40,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
+		(AWAIT_CRITERIA)
 		(STABILIZING)
 		(CRIT_CHECK_FAILED)
 		(HOVER)
@@ -96,9 +97,15 @@ public:
 		switch (state.current_state) {
 			case States::IDLE:
 				if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
-					state.current_state = States::STABILIZING;
+					state.current_state = States::AWAIT_CRITERIA;
 				}
 				break;
+
+			case States::AWAIT_CRITERIA:
+				if (get_messages<typename Stabilize_defs::i_hover_criteria>(mbs).size() >= 1) {
+					state.hover_criteria = get_messages<typename Stabilize_defs::i_hover_criteria>(mbs)[0];
+					state.current_state = States::STABILIZING;
+				}
 			case States::STABILIZING:
 				if (get_messages<typename Stabilize_defs::i_hover_criteria>(mbs).size() >= 1) {
 					state.hover_criteria = get_messages<typename Stabilize_defs::i_hover_criteria>(mbs)[0];
@@ -143,7 +150,7 @@ public:
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
-			case States::IDLE: case States::HOVER:
+			case States::IDLE: case States::AWAIT_CRITERIA: case States::HOVER:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::CRIT_CHECK_FAILED:
