@@ -166,7 +166,7 @@ public:
 				}
 			}
 		}
-		
+
 		switch (state.current_state) {
 			//If we are in a state that can receive a planned landing point acheived input,
 			case States::WAYPOINT_MET:
@@ -201,8 +201,7 @@ public:
 			//Execute the external transition first, then the internal.
 			external_transition(TIME(), move(mbs));
 			internal_transition();
-		}
-		else {
+		} else {
 			internal_transition();
 			external_transition(TIME(), move(mbs));
 		}
@@ -294,14 +293,14 @@ public:
 		double i_y = R * cos(i_lp.lat) * sin(i_lp.lon);
 		double i_z = R * sin(i_lp.lat);
 
-		return (sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2)) <= LP_HOR_ACCEPT_TOLERANCE_DISTANCE);
+		return (sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2)) >= LP_HOR_ACCEPT_TOLERANCE_DISTANCE);
 	}
 
 	static TIME calculate_time_from_double_seconds(double time) {
 		int hours = time / 3600;
-		int mins = (time - hours) / 60;
-		int secs = (time - hours - mins);
-		int millis = (time - hours - mins - secs) * 100;
+		int mins = (time - hours * 3600) / 60;
+		int secs = (time - hours * 3600 - mins * 60);
+		int millis = (time - hours * 3600 - mins * 60 - secs) * 100;
 		return TIME(to_string(hours) + ":" + to_string(mins) + ":" + to_string(secs) + ":" + to_string(millis));
 	}
 };

@@ -51,6 +51,8 @@ struct o_control_yielded : public out_port<bool> {};
 struct o_notify_pilot : public out_port<bool> {};
 struct o_land_requested : public out_port<bool> {};
 struct o_mission_complete : public out_port<bool> {};
+struct o_lp_expired : public out_port<LPMessage_t> {};
+struct o_start_lze_scan : public out_port<bool> {};
 
 
 /**
@@ -113,7 +115,9 @@ int main(int argc, char* argv[]) {
 		typeid(o_control_yielded),
 		typeid(o_notify_pilot),
 		typeid(o_land_requested),
-		typeid(o_mission_complete)
+		typeid(o_mission_complete),
+		typeid(o_lp_expired),
+		typeid(o_start_lze_scan)
 	};
 
 	//Define the sub-models that make up the Supervisor coupled model.
@@ -150,8 +154,10 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_EOC<Handover_Control_defs::o_notify_pilot, o_notify_pilot>("handover_control"),
 		// landing_routine
 		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested, o_land_requested>("landing_routine"),
-		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested, o_land_requested>("landing_routine")
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete, o_mission_complete>("landing_routine"),
 		// lp_manager
+		dynamic::translate::make_EOC<LP_Manager_defs::o_lp_expired, o_lp_expired>("lp_manager"),
+		dynamic::translate::make_EOC<LP_Manager_defs::o_start_lze_scan, o_start_lze_scan>("lp_manager")
 		// lp_reposition
 		// stabilize
 	};
