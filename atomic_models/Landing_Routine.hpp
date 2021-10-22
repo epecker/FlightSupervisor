@@ -71,8 +71,6 @@ public:
 	struct state_type {
 		States current_state;
 		TIME next_internal;
-
-		Message_t landing_point;
 	};
 
 	state_type state;
