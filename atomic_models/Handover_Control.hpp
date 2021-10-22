@@ -68,8 +68,6 @@ public:
 	struct state_type {
 		States current_state;
 		TIME next_internal;
-
-		Message_t landing_point;
 	};
 
 	state_type state;
@@ -121,7 +119,7 @@ public:
 				break;
 			case States::STABILIZING:
 				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
-				received_hover_crit_met = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs).size() >= 1;
+				received_hover_crit_met = get_messages<typename Handover_Control_defs::i_hover_criteria_met>(mbs).size() >= 1;
 
 				if (received_pilot_takeover) {
 					state.current_state = States::PILOT_CONTROL;
