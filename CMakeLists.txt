@@ -16,5 +16,8 @@ include(deps/destimes.cmake)
 add_executable(supervisor "${CMAKE_SOURCE_DIR}/coupled_model/main.cpp")
 target_include_directories(supervisor PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
+add_executable(td_handover_control "${CMAKE_SOURCE_DIR}/test_drivers/td_handover_control.cpp")
+target_include_directories(td_handover_control PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
+
 add_executable(td_lp_manager "${CMAKE_SOURCE_DIR}/test_drivers/td_lp_manager.cpp")
 target_include_directories(td_lp_manager PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
