@@ -25,5 +25,8 @@ target_include_directories(td_landing_routine PUBLIC ${BOOST_INCLUDE_DIR} ${CADM
 add_executable(td_lp_manager "${CMAKE_SOURCE_DIR}/test_drivers/td_lp_manager.cpp")
 target_include_directories(td_lp_manager PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
+add_executable(td_lp_reposition "${CMAKE_SOURCE_DIR}/test_drivers/td_lp_reposition.cpp")
+target_include_directories(td_lp_reposition PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
+
 add_executable(td_stabilize "${CMAKE_SOURCE_DIR}/test_drivers/td_stabilize.cpp")
 target_include_directories(td_stabilize PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
