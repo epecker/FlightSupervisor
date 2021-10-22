@@ -2,7 +2,7 @@
 #define CONSTANTS_HPP
 
 // Macros for LP_Reposition.hpp
-#define LP_REPOSITION_TIME "00:00:60:000"
+#define LP_REPOSITION_TIME "00:01:00:000"
 #define LAND_OUTPUT true
 #define PILOT_HANDOVER true
 

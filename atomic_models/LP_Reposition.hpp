@@ -24,9 +24,7 @@
 #include "../data_structures/lp_message.hpp"
 
 // Macros
-#define LP_REPOSITION_TIME "00:01:00:000"
-#define LAND_OUTPUT true
-#define PILOT_HANDOVER true
+#include "../include/Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
