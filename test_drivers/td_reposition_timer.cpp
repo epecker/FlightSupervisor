@@ -14,7 +14,7 @@
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
-#include "../atomic_models/LP_Reposition.hpp"
+#include "../atomic_models/Reposition_Timer.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "../include/SupervisorConfig.hpp"
@@ -73,7 +73,7 @@ struct o_land : public out_port<bool> {};
 */
 int main(int argc, char* argv[]) {
 	// Input Files
-	const string input_dir = string(PROJECT_DIRECTORY) + string("/input_data/lp_reposition/");
+	const string input_dir = string(PROJECT_DIRECTORY) + string("/input_data/reposition_timer/");
 	const string input_file_lp_new = input_dir + string("lp_new.txt");
 	const string input_file_pilot_takeover = input_dir + string("pilot_takeover.txt");
 	const string input_file_lp_criteria_met = input_dir + string("lp_criteria_met.txt");
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Instantiate the atomic model to test
-	shared_ptr<dynamic::modeling::model> lp_reposition = dynamic::translate::make_dynamic_atomic_model<LP_Reposition, TIME>("lp_reposition");
+	shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME>("reposition_timer");
 
 	// Instantiate the input readers.
 	// One for each input
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
 		ir_pilot_takeover,
 		ir_lp_crit_met,
 		ir_control_yielded,
-		lp_reposition
+		reposition_timer
 	};
 
 	dynamic::modeling::Ports iports_TestDriver = {	};
@@ -123,16 +123,16 @@ int main(int argc, char* argv[]) {
 
 	// The output ports will be used to export in logging
 	dynamic::modeling::EOCs eocs_TestDriver = {
-		dynamic::translate::make_EOC<LP_Reposition_defs::o_pilot_handover,o_pilot_handover>("lp_reposition"),
-		dynamic::translate::make_EOC<LP_Reposition_defs::o_land,o_land>("lp_reposition")
+		dynamic::translate::make_EOC<Reposition_Timer_defs::o_pilot_handover,o_pilot_handover>("reposition_timer"),
+		dynamic::translate::make_EOC<Reposition_Timer_defs::o_land,o_land>("reposition_timer")
 	};
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,LP_Reposition_defs::i_lp_new>("ir_lp_new", "lp_reposition"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_pilot_takeover>("ir_pilot_takeover", "lp_reposition"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_lp_crit_met>("ir_lp_crit_met", "lp_reposition"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_control_yielded>("ir_control_yielded", "lp_reposition")
+		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Reposition_Timer_defs::i_lp_new>("ir_lp_new", "reposition_timer"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_pilot_takeover>("ir_pilot_takeover", "reposition_timer"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_control_yielded>("ir_control_yielded", "reposition_timer")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 	);
 
 	/*************** Loggers *******************/
-	string out_directory = string(PROJECT_DIRECTORY) + string("/simulation_results/lp_reposition/");
+	string out_directory = string(PROJECT_DIRECTORY) + string("/simulation_results/reposition_timer/");
 	string out_messages_file = out_directory + string("output_messages.txt");
 	string out_state_file = out_directory + string("output_state.txt");
 
