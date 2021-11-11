@@ -35,6 +35,7 @@ struct Landing_Routine_defs {
 
 	struct o_land_requested : public out_port<bool> {};
 	struct o_mission_complete : public out_port<bool> {};
+	struct o_stabilize : public out_port<bool> {};
 };
 
 // Atomic Model
@@ -44,6 +45,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
+		(HOVER)
 		(STABILIZING)
 		(REQUEST_LAND)
 		(LANDING)
@@ -63,7 +65,8 @@ public:
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
 		typename Landing_Routine_defs::o_land_requested,
-		typename Landing_Routine_defs::o_mission_complete
+		typename Landing_Routine_defs::o_mission_complete,
+		typename Landing_Routine_defs::o_stabilize
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -86,6 +89,10 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
+			case States::HOVER:
+				state.current_state = States::STABILIZING;
+				state.next_internal = numeric_limits<TIME>::infinity();
+				break;
 			case States::REQUEST_LAND:
 				state.current_state = States::LANDING;
 				state.next_internal = numeric_limits<TIME>::infinity();
@@ -119,8 +126,8 @@ public:
 					received_land = get_messages<typename Landing_Routine_defs::i_land>(mbs).size() >= 1;
 
 					if (received_land) {
-						state.current_state = States::STABILIZING;
-						state.next_internal = numeric_limits<TIME>::infinity();
+						state.current_state = States::HOVER;
+						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::STABILIZING:
@@ -132,6 +139,14 @@ public:
 					}
 					break;
 				case States::LANDING:
+					received_landing_achieved = get_messages<typename Landing_Routine_defs::i_landing_achieved>(mbs).size() >= 1;
+
+					if (received_landing_achieved) {
+						state.current_state = States::NOTIFY_LANDED;
+						state.next_internal = TIME("00:00:00:000");
+					}
+					break;
+				case States::PILOT_CONTROL:
 					received_landing_achieved = get_messages<typename Landing_Routine_defs::i_landing_achieved>(mbs).size() >= 1;
 
 					if (received_landing_achieved) {
@@ -165,6 +180,10 @@ public:
 			case States::LANDED:
 				bag_port_out.push_back(true);
 				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
+				break;
+			case States::STABILIZING:
+				bag_port_out.push_back(true);
+				get_messages<typename Landing_Routine_defs::o_stabilize>(bags) = bag_port_out;
 				break;
 			default:
 				break;
