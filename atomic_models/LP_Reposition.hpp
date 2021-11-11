@@ -38,6 +38,7 @@ struct LP_Reposition_defs {
 
 	struct o_land : public out_port<bool> {};
 	struct o_pilot_handover : public out_port<bool> {};
+	struct o_request_reposition : public out_port<LPMessage_t> {};
 };
 
 // Atomic Model
@@ -49,7 +50,7 @@ public:
 		(IDLE)
 		(LP_REPO)
 		(NEW_LP_REPO)
-		(TRIGGER_LAND)
+		(REQUEST_LAND)
 		(HANDOVER_CTRL)
 		(LANDING_ROUTINE)
 		(PILOT_CONTROL)
@@ -66,7 +67,8 @@ public:
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
 		typename LP_Reposition_defs::o_land,
-		typename LP_Reposition_defs::o_pilot_handover
+		typename LP_Reposition_defs::o_pilot_handover,
+		typename LP_Reposition_defs::o_request_reposition
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -96,10 +98,10 @@ public:
 				state.next_internal = TIME(LP_REPOSITION_TIME);
 				break;
 			case States::LP_REPO:
-				state.current_state = States::PILOT_CONTROL;
+				state.current_state = States::HANDOVER_CTRL;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case States::TRIGGER_LAND:
+			case States::REQUEST_LAND:
 				state.current_state = States::LANDING_ROUTINE;
 				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
@@ -141,7 +143,7 @@ public:
 						state.current_state = States::NEW_LP_REPO;
 						state.next_internal = TIME("00:00:00:000");
 					} else if (received_lp_crit_met) {
-						state.current_state = States::TRIGGER_LAND;
+						state.current_state = States::REQUEST_LAND;
 						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
@@ -170,6 +172,7 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
+		vector<LPMessage_t> bag_port_lp_out;
 
 		switch (state.current_state) {
 			case States::LANDING_ROUTINE:
@@ -179,6 +182,10 @@ public:
 			case States::HANDOVER_CTRL:
 				bag_port_out.push_back(PILOT_HANDOVER);
 				get_messages<typename LP_Reposition_defs::o_pilot_handover>(bags) = bag_port_out;
+				break;
+			case States::LP_REPO:
+				bag_port_lp_out.push_back(LPMessage_t());
+				get_messages<typename LP_Reposition_defs::o_request_reposition>(bags) = bag_port_lp_out;
 				break;
 			default:
 				break;
