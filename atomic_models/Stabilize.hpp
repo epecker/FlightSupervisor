@@ -17,8 +17,9 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
-#include "../data_structures/message.hpp"
 #include "../data_structures/hover_criteria_message.hpp"
+#include "../data_structures/lp_message.hpp"
+#include "../data_structures/fcc_command.hpp"
 #include "../include/enum_string_conversion.hpp"
 #include "../include/Constants.hpp"
 
@@ -27,9 +28,11 @@ using namespace std;
 
 // Input and output port definition
 struct Stabilize_defs {
-	struct i_stabilize : public in_port<bool> {};
-	struct i_hover_criteria : public in_port<HoverCriteriaMessage_t> {};
+	struct i_aircraft_state : public in_port<HoverCriteriaMessage_t> {};
+	struct i_stabilize : public in_port<LPMessage_t> {};
+	struct i_cancel_hover : public in_port<bool> {};
 
+	struct o_fcc_command_hover : public out_port<FccCommandMessage_t> {};
 	struct o_hover_criteria_met : public out_port<bool> {};
 };
 
@@ -40,7 +43,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(AWAIT_CRITERIA)
+		(INIT_HOVER)
 		(STABILIZING)
 		(CRIT_CHECK_FAILED)
 		(HOVER)
@@ -48,12 +51,14 @@ public:
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
+		typename Stabilize_defs::i_aircraft_state,
 		typename Stabilize_defs::i_stabilize,
-		typename Stabilize_defs::i_hover_criteria
+		typename Stabilize_defs::i_cancel_hover
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
+		typename Stabilize_defs::o_fcc_command_hover,
 		typename Stabilize_defs::o_hover_criteria_met
 	>;
 
@@ -61,14 +66,14 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		HoverCriteriaMessage_t hover_criteria; 
+		HoverCriteriaMessage_t aircraft_state;
 	};
 	state_type state;
 
 	// Default constructor
 	Stabilize() {
 		state.current_state = States::IDLE;
-		state.hover_criteria = HoverCriteriaMessage_t();
+		state.aircraft_state = HoverCriteriaMessage_t();
 	}
 
 	// Internal transitions
@@ -77,6 +82,9 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
+			case States::INIT_HOVER:
+				state.current_state = States::STABILIZING;
+				break;
 			case States::CRIT_CHECK_FAILED:
 				state.current_state = States::STABILIZING;
 				break;
@@ -93,30 +101,25 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+		bool received_cancel_hover = get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1;
 
-		switch (state.current_state) {
-			case States::IDLE:
-				if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
-					state.current_state = States::AWAIT_CRITERIA;
-				}
-				break;
-
-			case States::AWAIT_CRITERIA:
-				if (get_messages<typename Stabilize_defs::i_hover_criteria>(mbs).size() >= 1) {
-					state.hover_criteria = get_messages<typename Stabilize_defs::i_hover_criteria>(mbs)[0];
-					state.current_state = States::STABILIZING;
-				}
-			case States::STABILIZING:
-				if (get_messages<typename Stabilize_defs::i_hover_criteria>(mbs).size() >= 1) {
-					state.hover_criteria = get_messages<typename Stabilize_defs::i_hover_criteria>(mbs)[0];
-					bool hover_criteria_met = calculate_hover_criteria_met(state.hover_criteria);
-					if (!hover_criteria_met) {
-						state.current_state = States::CRIT_CHECK_FAILED;
+		if (received_cancel_hover) {
+			state.current_state = States::IDLE;
+		} else {
+			switch (state.current_state) {
+				case States::IDLE:
+					if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
+						state.current_state = States::INIT_HOVER;
 					}
-				}
-				break;
-			default:
-				break;
+					break;
+				case States::STABILIZING:
+					if (get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).size() >= 1) {
+						state.aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+					}
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
@@ -132,8 +135,13 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> message_out;
+		vector<FccCommandMessage_t> message_fcc_out;
 
 		switch (state.current_state) {
+			case States::STABILIZING:
+				message_fcc_out.push_back(FccCommandMessage_t());
+				get_messages<typename Stabilize_defs::o_fcc_command_hover>(bags) = message_fcc_out;
+				break;
 			case States::HOVER:
 				message_out.push_back(true);
 				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
@@ -150,14 +158,14 @@ public:
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
-			case States::IDLE: case States::AWAIT_CRITERIA: case States::HOVER:
+			case States::IDLE: case States::INIT_HOVER: case States::HOVER:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::CRIT_CHECK_FAILED:
 				next_internal = TIME("00:00:00:000");
 				break;
 			case States::STABILIZING:
-				next_internal = calculate_time_from_double_seconds(state.hover_criteria.timeTol);
+				next_internal = calculate_time_from_double_seconds(state.aircraft_state.timeTol);
 				break;
 			default:
 				next_internal = numeric_limits<TIME>::infinity();

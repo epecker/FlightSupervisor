@@ -11,6 +11,8 @@
 //Messages structures
 #include "../data_structures/lp_message.hpp"
 #include "../data_structures/plp_message.hpp"
+#include "../data_structures/fcc_command.hpp"
+#include "../data_structures/hover_criteria_message.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
@@ -46,6 +48,14 @@ public:
 	IR_HoverCriteriaMessage_t(const char* file_path) : iestream_input<HoverCriteriaMessage_t, T>(file_path) {};
 };
 
+// LPMessage input reader
+template<typename T>
+class IR_LPMessage_t : public iestream_input<LPMessage_t, T> {
+public:
+	IR_LPMessage_t() = default;
+	IR_LPMessage_t(const char* file_path) : iestream_input<LPMessage_t, T>(file_path) {};
+};
+
 // Bool input reader
 template<typename T>
 class IR_Boolean : public iestream_input<bool, T> {
@@ -56,6 +66,7 @@ public:
 
 // Define output ports to be used for logging purposes
 struct o_hover_criteria_met : public out_port<bool> {};
+struct o_fcc_command_hover : public out_port<FccCommandMessage_t> {};
 
 /**
 * ==========================================================
@@ -65,10 +76,12 @@ struct o_hover_criteria_met : public out_port<bool> {};
 int main(int argc, char* argv[]) {
 	// Input Files
 	const string input_dir = string(PROJECT_DIRECTORY) + string("/input_data/stabilize/");
-	const string input_file_hover_criteria = input_dir + string("hover_criteria.txt");
+	const string input_file_aircraft_state = input_dir + string("aircraft_state.txt");
+	const string input_file_cancel_hover = input_dir + string("cancel_hover.txt");
 	const string input_file_stabilize = input_dir + string("stabilize.txt");
 
-	if (!filesystem::exists(input_file_hover_criteria) ||
+	if (!filesystem::exists(input_file_aircraft_state) ||
+		!filesystem::exists(input_file_cancel_hover) ||
 		!filesystem::exists(input_file_stabilize)
 		) {
 		printf("One of the input files do not exist\n");
@@ -80,15 +93,18 @@ int main(int argc, char* argv[]) {
 
 	// Instantiate the input readers.
 	// One for each input
-	shared_ptr<dynamic::modeling::model> ir_hover_criteria = 
-		dynamic::translate::make_dynamic_atomic_model<IR_HoverCriteriaMessage_t, TIME, const char* >("ir_hover_criteria", move(input_file_hover_criteria.c_str()));
+	shared_ptr<dynamic::modeling::model> ir_aircraft_state = 
+		dynamic::translate::make_dynamic_atomic_model<IR_HoverCriteriaMessage_t, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
+	shared_ptr<dynamic::modeling::model> ir_cancel_hover =
+		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_cancel_hover", move(input_file_stabilize.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_stabilize = 
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_stabilize", move(input_file_stabilize.c_str()));
+		dynamic::translate::make_dynamic_atomic_model<IR_LPMessage_t, TIME, const char* >("ir_stabilize", move(input_file_stabilize.c_str()));
 
 	// The models to be included in this coupled model 
 	// (accepts atomic and coupled models)
 	dynamic::modeling::Models submodels_TestDriver = {
-		ir_hover_criteria,
+		ir_aircraft_state,
+		ir_cancel_hover,
 		ir_stabilize,
 		stabilize
 	};
@@ -96,7 +112,8 @@ int main(int argc, char* argv[]) {
 	dynamic::modeling::Ports iports_TestDriver = {	};
 
 	dynamic::modeling::Ports oports_TestDriver = {
-		typeid(o_hover_criteria_met)
+		typeid(o_hover_criteria_met),
+		typeid(o_fcc_command_hover)
 	};
 
 	dynamic::modeling::EICs eics_TestDriver = {	};
@@ -108,8 +125,9 @@ int main(int argc, char* argv[]) {
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<HoverCriteriaMessage_t>::out,Stabilize_defs::i_hover_criteria>("ir_hover_criteria", "stabilize"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize_defs::i_stabilize>("ir_stabilize", "stabilize")
+		dynamic::translate::make_IC<iestream_input_defs<HoverCriteriaMessage_t>::out,Stabilize_defs::i_aircraft_state>("ir_aircraft_state", "stabilize"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize_defs::i_cancel_hover>("ir_cancel_hover", "stabilize"),
+		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Stabilize_defs::i_stabilize>("ir_stabilize", "stabilize")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
