@@ -18,6 +18,7 @@
 #include <string>
 
 #include "../data_structures/hover_criteria_message.hpp"
+#include "../data_structures/aircraft_state_message.hpp"
 #include "../data_structures/lp_message.hpp"
 #include "../data_structures/fcc_command.hpp"
 #include "../include/enum_string_conversion.hpp"
@@ -28,8 +29,8 @@ using namespace std;
 
 // Input and output port definition
 struct Stabilize_defs {
-	struct i_aircraft_state : public in_port<HoverCriteriaMessage_t> {};
-	struct i_stabilize : public in_port<LPMessage_t> {};
+	struct i_aircraft_state : public in_port<AircraftStateMessage_t> {};
+	struct i_stabilize : public in_port<HoverCriteriaMessage_t> {};
 	struct i_cancel_hover : public in_port<bool> {};
 
 	struct o_fcc_command_hover : public out_port<FccCommandMessage_t> {};
@@ -66,14 +67,16 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		HoverCriteriaMessage_t aircraft_state;
+		HoverCriteriaMessage_t hover_criteria;
+		AircraftStateMessage_t aircraft_state;
 	};
 	state_type state;
 
 	// Default constructor
 	Stabilize() {
 		state.current_state = States::IDLE;
-		state.aircraft_state = HoverCriteriaMessage_t();
+		state.hover_criteria = HoverCriteriaMessage_t();
+		state.aircraft_state = AircraftStateMessage_t();
 	}
 
 	// Internal transitions
@@ -101,20 +104,26 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_cancel_hover = get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1;
+		bool received_cancel_hover = get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).size() >= 1;
 
 		if (received_cancel_hover) {
 			state.current_state = States::IDLE;
+			state.aircraft_state = AircraftStateMessage_t();
+			state.hover_criteria = HoverCriteriaMessage_t();
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
 					if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
 						state.current_state = States::INIT_HOVER;
+						state.hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
 					}
 					break;
 				case States::STABILIZING:
 					if (get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).size() >= 1) {
 						state.aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+						if (!calculate_hover_criteria_met(state.aircraft_state)) {
+							state.current_state = States::CRIT_CHECK_FAILED;
+						}
 					}
 					break;
 				default:
@@ -138,11 +147,11 @@ public:
 		vector<FccCommandMessage_t> message_fcc_out;
 
 		switch (state.current_state) {
-			case States::STABILIZING:
+			case States::INIT_HOVER:
 				message_fcc_out.push_back(FccCommandMessage_t());
 				get_messages<typename Stabilize_defs::o_fcc_command_hover>(bags) = message_fcc_out;
 				break;
-			case States::HOVER:
+			case States::STABILIZING:
 				message_out.push_back(true);
 				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
 				break;
@@ -165,7 +174,7 @@ public:
 				next_internal = TIME("00:00:00:000");
 				break;
 			case States::STABILIZING:
-				next_internal = calculate_time_from_double_seconds(state.aircraft_state.timeTol);
+				next_internal = calculate_time_from_double_seconds(state.hover_criteria.timeTol);
 				break;
 			default:
 				next_internal = numeric_limits<TIME>::infinity();
@@ -179,7 +188,7 @@ public:
 	}
 
 	// Stub implementation for now so we can always hover.
-	bool calculate_hover_criteria_met(HoverCriteriaMessage_t hover_criteria_message) {
+	bool calculate_hover_criteria_met(AircraftStateMessage_t state) {
 		return true;
 	}
 
