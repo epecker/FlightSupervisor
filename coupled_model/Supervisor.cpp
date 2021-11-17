@@ -66,6 +66,7 @@ struct Supervisor_defs {
 	struct o_fcc_command_velocity : public out_port<FccCommandMessage_t> {};
 	struct o_control_yielded : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
+	struct o_fcc_command_hover : public out_port<FccCommandMessage_t> {};
 };
 
 
@@ -96,7 +97,8 @@ dynamic::modeling::Ports oports_Supervisor = {
 	typeid(Supervisor_defs::o_land_requested),
 	typeid(Supervisor_defs::o_fcc_command_velocity),
 	typeid(Supervisor_defs::o_control_yielded),
-	typeid(Supervisor_defs::o_notify_pilot)
+	typeid(Supervisor_defs::o_notify_pilot),
+	typeid(Supervisor_defs::o_fcc_command_hover)
 };
 
 //Define the sub-models that make up the Supervisor coupled model.
@@ -132,15 +134,18 @@ dynamic::modeling::EOCs eocs_Supervisor = {
 	// lp_manager
 	dynamic::translate::make_EOC<LP_Manager_defs::o_lp_expired, Supervisor_defs::o_LP_expired>("lp_manager"),
 	dynamic::translate::make_EOC<LP_Manager_defs::o_start_lze_scan, Supervisor_defs::o_start_LZE_scan>("lp_manager"),
-
+	
 	// lp_reposition
 	dynamic::translate::make_EOC<LP_Reposition_defs::o_mission_complete, Supervisor_defs::o_mission_complete>("lp_reposition"),
 	dynamic::translate::make_EOC<LP_Reposition_defs::o_land_requested, Supervisor_defs::o_land_requested>("lp_reposition"),
 	dynamic::translate::make_EOC<LP_Reposition_defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("lp_reposition"),
-
+	
 	// handover_control
 	dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded, Supervisor_defs::o_control_yielded>("handover_control"),
-	dynamic::translate::make_EOC<Handover_Control_defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("handover_control")
+	dynamic::translate::make_EOC<Handover_Control_defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("handover_control"),
+	
+	//stabilize
+	dynamic::translate::make_EOC<Stabilize_defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("stabilize")
 };
 
 //Define the internal to internal couplings for the Supervisor.

@@ -33,3 +33,6 @@ target_include_directories(td_stabilize PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_IN
 
 add_executable(td_command_reposition "${CMAKE_SOURCE_DIR}/test_drivers/td_command_reposition.cpp")
 target_include_directories(td_command_reposition PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
+
+add_executable(td_supervisor "${CMAKE_SOURCE_DIR}/test_drivers/td_supervisor.cpp")
+target_include_directories(td_supervisor PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
