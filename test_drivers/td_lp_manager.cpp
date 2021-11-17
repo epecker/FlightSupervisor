@@ -9,6 +9,7 @@
 #include <NDTime.hpp>
 
 //Messages structures
+#include "../data_structures/hover_criteria_message.hpp"
 #include "../data_structures/lp_message.hpp"
 #include "../data_structures/plp_message.hpp"
 
@@ -66,7 +67,7 @@ public:
 struct o_lp_new : public out_port<LPMessage_t> {};
 struct o_lp_expired : public out_port<LPMessage_t> {};
 struct o_pilot_handover : public out_port<bool> {};
-struct o_stabilize : public out_port<bool> {};
+struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 struct o_start_lze_scan : public out_port<bool> {};
 
 /**

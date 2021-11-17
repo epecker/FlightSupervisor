@@ -13,14 +13,14 @@ using namespace std;
 /**************** Message_t ****************/
 /*******************************************/
 struct LPMessage_t{
-  LPMessage_t(){}
-  LPMessage_t(int i_id, double i_lat, double i_lon, double i_alt)
-   :id(i_id), lat(i_lat), lon(i_lon), alt(i_alt){}
-
   	int		id;
   	double	lat;
 	double	lon;
 	double	alt;
+
+	LPMessage_t() :id(0), lat(0), lon(0), alt(0) {}
+	LPMessage_t(int i_id, double i_lat, double i_lon, double i_alt)
+		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt){}
 };
 
 /***************************************************/

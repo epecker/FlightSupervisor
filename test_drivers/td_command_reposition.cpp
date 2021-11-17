@@ -9,6 +9,8 @@
 #include <NDTime.hpp>
 
 //Messages structures
+#include "../data_structures/aircraft_state_message.hpp"
+#include "../data_structures/hover_criteria_message.hpp"
 #include "../data_structures/lp_message.hpp"
 #include "../data_structures/fcc_command.hpp"
 
@@ -46,6 +48,14 @@ public:
 	IR_LPMessage_t(const char* file_path) : iestream_input<LPMessage_t, T>(file_path) {};
 };
 
+// AircraftStateMessage input reader
+template<typename T>
+class IR_AircraftStateMessage_t : public iestream_input<AircraftStateMessage_t, T> {
+public:
+	IR_AircraftStateMessage_t() = default;
+	IR_AircraftStateMessage_t(const char* file_path) : iestream_input<AircraftStateMessage_t, T>(file_path) {};
+};
+
 // Bool input reader
 template<typename T>
 class IR_Boolean : public iestream_input<bool, T> {
@@ -57,8 +67,8 @@ public:
 // Define output ports to be used for logging purposes
 struct o_cancel_hover : public out_port<bool> {};
 struct o_fcc_command_velocity : public out_port<FccCommandMessage_t> {};
-struct o_lp_criteria_met : public out_port<bool> {};
-struct o_stabilize : public out_port<bool> {};
+struct o_lp_criteria_met : public out_port<LPMessage_t> {};
+struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 
 
 /**
@@ -91,11 +101,11 @@ int main(int argc, char* argv[]) {
 	// Instantiate the input readers.
 	// One for each input
 	shared_ptr<dynamic::modeling::model> ir_aircraft_state = 
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
+		dynamic::translate::make_dynamic_atomic_model<IR_AircraftStateMessage_t, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_pilot_handover = 
-		dynamic::translate::make_dynamic_atomic_model<IR_LPMessage_t, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
+		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_pilot_takeover = 
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_request_reposition = 
@@ -133,9 +143,9 @@ int main(int argc, char* argv[]) {
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_aircraft_state>("ir_aircraft_state", "command_reposition"),
+		dynamic::translate::make_IC<iestream_input_defs<AircraftStateMessage_t>::out,Command_Reposition_defs::i_aircraft_state>("ir_aircraft_state", "command_reposition"),
 		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_hover_criteria_met>("ir_hover_criteria_met", "command_reposition"),
-		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Command_Reposition_defs::i_pilot_handover>("ir_pilot_handover", "command_reposition"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_pilot_handover>("ir_pilot_handover", "command_reposition"),
 		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_pilot_takeover>("ir_pilot_takeover", "command_reposition"),
 		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Command_Reposition_defs::i_request_reposition>("ir_request_reposition", "command_reposition")
 	};

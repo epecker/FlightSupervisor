@@ -46,14 +46,6 @@ public:
 	IR_LPMessage_t(const char* file_path) : iestream_input<LPMessage_t, T>(file_path) {};
 };
 
-// PLPMessage input reader
-template<typename T>
-class IR_PLPMessage_t : public iestream_input<PLPMessage_t, T> {
-public:
-	IR_PLPMessage_t() = default;
-	IR_PLPMessage_t(const char* file_path) : iestream_input<PLPMessage_t, T>(file_path) {};
-};
-
 // Bool input reader
 template<typename T>
 class IR_Boolean : public iestream_input<bool, T> {
@@ -65,6 +57,7 @@ public:
 // Define output ports to be used for logging purposes
 struct o_pilot_handover : public out_port<bool> {};
 struct o_land : public out_port<bool> {};
+struct o_request_reposition : public out_port<LPMessage_t> {};
 
 /**
 * ==========================================================
@@ -98,7 +91,7 @@ int main(int argc, char* argv[]) {
 	shared_ptr<dynamic::modeling::model> ir_pilot_takeover = 
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_lp_crit_met = 
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_lp_crit_met", move(input_file_lp_criteria_met.c_str()));
+		dynamic::translate::make_dynamic_atomic_model<IR_LPMessage_t, TIME, const char* >("ir_lp_crit_met", move(input_file_lp_criteria_met.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_control_yielded = 
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_control_yielded", move(input_file_control_yielded.c_str()));
 
@@ -116,7 +109,8 @@ int main(int argc, char* argv[]) {
 
 	dynamic::modeling::Ports oports_TestDriver = {
 		typeid(o_pilot_handover),
-		typeid(o_land)
+		typeid(o_land),
+		typeid(o_request_reposition)
 	};
 
 	dynamic::modeling::EICs eics_TestDriver = {	};
@@ -124,14 +118,15 @@ int main(int argc, char* argv[]) {
 	// The output ports will be used to export in logging
 	dynamic::modeling::EOCs eocs_TestDriver = {
 		dynamic::translate::make_EOC<Reposition_Timer_defs::o_pilot_handover,o_pilot_handover>("reposition_timer"),
-		dynamic::translate::make_EOC<Reposition_Timer_defs::o_land,o_land>("reposition_timer")
+		dynamic::translate::make_EOC<Reposition_Timer_defs::o_land,o_land>("reposition_timer"),
+		dynamic::translate::make_EOC<Reposition_Timer_defs::o_request_reposition,o_request_reposition>("reposition_timer")
 	};
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
 		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Reposition_Timer_defs::i_lp_new>("ir_lp_new", "reposition_timer"),
 		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_pilot_takeover>("ir_pilot_takeover", "reposition_timer"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
+		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Reposition_Timer_defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
 		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_control_yielded>("ir_control_yielded", "reposition_timer")
 	};
 

@@ -9,8 +9,7 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../data_structures/lp_message.hpp"
-#include "../data_structures/plp_message.hpp"
+#include "../data_structures/hover_criteria_message.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
@@ -49,6 +48,7 @@ public:
 // Define output ports to be used for logging purposes
 struct o_land_requested : public out_port<bool> {};
 struct o_mission_complete : public out_port<bool> {};
+struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 
 /**
 * ==========================================================
@@ -100,7 +100,8 @@ int main(int argc, char* argv[]) {
 
 	dynamic::modeling::Ports oports_TestDriver = {
 		typeid(o_land_requested),
-		typeid(o_mission_complete)
+		typeid(o_mission_complete),
+		typeid(o_stabilize)
 	};
 
 	dynamic::modeling::EICs eics_TestDriver = {	};
@@ -108,7 +109,8 @@ int main(int argc, char* argv[]) {
 	// The output ports will be used to export in logging
 	dynamic::modeling::EOCs eocs_TestDriver = {
 		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested,o_land_requested>("landing_routine"),
-		dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete,o_mission_complete>("landing_routine")
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete,o_mission_complete>("landing_routine"),
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_stabilize,o_stabilize>("landing_routine")
 	};
 	
 	// This will connect our outputs from our input reader to the file

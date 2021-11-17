@@ -167,7 +167,7 @@ public:
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
-			case States::IDLE: case States::INIT_HOVER: case States::HOVER:
+			case States::IDLE: case States::HOVER:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::CRIT_CHECK_FAILED:
@@ -175,6 +175,9 @@ public:
 				break;
 			case States::STABILIZING:
 				next_internal = calculate_time_from_double_seconds(state.hover_criteria.timeTol);
+				break;
+			case States::INIT_HOVER:
+				next_internal = TIME("00:00:00:000");
 				break;
 			default:
 				next_internal = numeric_limits<TIME>::infinity();

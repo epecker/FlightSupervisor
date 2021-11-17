@@ -86,6 +86,7 @@ public:
 	Reposition_Timer() {
 		state.current_state = States::IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
+		state.landing_point = LPMessage_t();
 	}
 
 	// Internal transitions
@@ -129,6 +130,8 @@ public:
 				case States::IDLE:
 					received_lp_new = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
+						vector<LPMessage_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						state.landing_point = new_landing_points[0];
 						state.current_state = States::LP_REPO;
 						state.next_internal = TIME(LP_REPOSITION_TIME);
 					}
