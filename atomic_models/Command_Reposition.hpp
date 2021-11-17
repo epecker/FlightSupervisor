@@ -21,6 +21,8 @@
 #include "../include/enum_string_conversion.hpp"
 
 // Data structures that are used in message transport
+#include "../data_structures/aircraft_state_message.hpp"
+#include "../data_structures/hover_criteria_message.hpp"
 #include "../data_structures/lp_message.hpp"
 #include "../data_structures/fcc_command.hpp"
 
@@ -32,16 +34,16 @@ using namespace std;
 
 // Input and output port definitions
 struct Command_Reposition_defs {
-	struct i_aircraft_state : public in_port<bool> {};
+	struct i_aircraft_state : public in_port<AircraftStateMessage_t> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_pilot_handover : public in_port<LPMessage_t> {};
+	struct i_pilot_handover : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_request_reposition : public in_port<LPMessage_t> {};
 
 	struct o_cancel_hover : public out_port<bool> {};
 	struct o_fcc_command_velocity : public out_port<FccCommandMessage_t> {};
-	struct o_stabilize : public out_port<bool> {};
-	struct o_lp_criteria_met : public out_port<bool> {};
+	struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
+	struct o_lp_criteria_met : public out_port<LPMessage_t> {};
 };
 
 // Atomic Model
@@ -229,7 +231,9 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
+		vector<LPMessage_t> bag_port_LP_out;
 		vector<FccCommandMessage_t> bag_port_fcc_out;
+		vector<HoverCriteriaMessage_t> bag_port_hover_out;
 
 		switch (state.current_state) {
 			case States::COMMAND_HOVER:
@@ -237,16 +241,16 @@ public:
 				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
 				break;
 			case States::STABILIZING:
-				bag_port_out.push_back(true);
-				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_out;
+				bag_port_hover_out.push_back(HoverCriteriaMessage_t());
+				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
 			case States::GET_STATE:
 				bag_port_out.push_back(true);
 				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;
 				break;
 			case States::LANDING:
-				bag_port_out.push_back(true);
-				get_messages<typename Command_Reposition_defs::o_lp_criteria_met>(bags) = bag_port_out;
+				bag_port_LP_out.push_back(LPMessage_t());
+				get_messages<typename Command_Reposition_defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
 				break;
 			default:
 				break;

@@ -32,7 +32,7 @@ using namespace std;
 // Input and output port definition
 struct Reposition_Timer_defs {
 	struct i_control_yielded : public in_port<bool> {};
-	struct i_lp_crit_met : public in_port<bool> {};
+	struct i_lp_crit_met : public in_port<LPMessage_t> {};
 	struct i_lp_new : public in_port<LPMessage_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 

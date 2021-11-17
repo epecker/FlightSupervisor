@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <string>
 
+#include "../data_structures/hover_criteria_message.hpp"
 #include "../data_structures/lp_message.hpp"
 #include "../data_structures/plp_message.hpp"
 #include "../include/enum_string_conversion.hpp"
@@ -32,7 +33,7 @@ struct LP_Manager_defs {
 	struct o_lp_new : public out_port<LPMessage_t> {};
 	struct o_lp_expired : public out_port<LPMessage_t> {};
 	struct o_pilot_handover : public out_port<bool> {};
-	struct o_stabilize : public out_port<bool> {};
+	struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 	struct o_start_lze_scan : public out_port<bool> {};
 };
 
@@ -213,11 +214,12 @@ public:
 		vector<LPMessage_t> message_out;
 		LPMessage_t temp_lp;
 		vector<bool> bool_out;
+		vector<HoverCriteriaMessage_t> stabilize_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
-				bool_out.push_back(true);
-				get_messages<typename LP_Manager_defs::o_stabilize>(bags) = bool_out;
+				stabilize_messages.push_back(HoverCriteriaMessage_t());
+				get_messages<typename LP_Manager_defs::o_stabilize>(bags) = stabilize_messages;
 				break;
 
 			case States::START_LZE_SCAN:

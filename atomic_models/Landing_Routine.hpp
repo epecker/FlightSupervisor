@@ -35,7 +35,7 @@ struct Landing_Routine_defs {
 
 	struct o_land_requested : public out_port<bool> {};
 	struct o_mission_complete : public out_port<bool> {};
-	struct o_stabilize : public out_port<bool> {};
+	struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 };
 
 // Atomic Model
@@ -171,6 +171,7 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
+		vector<HoverCriteriaMessage_t> bag_port_hover_out;
 
 		switch (state.current_state) {
 			case States::LANDING:
@@ -182,8 +183,8 @@ public:
 				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
 				break;
 			case States::STABILIZING:
-				bag_port_out.push_back(true);
-				get_messages<typename Landing_Routine_defs::o_stabilize>(bags) = bag_port_out;
+				bag_port_hover_out.push_back(HoverCriteriaMessage_t());
+				get_messages<typename Landing_Routine_defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
 			default:
 				break;
