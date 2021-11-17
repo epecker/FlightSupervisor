@@ -96,7 +96,6 @@ public:
 		switch (state.current_state) {
 			case States::NEW_LP_REPO:
 				state.current_state = States::LP_REPO;
-				state.next_internal = TIME(LP_REPOSITION_TIME);
 				break;
 			case States::LP_REPO:
 				state.current_state = States::HANDOVER_CTRL;
@@ -132,8 +131,7 @@ public:
 					if (received_lp_new) {
 						vector<LPMessage_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
 						state.landing_point = new_landing_points[0];
-						state.current_state = States::LP_REPO;
-						state.next_internal = TIME(LP_REPOSITION_TIME);
+						state.current_state = States::NEW_LP_REPO;
 					}
 					break;
 				case States::LP_REPO:
@@ -144,10 +142,8 @@ public:
 						vector<LPMessage_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::NEW_LP_REPO;
-						state.next_internal = TIME("00:00:00:000");
 					} else if (received_lp_crit_met) {
 						state.current_state = States::REQUEST_LAND;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::HANDOVER_CTRL:
@@ -155,7 +151,6 @@ public:
 
 					if (received_control_yielded) {
 						state.current_state = States::PILOT_CONTROL;
-						state.next_internal = numeric_limits<TIME>::infinity();
 					}
 					break;
 				default:
@@ -178,15 +173,15 @@ public:
 		vector<LPMessage_t> bag_port_lp_out;
 
 		switch (state.current_state) {
-			case States::LANDING_ROUTINE:
+			case States::REQUEST_LAND:
 				bag_port_out.push_back(LAND_OUTPUT);
 				get_messages<typename Reposition_Timer_defs::o_land>(bags) = bag_port_out;
 				break;
-			case States::HANDOVER_CTRL:
+			case States::LP_REPO:
 				bag_port_out.push_back(PILOT_HANDOVER);
 				get_messages<typename Reposition_Timer_defs::o_pilot_handover>(bags) = bag_port_out;
 				break;
-			case States::LP_REPO:
+			case States::NEW_LP_REPO:
 				bag_port_lp_out.push_back(LPMessage_t());
 				get_messages<typename Reposition_Timer_defs::o_request_reposition>(bags) = bag_port_lp_out;
 				break;
@@ -200,7 +195,22 @@ public:
 	// Time advance
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
-		return state.next_internal;
+		TIME next_internal;
+		switch(state.current_state) {
+			case States::IDLE: case States::HANDOVER_CTRL: case States::PILOT_CONTROL: case States::LANDING_ROUTINE:
+				next_internal = numeric_limits<TIME>::infinity();
+				break;
+			case States::LP_REPO:
+				next_internal = TIME(LP_REPOSITION_TIME);
+				break;
+			case States::NEW_LP_REPO: case States::REQUEST_LAND:
+				next_internal = TIME("00:00:00:000");
+				break;
+			default:
+				next_internal = numeric_limits<TIME>::infinity();
+				break;
+		}
+		return next_internal;
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Reposition_Timer<TIME>::state_type& i) {
