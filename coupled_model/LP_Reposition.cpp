@@ -121,11 +121,11 @@ dynamic::modeling::EOCs eocs_LPReposition = {
 	dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete, LP_Reposition_defs::o_mission_complete>("landing_routine"),
 	dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested, LP_Reposition_defs::o_land_requested>("landing_routine"),
 	dynamic::translate::make_EOC<Landing_Routine_defs::o_stabilize, LP_Reposition_defs::o_stabilize>("landing_routine"),
-
+	
 	dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize, LP_Reposition_defs::o_stabilize>("command_reposition"),
 	dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize, LP_Reposition_defs::o_stabilize>("command_reposition"),
 	dynamic::translate::make_EOC<Command_Reposition_defs::o_fcc_command_velocity, LP_Reposition_defs::o_fcc_command_velocity>("command_reposition"),
-
+	
 	dynamic::translate::make_EOC<Reposition_Timer_defs::o_pilot_handover, LP_Reposition_defs::o_pilot_handover>("reposition_timer")
 };
 
