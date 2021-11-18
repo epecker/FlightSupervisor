@@ -18,10 +18,10 @@
 #include <string>
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../include/enum_string_conversion.hpp"
+#include "../../include/enum_string_conversion.hpp"
 
 // Data structures that are used in message transport
-#include "../data_structures/hover_criteria_message.hpp"
+#include "../../include/message_structures/hover_criteria_message.hpp"
 
 using namespace cadmium;
 using namespace std;

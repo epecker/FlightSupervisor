@@ -13,26 +13,26 @@ include(deps/boost.cmake)
 include(deps/cadmium.cmake)
 include(deps/destimes.cmake)
 
-add_executable(supervisor "${CMAKE_SOURCE_DIR}/coupled_model/main.cpp")
+add_executable(supervisor "${CMAKE_SOURCE_DIR}/src/coupled_models/main.cpp")
 target_include_directories(supervisor PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_handover_control "${CMAKE_SOURCE_DIR}/test_drivers/td_handover_control.cpp")
+add_executable(td_handover_control "${CMAKE_SOURCE_DIR}/test/drivers/td_handover_control.cpp")
 target_include_directories(td_handover_control PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_landing_routine "${CMAKE_SOURCE_DIR}/test_drivers/td_landing_routine.cpp")
+add_executable(td_landing_routine "${CMAKE_SOURCE_DIR}/test/drivers/td_landing_routine.cpp")
 target_include_directories(td_landing_routine PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_lp_manager "${CMAKE_SOURCE_DIR}/test_drivers/td_lp_manager.cpp")
+add_executable(td_lp_manager "${CMAKE_SOURCE_DIR}/test/drivers/td_lp_manager.cpp")
 target_include_directories(td_lp_manager PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_lp_reposition "${CMAKE_SOURCE_DIR}/test_drivers/td_reposition_timer.cpp")
+add_executable(td_lp_reposition "${CMAKE_SOURCE_DIR}/test/drivers/td_reposition_timer.cpp")
 target_include_directories(td_lp_reposition PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_stabilize "${CMAKE_SOURCE_DIR}/test_drivers/td_stabilize.cpp")
+add_executable(td_stabilize "${CMAKE_SOURCE_DIR}/test/drivers/td_stabilize.cpp")
 target_include_directories(td_stabilize PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_command_reposition "${CMAKE_SOURCE_DIR}/test_drivers/td_command_reposition.cpp")
+add_executable(td_command_reposition "${CMAKE_SOURCE_DIR}/test/drivers/td_command_reposition.cpp")
 target_include_directories(td_command_reposition PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
-add_executable(td_supervisor "${CMAKE_SOURCE_DIR}/test_drivers/td_supervisor.cpp")
+add_executable(td_supervisor "${CMAKE_SOURCE_DIR}/test/drivers/td_supervisor.cpp")
 target_include_directories(td_supervisor PUBLIC ${BOOST_INCLUDE_DIR} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})

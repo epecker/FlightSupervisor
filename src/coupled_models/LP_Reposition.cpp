@@ -18,18 +18,18 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../data_structures/hover_criteria_message.hpp"
-#include "../data_structures/aircraft_state_message.hpp"
-#include "../data_structures/lp_message.hpp"
-#include "../data_structures/fcc_command.hpp"
+#include "../../include/message_structures/hover_criteria_message.hpp"
+#include "../../include/message_structures/aircraft_state_message.hpp"
+#include "../../include/message_structures/lp_message.hpp"
+#include "../../include/message_structures/fcc_command.hpp"
 
 //Atomic model headers
-#include "../atomic_models/Landing_Routine.hpp"
-#include "../atomic_models/Reposition_Timer.hpp"
-#include "../atomic_models/Command_Reposition.hpp"
+#include "../../include/atomic_models/Landing_Routine.hpp"
+#include "../../include/atomic_models/Reposition_Timer.hpp"
+#include "../../include/atomic_models/Command_Reposition.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../include/SupervisorConfig.hpp"
+#include "../../include/SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
