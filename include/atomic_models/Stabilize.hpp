@@ -17,12 +17,13 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
-#include "../data_structures/hover_criteria_message.hpp"
-#include "../data_structures/aircraft_state_message.hpp"
-#include "../data_structures/lp_message.hpp"
-#include "../data_structures/fcc_command.hpp"
-#include "../include/enum_string_conversion.hpp"
-#include "../include/Constants.hpp"
+#include "../../include/message_structures/hover_criteria_message.hpp"
+#include "../../include/message_structures/aircraft_state_message.hpp"
+#include "../../include/message_structures/lp_message.hpp"
+#include "../../include/message_structures/fcc_command.hpp"
+
+#include "../../include/enum_string_conversion.hpp"
+#include "../../include/Constants.hpp"
 
 using namespace cadmium;
 using namespace std;

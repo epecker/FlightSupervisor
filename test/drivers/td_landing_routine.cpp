@@ -9,16 +9,14 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../data_structures/hover_criteria_message.hpp"
-#include "../data_structures/lp_message.hpp"
-#include "../data_structures/plp_message.hpp"
+#include "../../include/message_structures/hover_criteria_message.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
-#include "../atomic_models/LP_Manager.hpp"
+#include "../../include/atomic_models/Landing_Routine.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../include/SupervisorConfig.hpp"
+#include "../../include/SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
@@ -39,22 +37,6 @@ using TIME = NDTime;
 * ==========================================================
 */
 
-// LPMessage input reader
-template<typename T>
-class IR_LPMessage_t : public iestream_input<LPMessage_t, T> {
-public:
-	IR_LPMessage_t() = default;
-	IR_LPMessage_t(const char* file_path) : iestream_input<LPMessage_t, T>(file_path) {};
-};
-
-// PLPMessage input reader
-template<typename T>
-class IR_PLPMessage_t : public iestream_input<PLPMessage_t, T> {
-public:
-	IR_PLPMessage_t() = default;
-	IR_PLPMessage_t(const char* file_path) : iestream_input<PLPMessage_t, T>(file_path) {};
-};
-
 // Bool input reader
 template<typename T>
 class IR_Boolean : public iestream_input<bool, T> {
@@ -64,11 +46,9 @@ public:
 };
 
 // Define output ports to be used for logging purposes
-struct o_lp_new : public out_port<LPMessage_t> {};
-struct o_lp_expired : public out_port<LPMessage_t> {};
-struct o_pilot_handover : public out_port<bool> {};
+struct o_land_requested : public out_port<bool> {};
+struct o_mission_complete : public out_port<bool> {};
 struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
-struct o_start_lze_scan : public out_port<bool> {};
 
 /**
 * ==========================================================
@@ -77,78 +57,68 @@ struct o_start_lze_scan : public out_port<bool> {};
 */
 int main(int argc, char* argv[]) {
 	// Input Files
-	const string input_dir = string(PROJECT_DIRECTORY) + string("/input_data/lp_manager/");
-	const string input_file_lp_recv = input_dir + string("lp_recv.txt");
-	const string input_file_plp_ach = input_dir + string("plp_ach.txt");
+	const string input_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/landing_routine/");
+	const string input_file_landing_achieved = input_dir + string("landing_achieved.txt");
 	const string input_file_pilot_takeover = input_dir + string("pilot_takeover.txt");
 	const string input_file_hover_criteria_met = input_dir + string("hover_criteria_met.txt");
-	const string input_file_control_yielded = input_dir + string("control_yielded.txt");
+	const string input_file_land = input_dir + string("land.txt");
 
-	if (!filesystem::exists(input_file_lp_recv) ||
-		!filesystem::exists(input_file_plp_ach) ||
+	if (!filesystem::exists(input_file_landing_achieved) ||
 		!filesystem::exists(input_file_pilot_takeover) ||
 		!filesystem::exists(input_file_hover_criteria_met) ||
-		!filesystem::exists(input_file_control_yielded)
+		!filesystem::exists(input_file_land)
 		) {
 		printf("One of the input files do not exist\n");
 		return 1;
 	}
 
 	// Instantiate the atomic model to test
-	shared_ptr<dynamic::modeling::model> lp_manager = dynamic::translate::make_dynamic_atomic_model<LP_Manager, TIME>("lp_manager");
+	shared_ptr<dynamic::modeling::model> landing_routine = dynamic::translate::make_dynamic_atomic_model<Landing_Routine, TIME>("landing_routine");
 
 	// Instantiate the input readers.
 	// One for each input
-	shared_ptr<dynamic::modeling::model> ir_lp_recv = 
-		dynamic::translate::make_dynamic_atomic_model<IR_LPMessage_t, TIME, const char* >("ir_lp_recv", move(input_file_lp_recv.c_str()));
-	shared_ptr<dynamic::modeling::model> ir_plp_ach = 
-		dynamic::translate::make_dynamic_atomic_model<IR_PLPMessage_t, TIME, const char* >("ir_plp_ach", move(input_file_plp_ach.c_str()));
-	shared_ptr<dynamic::modeling::model> ir_pilot_takeover = 
+	shared_ptr<dynamic::modeling::model> ir_landing_achieved =
+		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_landing_achieved", move(input_file_landing_achieved.c_str()));
+	shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
-	shared_ptr<dynamic::modeling::model> ir_hover_criteria_met = 
+	shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
-	shared_ptr<dynamic::modeling::model> ir_control_yielded = 
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_control_yielded", move(input_file_control_yielded.c_str()));
+	shared_ptr<dynamic::modeling::model> ir_land =
+		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_land", move(input_file_land.c_str()));
 
 	// The models to be included in this coupled model 
 	// (accepts atomic and coupled models)
 	dynamic::modeling::Models submodels_TestDriver = {
-		ir_lp_recv,
-		ir_plp_ach,
+		ir_landing_achieved,
 		ir_pilot_takeover,
 		ir_hover_criteria_met,
-		ir_control_yielded,
-		lp_manager
+		ir_land,
+		landing_routine
 	};
 
 	dynamic::modeling::Ports iports_TestDriver = {	};
 
 	dynamic::modeling::Ports oports_TestDriver = {
-		typeid(o_lp_new),
-		typeid(o_lp_expired),
-		typeid(o_pilot_handover),
-		typeid(o_stabilize),
-		typeid(o_start_lze_scan)
+		typeid(o_land_requested),
+		typeid(o_mission_complete),
+		typeid(o_stabilize)
 	};
 
 	dynamic::modeling::EICs eics_TestDriver = {	};
 
 	// The output ports will be used to export in logging
 	dynamic::modeling::EOCs eocs_TestDriver = {
-		dynamic::translate::make_EOC<LP_Manager_defs::o_lp_new,o_lp_new>("lp_manager"),
-		dynamic::translate::make_EOC<LP_Manager_defs::o_lp_expired,o_lp_expired>("lp_manager"),
-		dynamic::translate::make_EOC<LP_Manager_defs::o_pilot_handover,o_pilot_handover>("lp_manager"),
-		dynamic::translate::make_EOC<LP_Manager_defs::o_stabilize,o_stabilize>("lp_manager"),
-		dynamic::translate::make_EOC<LP_Manager_defs::o_start_lze_scan,o_start_lze_scan>("lp_manager")
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested,o_land_requested>("landing_routine"),
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete,o_mission_complete>("landing_routine"),
+		dynamic::translate::make_EOC<Landing_Routine_defs::o_stabilize,o_stabilize>("landing_routine")
 	};
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,LP_Manager_defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
-		dynamic::translate::make_IC<iestream_input_defs<PLPMessage_t>::out,LP_Manager_defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager_defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager_defs::i_hover_criteria_met>("ir_hover_criteria_met", "lp_manager"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager_defs::i_control_yielded>("ir_control_yielded", "lp_manager")
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_landing_achieved>("ir_landing_achieved", "landing_routine"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_pilot_takeover>("ir_pilot_takeover", "landing_routine"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_hover_crit_met>("ir_hover_criteria_met", "landing_routine"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_land>("ir_land", "landing_routine")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -156,7 +126,7 @@ int main(int argc, char* argv[]) {
 	);
 
 	/*************** Loggers *******************/
-	string out_directory = string(PROJECT_DIRECTORY) + string("/simulation_results/lp_manager/");
+	string out_directory = string(PROJECT_DIRECTORY) + string("/test/simulation_results/landing_routine/");
 	string out_messages_file = out_directory + string("output_messages.txt");
 	string out_state_file = out_directory + string("output_state.txt");
 

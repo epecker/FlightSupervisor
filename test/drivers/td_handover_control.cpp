@@ -8,15 +8,12 @@
 //Time class header
 #include <NDTime.hpp>
 
-//Messages structures
-#include "../data_structures/hover_criteria_message.hpp"
-
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
-#include "../atomic_models/Landing_Routine.hpp"
+#include "../../include/atomic_models/Handover_Control.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../include/SupervisorConfig.hpp"
+#include "../../include/SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
@@ -46,9 +43,8 @@ public:
 };
 
 // Define output ports to be used for logging purposes
-struct o_land_requested : public out_port<bool> {};
-struct o_mission_complete : public out_port<bool> {};
-struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
+struct o_notify_pilot : public out_port<bool> {};
+struct o_control_yielded : public out_port<bool> {};
 
 /**
 * ==========================================================
@@ -57,68 +53,60 @@ struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 */
 int main(int argc, char* argv[]) {
 	// Input Files
-	const string input_dir = string(PROJECT_DIRECTORY) + string("/input_data/landing_routine/");
-	const string input_file_landing_achieved = input_dir + string("landing_achieved.txt");
-	const string input_file_pilot_takeover = input_dir + string("pilot_takeover.txt");
+	const string input_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/handover_control/");
 	const string input_file_hover_criteria_met = input_dir + string("hover_criteria_met.txt");
-	const string input_file_land = input_dir + string("land.txt");
+	const string input_file_pilot_handover = input_dir + string("pilot_handover.txt");
+	const string input_file_pilot_takeover = input_dir + string("pilot_takeover.txt");
 
-	if (!filesystem::exists(input_file_landing_achieved) ||
-		!filesystem::exists(input_file_pilot_takeover) ||
-		!filesystem::exists(input_file_hover_criteria_met) ||
-		!filesystem::exists(input_file_land)
+	if (!filesystem::exists(input_file_hover_criteria_met) ||
+		!filesystem::exists(input_file_pilot_handover) ||
+		!filesystem::exists(input_file_pilot_takeover)
 		) {
 		printf("One of the input files do not exist\n");
 		return 1;
 	}
 
 	// Instantiate the atomic model to test
-	shared_ptr<dynamic::modeling::model> landing_routine = dynamic::translate::make_dynamic_atomic_model<Landing_Routine, TIME>("landing_routine");
+	shared_ptr<dynamic::modeling::model> handover_control = dynamic::translate::make_dynamic_atomic_model<Handover_Control, TIME>("handover_control");
 
 	// Instantiate the input readers.
 	// One for each input
-	shared_ptr<dynamic::modeling::model> ir_landing_achieved =
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_landing_achieved", move(input_file_landing_achieved.c_str()));
-	shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
-	shared_ptr<dynamic::modeling::model> ir_land =
-		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_land", move(input_file_land.c_str()));
+	shared_ptr<dynamic::modeling::model> ir_pilot_handover =
+		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
+	shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
+		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 
 	// The models to be included in this coupled model 
 	// (accepts atomic and coupled models)
 	dynamic::modeling::Models submodels_TestDriver = {
-		ir_landing_achieved,
-		ir_pilot_takeover,
 		ir_hover_criteria_met,
-		ir_land,
-		landing_routine
+		ir_pilot_handover,
+		ir_pilot_takeover,
+		handover_control
 	};
 
 	dynamic::modeling::Ports iports_TestDriver = {	};
 
 	dynamic::modeling::Ports oports_TestDriver = {
-		typeid(o_land_requested),
-		typeid(o_mission_complete),
-		typeid(o_stabilize)
+		typeid(o_notify_pilot),
+		typeid(o_control_yielded)
 	};
 
 	dynamic::modeling::EICs eics_TestDriver = {	};
 
 	// The output ports will be used to export in logging
 	dynamic::modeling::EOCs eocs_TestDriver = {
-		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested,o_land_requested>("landing_routine"),
-		dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete,o_mission_complete>("landing_routine"),
-		dynamic::translate::make_EOC<Landing_Routine_defs::o_stabilize,o_stabilize>("landing_routine")
+		dynamic::translate::make_EOC<Handover_Control_defs::o_notify_pilot,o_notify_pilot>("handover_control"),
+		dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded,o_control_yielded>("handover_control")
 	};
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_landing_achieved>("ir_landing_achieved", "landing_routine"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_pilot_takeover>("ir_pilot_takeover", "landing_routine"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_hover_crit_met>("ir_hover_criteria_met", "landing_routine"),
-		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_land>("ir_land", "landing_routine")
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control_defs::i_hover_criteria_met>("ir_hover_criteria_met", "handover_control"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control_defs::i_pilot_handover>("ir_pilot_handover", "handover_control"),
+		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control_defs::i_pilot_takeover>("ir_pilot_takeover", "handover_control"),
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -126,7 +114,7 @@ int main(int argc, char* argv[]) {
 	);
 
 	/*************** Loggers *******************/
-	string out_directory = string(PROJECT_DIRECTORY) + string("/simulation_results/landing_routine/");
+	string out_directory = string(PROJECT_DIRECTORY) + string("/test/simulation_results/handover_control/");
 	string out_messages_file = out_directory + string("output_messages.txt");
 	string out_state_file = out_directory + string("output_state.txt");
 

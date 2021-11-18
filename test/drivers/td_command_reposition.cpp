@@ -9,17 +9,17 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../data_structures/aircraft_state_message.hpp"
-#include "../data_structures/hover_criteria_message.hpp"
-#include "../data_structures/lp_message.hpp"
-#include "../data_structures/fcc_command.hpp"
+#include "../../include/message_structures/aircraft_state_message.hpp"
+#include "../../include/message_structures/hover_criteria_message.hpp"
+#include "../../include/message_structures/lp_message.hpp"
+#include "../../include/message_structures/fcc_command.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
-#include "../atomic_models/Command_Reposition.hpp"
+#include "../../include/atomic_models/Command_Reposition.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../include/SupervisorConfig.hpp"
+#include "../../include/SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
@@ -78,7 +78,7 @@ struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
 */
 int main(int argc, char* argv[]) {
 	// Input Files
-	const string input_dir = string(PROJECT_DIRECTORY) + string("/input_data/command_reposition/");
+	const string input_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/command_reposition/");
 	const string input_file_aircraft_state = input_dir + string("aircraft_state.txt");
 	const string input_file_hover_criteria_met = input_dir + string("hover_criteria_met.txt");
 	const string input_file_pilot_handover = input_dir + string("pilot_handover.txt");
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
 	);
 
 	/*************** Loggers *******************/
-	string out_directory = string(PROJECT_DIRECTORY) + string("/simulation_results/command_reposition/");
+	string out_directory = string(PROJECT_DIRECTORY) + string("/test/simulation_results/command_reposition/");
 	string out_messages_file = out_directory + string("output_messages.txt");
 	string out_state_file = out_directory + string("output_state.txt");
 
