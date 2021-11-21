@@ -85,8 +85,6 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		TIME next_internal;
-
 		message_mavlink_mission_item_t landing_point;
 	};
 
@@ -95,7 +93,6 @@ public:
 	// Default constructor
 	Command_Reposition() {
 		state.current_state = States::IDLE;
-		state.next_internal = numeric_limits<TIME>::infinity();
 	}
 
 	// Internal transitions
@@ -105,19 +102,15 @@ public:
 		switch (state.current_state) {
 			case States::COMMAND_VEL:
 				state.current_state = States::COMMAND_HOVER;
-				state.next_internal = TIME("00:00:00:000");
 				break;
 			case States::COMMAND_HOVER:
 				state.current_state = States::STABILIZING;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::LP_CRITERIA_MET:
 				state.current_state = States::LANDING;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::CANCEL_HOVER:
 				state.current_state = States::GET_STATE;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
 				break;
@@ -139,10 +132,8 @@ public:
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
-			state.next_internal = numeric_limits<TIME>::infinity();
 		} else if (received_pilot_handover) {
 			state.current_state = States::TIMER_EXPIRED;
-			state.next_internal = numeric_limits<TIME>::infinity();
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
@@ -152,7 +143,6 @@ public:
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
-						state.next_internal = numeric_limits<TIME>::infinity();
 					}
 					break;
 				case States::GET_STATE:
@@ -160,7 +150,6 @@ public:
 
 					if (received_aircraft_state) {
 						state.current_state = States::COMMAND_VEL;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::COMMAND_VEL:
@@ -170,7 +159,6 @@ public:
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
-						state.next_internal = numeric_limits<TIME>::infinity();
 					}
 					break;
 				case States::COMMAND_HOVER:
@@ -180,7 +168,6 @@ public:
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
-						state.next_internal = numeric_limits<TIME>::infinity();
 					}
 					break;
 				case States::STABILIZING:
@@ -191,10 +178,8 @@ public:
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
-						state.next_internal = TIME("00:00:00:000");
 					} else if (received_hover_criteria_met) {
 						state.current_state = States::LP_CRITERIA_MET;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::LP_CRITERIA_MET:
@@ -204,7 +189,6 @@ public:
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				default:
@@ -262,7 +246,42 @@ public:
 	// Time advance
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
-		return state.next_internal;
+		switch (state.current_state) {
+			case States::IDLE:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::GET_STATE:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::COMMAND_VEL:
+				return TIME("00:00:00:000");
+				break;
+			case States::COMMAND_HOVER:
+				return TIME("00:00:00:000");
+				break;
+			case States::STABILIZING:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::LP_CRITERIA_MET:
+				return TIME("00:00:00:000");
+				break;
+			case States::LANDING:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::CANCEL_HOVER:
+				return TIME("00:00:00:000");
+				break;
+			case States::TIMER_EXPIRED:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::PILOT_CONTROL:
+				return numeric_limits<TIME>::infinity();
+				break;
+			default:
+				assert(false && "Unhandled state time advance.");
+				return numeric_limits<TIME>::infinity(); // Used to stop unhandled path warning will not be called because of assert
+				break;
+		}
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Command_Reposition<TIME>::state_type& i) {

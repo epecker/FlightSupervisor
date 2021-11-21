@@ -73,7 +73,6 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		TIME next_internal;
 	};
 
 	state_type state;
@@ -81,7 +80,6 @@ public:
 	// Default constructor
 	Landing_Routine() {
 		state.current_state = States::IDLE;
-		state.next_internal = numeric_limits<TIME>::infinity();
 	}
 
 	// Internal transitions
@@ -91,15 +89,12 @@ public:
 		switch (state.current_state) {
 			case States::HOVER:
 				state.current_state = States::STABILIZING;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::REQUEST_LAND:
 				state.current_state = States::LANDING;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::NOTIFY_LANDED:
 				state.current_state = States::LANDED;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
 				break;
@@ -119,7 +114,6 @@ public:
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
-			state.next_internal = numeric_limits<TIME>::infinity();
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
@@ -127,7 +121,6 @@ public:
 
 					if (received_land) {
 						state.current_state = States::HOVER;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::STABILIZING:
@@ -135,7 +128,6 @@ public:
 
 					if (received_hover_crit_met) {
 						state.current_state = States::REQUEST_LAND;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::LANDING:
@@ -143,7 +135,6 @@ public:
 
 					if (received_landing_achieved) {
 						state.current_state = States::NOTIFY_LANDED;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				case States::PILOT_CONTROL:
@@ -151,7 +142,6 @@ public:
 
 					if (received_landing_achieved) {
 						state.current_state = States::NOTIFY_LANDED;
-						state.next_internal = TIME("00:00:00:000");
 					}
 					break;
 				default:
@@ -196,7 +186,36 @@ public:
 	// Time advance
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
-		return state.next_internal;
+		switch (state.current_state) {
+			case States::IDLE:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::HOVER:
+				return TIME("00:00:00:000");
+				break;
+			case States::STABILIZING:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::REQUEST_LAND:
+				return TIME("00:00:00:000");
+				break;
+			case States::LANDING:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::NOTIFY_LANDED:
+				return TIME("00:00:00:000");
+				break;
+			case States::LANDED:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::PILOT_CONTROL:
+				return numeric_limits<TIME>::infinity();
+				break;
+			default:
+				assert(false && "Unhandled state time advance.");
+				return numeric_limits<TIME>::infinity(); // Used to stop unhandled path warning will not be called because of assert
+				break;
+		}
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Landing_Routine<TIME>::state_type& i) {

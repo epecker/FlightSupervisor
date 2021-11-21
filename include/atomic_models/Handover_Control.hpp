@@ -40,6 +40,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
+		(HOVER)
 		(STABILIZING)
 		(NOTIFY_PILOT)
 		(WAIT_FOR_PILOT)
@@ -64,7 +65,6 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		TIME next_internal;
 	};
 
 	state_type state;
@@ -72,7 +72,6 @@ public:
 	// Default constructor
 	Handover_Control() {
 		state.current_state = States::IDLE;
-		state.next_internal = numeric_limits<TIME>::infinity();
 	}
 
 	// Internal transitions
@@ -80,13 +79,14 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
+			case States::HOVER:
+				state.current_state = States::STABILIZING;
+				break;
 			case States::NOTIFY_PILOT:
 				state.current_state = States::WAIT_FOR_PILOT;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::YIELD_CONTROL:
 				state.current_state = States::PILOT_CONTROL;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
 				break;
@@ -108,10 +108,8 @@ public:
 
 				if (received_pilot_takeover) {
 					state.current_state = States::PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
 				} else if (received_pilot_handover) {
-					state.current_state = States::STABILIZING;
-					state.next_internal = numeric_limits<TIME>::infinity();
+					state.current_state = States::HOVER;
 				}
 				break;
 			case States::STABILIZING:
@@ -120,10 +118,8 @@ public:
 
 				if (received_pilot_takeover) {
 					state.current_state = States::PILOT_CONTROL;
-					state.next_internal = numeric_limits<TIME>::infinity();
 				} else if (received_hover_crit_met) {
 					state.current_state = States::NOTIFY_PILOT;
-					state.next_internal = TIME("00:00:00:000");
 				}
 				break;
 			case States::WAIT_FOR_PILOT:
@@ -131,7 +127,6 @@ public:
 
 				if (received_pilot_takeover) {
 					state.current_state = States::YIELD_CONTROL;
-					state.next_internal = TIME("00:00:00:000");
 				}
 				break;
 			default:
@@ -170,7 +165,33 @@ public:
 	// Time advance
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
-		return state.next_internal;
+		switch (state.current_state) {
+			case States::IDLE:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::HOVER:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::STABILIZING:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::NOTIFY_PILOT:
+				return TIME("00:00:00:000");
+				break;
+			case States::WAIT_FOR_PILOT:
+				return numeric_limits<TIME>::infinity();
+				break;
+			case States::YIELD_CONTROL:
+				return TIME("00:00:00:000");
+				break;
+			case States::PILOT_CONTROL:
+				return numeric_limits<TIME>::infinity();
+				break;
+			default:
+				assert(false && "Unhandled state time advance.");
+				return numeric_limits<TIME>::infinity(); // Used to stop unhandled path warning will not be called because of assert
+				break;
+		}
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
