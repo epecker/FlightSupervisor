@@ -9,7 +9,7 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/lp_message.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
@@ -39,10 +39,10 @@ using TIME = NDTime;
 
 // LPMessage input reader
 template<typename T>
-class IR_LPMessage_t : public iestream_input<LPMessage_t, T> {
+class IR_message_mavlink_mission_item_t : public iestream_input<message_mavlink_mission_item_t, T> {
 public:
-	IR_LPMessage_t() = default;
-	IR_LPMessage_t(const char* file_path) : iestream_input<LPMessage_t, T>(file_path) {};
+	IR_message_mavlink_mission_item_t() = default;
+	IR_message_mavlink_mission_item_t(const char* file_path) : iestream_input<message_mavlink_mission_item_t, T>(file_path) {};
 };
 
 // Bool input reader
@@ -56,7 +56,7 @@ public:
 // Define output ports to be used for logging purposes
 struct o_pilot_handover : public out_port<bool> {};
 struct o_land : public out_port<bool> {};
-struct o_request_reposition : public out_port<LPMessage_t> {};
+struct o_request_reposition : public out_port<message_mavlink_mission_item_t> {};
 
 /**
 * ==========================================================
@@ -86,11 +86,11 @@ int main(int argc, char* argv[]) {
 	// Instantiate the input readers.
 	// One for each input
 	shared_ptr<dynamic::modeling::model> ir_lp_new = 
-		dynamic::translate::make_dynamic_atomic_model<IR_LPMessage_t, TIME, const char* >("ir_lp_new", move(input_file_lp_new.c_str()));
+		dynamic::translate::make_dynamic_atomic_model<IR_message_mavlink_mission_item_t, TIME, const char* >("ir_lp_new", move(input_file_lp_new.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_pilot_takeover = 
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_lp_crit_met = 
-		dynamic::translate::make_dynamic_atomic_model<IR_LPMessage_t, TIME, const char* >("ir_lp_crit_met", move(input_file_lp_criteria_met.c_str()));
+		dynamic::translate::make_dynamic_atomic_model<IR_message_mavlink_mission_item_t, TIME, const char* >("ir_lp_crit_met", move(input_file_lp_criteria_met.c_str()));
 	shared_ptr<dynamic::modeling::model> ir_control_yielded = 
 		dynamic::translate::make_dynamic_atomic_model<IR_Boolean, TIME, const char* >("ir_control_yielded", move(input_file_control_yielded.c_str()));
 
@@ -123,9 +123,9 @@ int main(int argc, char* argv[]) {
 	
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Reposition_Timer_defs::i_lp_new>("ir_lp_new", "reposition_timer"),
+		dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out,Reposition_Timer_defs::i_lp_new>("ir_lp_new", "reposition_timer"),
 		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_pilot_takeover>("ir_pilot_takeover", "reposition_timer"),
-		dynamic::translate::make_IC<iestream_input_defs<LPMessage_t>::out,Reposition_Timer_defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
+		dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out,Reposition_Timer_defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
 		dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_control_yielded>("ir_control_yielded", "reposition_timer")
 	};
 

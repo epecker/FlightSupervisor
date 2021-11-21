@@ -1,5 +1,5 @@
-#ifndef BOOST_SIMULATION_LP_MESSAGE_HPP
-#define BOOST_SIMULATION_LP_MESSAGE_HPP
+#ifndef BOOST_SIMULATION_PLP_MESSAGE_HPP
+#define BOOST_SIMULATION_PLP_MESSAGE_HPP
 
 #include <assert.h>
 #include <iostream>
@@ -12,14 +12,15 @@ using namespace std;
 /*******************************************/
 /**************** Message_t ****************/
 /*******************************************/
-struct LPMessage_t{
-  	int		id;
-  	double	lat;
+struct message_mavlink_mission_item_t{
+	int		id;
+	double	lat;
 	double	lon;
 	double	alt;
 
-	LPMessage_t() :id(0), lat(0), lon(0), alt(0) {}
-	LPMessage_t(int i_id, double i_lat, double i_lon, double i_alt)
+	message_mavlink_mission_item_t()
+		:id(0), lat(0), lon(0), alt(0) {}
+	message_mavlink_mission_item_t(int i_id, double i_lat, double i_lon, double i_alt)
 		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt){}
 };
 
@@ -27,7 +28,7 @@ struct LPMessage_t{
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const LPMessage_t& msg) {
+ostream& operator<<(ostream& os, const message_mavlink_mission_item_t& msg) {
 	os << msg.id << " " << msg.lat << " " << msg.lon << " " << msg.alt;
 	return os;
 }
@@ -36,7 +37,7 @@ ostream& operator<<(ostream& os, const LPMessage_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, LPMessage_t& msg) {
+istream& operator>> (istream& is, message_mavlink_mission_item_t& msg) {
 	is >> msg.id;
 	is >> msg.lat;
 	is >> msg.lon;
@@ -44,5 +45,4 @@ istream& operator>> (istream& is, LPMessage_t& msg) {
 	return is;
 }
 
-
-#endif // BOOST_SIMULATION_LP_MESSAGE_HPP
+#endif // BOOST_SIMULATION_PLP_MESSAGE_HPP

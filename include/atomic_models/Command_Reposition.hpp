@@ -21,10 +21,10 @@
 #include "../../include/enum_string_conversion.hpp"
 
 // Data structures that are used in message transport
-#include "../../include/message_structures/aircraft_state_message.hpp"
-#include "../../include/message_structures/hover_criteria_message.hpp"
-#include "../../include/message_structures/lp_message.hpp"
-#include "../../include/message_structures/fcc_command.hpp"
+#include "../../include/message_structures/message_aircraft_state_t.hpp"
+#include "../../include/message_structures/message_hover_criteria_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_fcc_command_t.hpp"
 
 // Macros
 #include "../../include/Constants.hpp"
@@ -34,16 +34,16 @@ using namespace std;
 
 // Input and output port definitions
 struct Command_Reposition_defs {
-	struct i_aircraft_state : public in_port<AircraftStateMessage_t> {};
+	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_pilot_handover : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_request_reposition : public in_port<LPMessage_t> {};
+	struct i_request_reposition : public in_port<message_mavlink_mission_item_t> {};
 
 	struct o_cancel_hover : public out_port<bool> {};
-	struct o_fcc_command_velocity : public out_port<FccCommandMessage_t> {};
-	struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
-	struct o_lp_criteria_met : public out_port<LPMessage_t> {};
+	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
+	struct o_stabilize : public out_port<message_hover_criteria_t> {};
+	struct o_lp_criteria_met : public out_port<message_mavlink_mission_item_t> {};
 };
 
 // Atomic Model
@@ -87,7 +87,7 @@ public:
 		States current_state;
 		TIME next_internal;
 
-		LPMessage_t landing_point;
+		message_mavlink_mission_item_t landing_point;
 	};
 
 	state_type state;
@@ -149,7 +149,7 @@ public:
 					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
 
 					if (received_request_reposition) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
 						state.next_internal = numeric_limits<TIME>::infinity();
@@ -167,7 +167,7 @@ public:
 					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
 
 					if (received_request_reposition) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
 						state.next_internal = numeric_limits<TIME>::infinity();
@@ -177,7 +177,7 @@ public:
 					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
 
 					if (received_request_reposition) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
 						state.next_internal = numeric_limits<TIME>::infinity();
@@ -188,7 +188,7 @@ public:
 					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
 
 					if (received_request_reposition) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
 						state.next_internal = TIME("00:00:00:000");
@@ -201,7 +201,7 @@ public:
 					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
 
 					if (received_request_reposition) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
 						state.next_internal = TIME("00:00:00:000");
@@ -231,17 +231,17 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
-		vector<LPMessage_t> bag_port_LP_out;
-		vector<FccCommandMessage_t> bag_port_fcc_out;
-		vector<HoverCriteriaMessage_t> bag_port_hover_out;
+		vector<message_mavlink_mission_item_t> bag_port_LP_out;
+		vector<message_fcc_command_t> bag_port_fcc_out;
+		vector<message_hover_criteria_t> bag_port_hover_out;
 
 		switch (state.current_state) {
 			case States::COMMAND_HOVER:
-				bag_port_fcc_out.push_back(FccCommandMessage_t());
+				bag_port_fcc_out.push_back(message_fcc_command_t());
 				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
 				break;
 			case States::STABILIZING:
-				bag_port_hover_out.push_back(HoverCriteriaMessage_t());
+				bag_port_hover_out.push_back(message_hover_criteria_t());
 				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
 			case States::GET_STATE:
@@ -249,7 +249,7 @@ public:
 				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;
 				break;
 			case States::LANDING:
-				bag_port_LP_out.push_back(LPMessage_t());
+				bag_port_LP_out.push_back(message_mavlink_mission_item_t());
 				get_messages<typename Command_Reposition_defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
 				break;
 			default:

@@ -8,14 +8,14 @@ using namespace std;
 /*******************************************/
 /**************** Message_t ****************/
 /*******************************************/
-struct AircraftStateMessage_t {
+struct message_aircraft_state_t {
 	double  lat;		            // Decimal degrees
 	double  lon;		            // Decimal degrees
 	float   alt_MSL;	            // Ft
 	float   hdg_Deg;	            // 0360 True hdg
 	double  vel_Kts;			        // Kts, tolerance for velocity  - horizontal
 
-	AircraftStateMessage_t() :
+	message_aircraft_state_t() :
 		lat(0.0),
 		lon(0.0),
 		alt_MSL(0.0),
@@ -23,7 +23,7 @@ struct AircraftStateMessage_t {
 		vel_Kts(0.0) 
 	{}
 
-	AircraftStateMessage_t(
+	message_aircraft_state_t(
 		double  i_lat,
 		double  i_lon,
 		float   i_alt_MSL,
@@ -41,7 +41,7 @@ struct AircraftStateMessage_t {
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const AircraftStateMessage_t& msg) {
+ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
 	os << msg.lat << " "
 		<< msg.lon << " "
 		<< msg.alt_MSL << " "
@@ -54,7 +54,7 @@ ostream& operator<<(ostream& os, const AircraftStateMessage_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, AircraftStateMessage_t& msg) {
+istream& operator>> (istream& is, message_aircraft_state_t& msg) {
 	is >> msg.lat;
 	is >> msg.lon;
 	is >> msg.alt_MSL;
