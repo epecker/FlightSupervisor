@@ -18,11 +18,11 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/hover_criteria_message.hpp"
-#include "../../include/message_structures/aircraft_state_message.hpp"
-#include "../../include/message_structures/lp_message.hpp"
-#include "../../include/message_structures/plp_message.hpp"
-#include "../../include/message_structures/fcc_command.hpp"
+#include "../../include/message_structures/message_hover_criteria_t.hpp"
+#include "../../include/message_structures/message_aircraft_state_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_fcc_command_t.hpp"
 
 //Atomic model headers
 #include "../../include/atomic_models/LP_Manager.hpp"
@@ -51,22 +51,22 @@ using TIME = NDTime;
 /***** Define input port for coupled models *****/
 struct Supervisor_defs {
 	struct i_landing_achieved : public in_port<bool> {};
-	struct i_aircraft_state : public in_port<AircraftStateMessage_t> {};
-	struct i_LP_criteria_met : public in_port<LPMessage_t> {};
+	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
+	struct i_LP_criteria_met : public in_port<message_mavlink_mission_item_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_LP_recv : public in_port<LPMessage_t> {};
-	struct i_PLP_ach : public in_port<PLPMessage_t> {};
+	struct i_LP_recv : public in_port<message_mavlink_mission_item_t> {};
+	struct i_PLP_ach : public in_port<message_mavlink_mission_item_t> {};
 
 
 	/***** Define output ports for coupled model *****/
-	struct o_LP_expired : public out_port<LPMessage_t> {};
+	struct o_LP_expired : public out_port<message_mavlink_mission_item_t> {};
 	struct o_start_LZE_scan : public out_port<bool> {};
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_land_requested : public out_port<bool> {};
-	struct o_fcc_command_velocity : public out_port<FccCommandMessage_t> {};
+	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 	struct o_control_yielded : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
-	struct o_fcc_command_hover : public out_port<FccCommandMessage_t> {};
+	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 };
 
 

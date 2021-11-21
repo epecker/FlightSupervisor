@@ -13,9 +13,9 @@
 #include <assert.h>
 #include <string>
 
-#include "../../include/message_structures/hover_criteria_message.hpp"
-#include "../../include/message_structures/lp_message.hpp"
-#include "../../include/message_structures/plp_message.hpp"
+#include "../../include/message_structures/message_hover_criteria_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
 
 #include "../../include/enum_string_conversion.hpp"
 #include "../../include/Constants.hpp"
@@ -25,16 +25,16 @@ using namespace std;
 
 //Port definition
 struct LP_Manager_defs {
-	struct i_lp_recv : public in_port<LPMessage_t> {};
-	struct i_plp_ach : public in_port<PLPMessage_t> {};
+	struct i_lp_recv : public in_port<message_mavlink_mission_item_t> {};
+	struct i_plp_ach : public in_port<message_mavlink_mission_item_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_control_yielded : public in_port<bool> {};
 
-	struct o_lp_new : public out_port<LPMessage_t> {};
-	struct o_lp_expired : public out_port<LPMessage_t> {};
+	struct o_lp_new : public out_port<message_mavlink_mission_item_t> {};
+	struct o_lp_expired : public out_port<message_mavlink_mission_item_t> {};
 	struct o_pilot_handover : public out_port<bool> {};
-	struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
+	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_start_lze_scan : public out_port<bool> {};
 };
 
@@ -76,7 +76,7 @@ public:
 	struct state_type {
 		States current_state;
 		bool lp_recvd;
-		LPMessage_t lp;
+		message_mavlink_mission_item_t lp;
 		TIME lp_accept_time_prev;
 	};
 	state_type state;
@@ -123,7 +123,7 @@ public:
 			//If there are landing points that have been received,
 			if (get_messages<typename LP_Manager_defs::i_lp_recv>(mbs).size() >= 1) {
 				//Store the landing points in a vector.
-				vector<LPMessage_t> landing_points = get_messages<typename LP_Manager_defs::i_lp_recv>(mbs);
+				vector<message_mavlink_mission_item_t> landing_points = get_messages<typename LP_Manager_defs::i_lp_recv>(mbs);
 
 				//Create a flag for if one of them is a valid landing point to be transitioned to.
 				bool valid_lp_recv = false;
@@ -131,7 +131,7 @@ public:
 				//If there was a previous landing point,
 				if (!state.lp_recvd) {
 					//For each of the landing points received,
-					for (LPMessage_t new_lp : landing_points) {
+					for (message_mavlink_mission_item_t new_lp : landing_points) {
 						//If the landing point is far enough away from the previous landing point,
 						if (calculate_new_lp_valid(new_lp)) {
 							//Set the current landing point to be the new landing point.
@@ -212,14 +212,14 @@ public:
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<LPMessage_t> message_out;
-		LPMessage_t temp_lp;
+		vector<message_mavlink_mission_item_t> message_out;
+		message_mavlink_mission_item_t temp_lp;
 		vector<bool> bool_out;
-		vector<HoverCriteriaMessage_t> stabilize_messages;
+		vector<message_hover_criteria_t> stabilize_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
-				stabilize_messages.push_back(HoverCriteriaMessage_t());
+				stabilize_messages.push_back(message_hover_criteria_t());
 				get_messages<typename LP_Manager_defs::o_stabilize>(bags) = stabilize_messages;
 				break;
 
@@ -284,7 +284,7 @@ public:
 		return os;
 	}
 
-	bool calculate_new_lp_valid(LPMessage_t i_lp) {
+	bool calculate_new_lp_valid(message_mavlink_mission_item_t i_lp) {
 		//Radius of the earth in meters.
 		float R = 6371000;
 

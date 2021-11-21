@@ -18,10 +18,10 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/hover_criteria_message.hpp"
-#include "../../include/message_structures/aircraft_state_message.hpp"
-#include "../../include/message_structures/lp_message.hpp"
-#include "../../include/message_structures/fcc_command.hpp"
+#include "../../include/message_structures/message_hover_criteria_t.hpp"
+#include "../../include/message_structures/message_aircraft_state_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_fcc_command_t.hpp"
 
 //Atomic model headers
 #include "../../include/atomic_models/Landing_Routine.hpp"
@@ -49,18 +49,18 @@ struct LP_Reposition_defs {
 	struct i_landing_achieved : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_aircraft_state : public in_port<AircraftStateMessage_t> {};
+	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_control_yielded : public in_port<bool> {};
-	struct i_LP_new : public in_port<LPMessage_t> {};
-	struct i_LP_criteria_met : public in_port<LPMessage_t> {};
+	struct i_LP_new : public in_port<message_mavlink_mission_item_t> {};
+	struct i_LP_criteria_met : public in_port<message_mavlink_mission_item_t> {};
 
 
 	/***** Define output ports for coupled model *****/
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_land_requested : public out_port<bool> {};
-	struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
+	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_cancel_hover : public out_port<bool> {};
-	struct o_fcc_command_velocity : public out_port<FccCommandMessage_t> {};
+	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 	struct o_pilot_handover : public out_port<bool> {};
 };
 

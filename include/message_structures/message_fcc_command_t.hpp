@@ -1,10 +1,10 @@
 #ifndef FCC_COMMAND_HPP
 #define FCC_COMMAND_HPP
 
-struct FccCommandMessage_t {
+struct message_fcc_command_t {
 	double  temp;		            // Decimal degrees
 
-	FccCommandMessage_t() : temp(0){}
+	message_fcc_command_t() : temp(0){}
 };
 
 #endif

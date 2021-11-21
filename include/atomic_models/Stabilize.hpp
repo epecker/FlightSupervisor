@@ -17,10 +17,10 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
-#include "../../include/message_structures/hover_criteria_message.hpp"
-#include "../../include/message_structures/aircraft_state_message.hpp"
-#include "../../include/message_structures/lp_message.hpp"
-#include "../../include/message_structures/fcc_command.hpp"
+#include "../../include/message_structures/message_hover_criteria_t.hpp"
+#include "../../include/message_structures/message_aircraft_state_t.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_fcc_command_t.hpp"
 
 #include "../../include/enum_string_conversion.hpp"
 #include "../../include/Constants.hpp"
@@ -30,11 +30,11 @@ using namespace std;
 
 // Input and output port definition
 struct Stabilize_defs {
-	struct i_aircraft_state : public in_port<AircraftStateMessage_t> {};
-	struct i_stabilize : public in_port<HoverCriteriaMessage_t> {};
+	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
+	struct i_stabilize : public in_port<message_hover_criteria_t> {};
 	struct i_cancel_hover : public in_port<bool> {};
 
-	struct o_fcc_command_hover : public out_port<FccCommandMessage_t> {};
+	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 	struct o_hover_criteria_met : public out_port<bool> {};
 };
 
@@ -68,16 +68,16 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		HoverCriteriaMessage_t hover_criteria;
-		AircraftStateMessage_t aircraft_state;
+		message_hover_criteria_t hover_criteria;
+		message_aircraft_state_t aircraft_state;
 	};
 	state_type state;
 
 	// Default constructor
 	Stabilize() {
 		state.current_state = States::IDLE;
-		state.hover_criteria = HoverCriteriaMessage_t();
-		state.aircraft_state = AircraftStateMessage_t();
+		state.hover_criteria = message_hover_criteria_t();
+		state.aircraft_state = message_aircraft_state_t();
 	}
 
 	// Internal transitions
@@ -109,8 +109,8 @@ public:
 
 		if (received_cancel_hover) {
 			state.current_state = States::IDLE;
-			state.aircraft_state = AircraftStateMessage_t();
-			state.hover_criteria = HoverCriteriaMessage_t();
+			state.aircraft_state = message_aircraft_state_t();
+			state.hover_criteria = message_hover_criteria_t();
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
@@ -145,11 +145,11 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> message_out;
-		vector<FccCommandMessage_t> message_fcc_out;
+		vector<message_fcc_command_t> message_fcc_out;
 
 		switch (state.current_state) {
 			case States::INIT_HOVER:
-				message_fcc_out.push_back(FccCommandMessage_t());
+				message_fcc_out.push_back(message_fcc_command_t());
 				get_messages<typename Stabilize_defs::o_fcc_command_hover>(bags) = message_fcc_out;
 				break;
 			case States::STABILIZING:
@@ -192,7 +192,7 @@ public:
 	}
 
 	// Stub implementation for now so we can always hover.
-	bool calculate_hover_criteria_met(AircraftStateMessage_t state) {
+	bool calculate_hover_criteria_met(message_aircraft_state_t state) {
 		return true;
 	}
 

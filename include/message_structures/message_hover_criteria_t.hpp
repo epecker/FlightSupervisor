@@ -8,7 +8,7 @@ using namespace std;
 /*******************************************/
 /**************** Message_t ****************/
 /*******************************************/
-struct HoverCriteriaMessage_t {
+struct message_hover_criteria_t {
 	double  desiredLat;		            // Decimal degrees
 	double  desiredLon;		            // Decimal degrees
 	float   desiredAltMSL;	            // Ft
@@ -22,7 +22,7 @@ struct HoverCriteriaMessage_t {
 	double  hoverCompleted;             // Flag that hover is completed
 	int     manCtrlRequiredAfterCritMet;// Allows supervisor to flag display system that MAN CTRL needed – pilot in control
 
-	HoverCriteriaMessage_t():
+	message_hover_criteria_t():
 		desiredLat(0.0),
 		desiredLon(0.0),
 		desiredAltMSL(0.0),
@@ -37,7 +37,7 @@ struct HoverCriteriaMessage_t {
 		manCtrlRequiredAfterCritMet(0)
 	{}
 
-	HoverCriteriaMessage_t(
+	message_hover_criteria_t(
 		double  i_desiredLat,
 		double  i_desiredLon,
 		float   i_desiredAltMSL,
@@ -69,7 +69,7 @@ struct HoverCriteriaMessage_t {
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const HoverCriteriaMessage_t& msg) {
+ostream& operator<<(ostream& os, const message_hover_criteria_t& msg) {
 	os << msg.desiredLat << " "
 		<< msg.desiredLon << " "
 		<< msg.desiredAltMSL << " "
@@ -81,7 +81,7 @@ ostream& operator<<(ostream& os, const HoverCriteriaMessage_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, HoverCriteriaMessage_t& msg) {
+istream& operator>> (istream& is, message_hover_criteria_t& msg) {
 	is >> msg.desiredLat;
 	is >> msg.desiredLon;
 	is >> msg.desiredAltMSL;

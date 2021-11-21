@@ -9,7 +9,7 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/hover_criteria_message.hpp"
+#include "../../include/message_structures/message_hover_criteria_t.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
@@ -48,7 +48,7 @@ public:
 // Define output ports to be used for logging purposes
 struct o_land_requested : public out_port<bool> {};
 struct o_mission_complete : public out_port<bool> {};
-struct o_stabilize : public out_port<HoverCriteriaMessage_t> {};
+struct o_stabilize : public out_port<message_hover_criteria_t> {};
 
 /**
 * ==========================================================

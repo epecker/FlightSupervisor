@@ -21,7 +21,7 @@
 #include "../../include/enum_string_conversion.hpp"
 
 // Data structures that are used in message transport
-#include "../../include/message_structures/lp_message.hpp"
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
 
 // Macros
 #include "../../include/Constants.hpp"
@@ -32,13 +32,13 @@ using namespace std;
 // Input and output port definition
 struct Reposition_Timer_defs {
 	struct i_control_yielded : public in_port<bool> {};
-	struct i_lp_crit_met : public in_port<LPMessage_t> {};
-	struct i_lp_new : public in_port<LPMessage_t> {};
+	struct i_lp_crit_met : public in_port<message_mavlink_mission_item_t> {};
+	struct i_lp_new : public in_port<message_mavlink_mission_item_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 
 	struct o_land : public out_port<bool> {};
 	struct o_pilot_handover : public out_port<bool> {};
-	struct o_request_reposition : public out_port<LPMessage_t> {};
+	struct o_request_reposition : public out_port<message_mavlink_mission_item_t> {};
 };
 
 // Atomic Model
@@ -77,7 +77,7 @@ public:
 		States current_state;
 		TIME next_internal;
 
-		LPMessage_t landing_point;
+		message_mavlink_mission_item_t landing_point;
 	};
 
 	state_type state;
@@ -86,7 +86,7 @@ public:
 	Reposition_Timer() {
 		state.current_state = States::IDLE;
 		state.next_internal = numeric_limits<TIME>::infinity();
-		state.landing_point = LPMessage_t();
+		state.landing_point = message_mavlink_mission_item_t();
 	}
 
 	// Internal transitions
@@ -129,7 +129,7 @@ public:
 				case States::IDLE:
 					received_lp_new = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
 						state.landing_point = new_landing_points[0];
 						state.current_state = States::NEW_LP_REPO;
 					}
@@ -139,7 +139,7 @@ public:
 					received_lp_crit_met = get_messages<typename Reposition_Timer_defs::i_lp_crit_met>(mbs).size() >= 1;
 
 					if (received_lp_new) {
-						vector<LPMessage_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
 						state.landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::NEW_LP_REPO;
 					} else if (received_lp_crit_met) {
@@ -170,7 +170,7 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
-		vector<LPMessage_t> bag_port_lp_out;
+		vector<message_mavlink_mission_item_t> bag_port_lp_out;
 
 		switch (state.current_state) {
 			case States::REQUEST_LAND:
@@ -182,7 +182,7 @@ public:
 				get_messages<typename Reposition_Timer_defs::o_pilot_handover>(bags) = bag_port_out;
 				break;
 			case States::NEW_LP_REPO:
-				bag_port_lp_out.push_back(LPMessage_t());
+				bag_port_lp_out.push_back(message_mavlink_mission_item_t());
 				get_messages<typename Reposition_Timer_defs::o_request_reposition>(bags) = bag_port_lp_out;
 				break;
 			default:
