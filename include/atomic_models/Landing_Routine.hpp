@@ -35,7 +35,6 @@ struct Landing_Routine_defs {
 
 	struct o_land_requested : public out_port<bool> {};
 	struct o_mission_complete : public out_port<bool> {};
-	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 };
 
 // Atomic Model
@@ -45,8 +44,6 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(HOVER)
-		(STABILIZING)
 		(REQUEST_LAND)
 		(LANDING)
 		(NOTIFY_LANDED)
@@ -65,8 +62,7 @@ public:
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
 		typename Landing_Routine_defs::o_land_requested,
-		typename Landing_Routine_defs::o_mission_complete,
-		typename Landing_Routine_defs::o_stabilize
+		typename Landing_Routine_defs::o_mission_complete
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -87,9 +83,6 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case States::HOVER:
-				state.current_state = States::STABILIZING;
-				break;
 			case States::REQUEST_LAND:
 				state.current_state = States::LANDING;
 				break;
@@ -120,13 +113,6 @@ public:
 					received_land = get_messages<typename Landing_Routine_defs::i_land>(mbs).size() >= 1;
 
 					if (received_land) {
-						state.current_state = States::HOVER;
-					}
-					break;
-				case States::STABILIZING:
-					received_hover_crit_met = get_messages<typename Landing_Routine_defs::i_hover_crit_met>(mbs).size() >= 1;
-
-					if (received_hover_crit_met) {
 						state.current_state = States::REQUEST_LAND;
 					}
 					break;
@@ -161,7 +147,6 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
-		vector<message_hover_criteria_t> bag_port_hover_out;
 
 		switch (state.current_state) {
 			case States::REQUEST_LAND:
@@ -171,10 +156,6 @@ public:
 			case States::NOTIFY_LANDED:
 				bag_port_out.push_back(true);
 				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
-				break;
-			case States::HOVER:
-				bag_port_hover_out.push_back(message_hover_criteria_t());
-				get_messages<typename Landing_Routine_defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
 			default:
 				break;
@@ -188,12 +169,6 @@ public:
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
-				return numeric_limits<TIME>::infinity();
-				break;
-			case States::HOVER:
-				return TIME("00:00:00:000");
-				break;
-			case States::STABILIZING:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::REQUEST_LAND:

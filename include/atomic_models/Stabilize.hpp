@@ -95,6 +95,9 @@ public:
 			case States::STABILIZING:
 				state.current_state = States::HOVER;
 				break;
+			case States::HOVER:
+				state.current_state = States::IDLE;
+				break;
 			default:
 				break;
 		}
@@ -170,16 +173,19 @@ public:
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
-			case States::IDLE: case States::HOVER:
+			case States::IDLE: 
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case States::CRIT_CHECK_FAILED:
+			case States::INIT_HOVER:
 				next_internal = TIME("00:00:00:000");
 				break;
 			case States::STABILIZING:
 				next_internal = calculate_time_from_double_seconds(state.hover_criteria.timeTol);
 				break;
-			case States::INIT_HOVER:
+			case States::CRIT_CHECK_FAILED:
+				next_internal = TIME("00:00:00:000");
+				break;
+			case States::HOVER:
 				next_internal = TIME("00:00:00:000");
 				break;
 			default:

@@ -110,7 +110,6 @@ int main(int argc, char* argv[]) {
 	dynamic::modeling::EOCs eocs_TestDriver = {
 		dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested,o_land_requested>("landing_routine"),
 		dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete,o_mission_complete>("landing_routine"),
-		dynamic::translate::make_EOC<Landing_Routine_defs::o_stabilize,o_stabilize>("landing_routine")
 	};
 	
 	// This will connect our outputs from our input reader to the file
