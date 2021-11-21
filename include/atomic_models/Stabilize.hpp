@@ -51,6 +51,10 @@ public:
 		(HOVER)
 	)
 
+	// Public members of the class
+	message_hover_criteria_t hover_criteria;
+	message_aircraft_state_t aircraft_state;
+
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
 		typename Stabilize_defs::i_aircraft_state,
@@ -68,16 +72,14 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		message_hover_criteria_t hover_criteria;
-		message_aircraft_state_t aircraft_state;
 	};
 	state_type state;
 
 	// Default constructor
 	Stabilize() {
 		state.current_state = States::IDLE;
-		state.hover_criteria = message_hover_criteria_t();
-		state.aircraft_state = message_aircraft_state_t();
+		hover_criteria = message_hover_criteria_t();
+		aircraft_state = message_aircraft_state_t();
 	}
 
 	// Internal transitions
@@ -101,7 +103,6 @@ public:
 			default:
 				break;
 		}
-
 	}
 
 	// External transitions
@@ -112,20 +113,20 @@ public:
 
 		if (received_cancel_hover) {
 			state.current_state = States::IDLE;
-			state.aircraft_state = message_aircraft_state_t();
-			state.hover_criteria = message_hover_criteria_t();
+			aircraft_state = message_aircraft_state_t();
+			hover_criteria = message_hover_criteria_t();
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
 					if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
 						state.current_state = States::INIT_HOVER;
-						state.hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
+						hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
 					}
 					break;
 				case States::STABILIZING:
 					if (get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).size() >= 1) {
-						state.aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
-						if (!calculate_hover_criteria_met(state.aircraft_state)) {
+						aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+						if (!calculate_hover_criteria_met(aircraft_state)) {
 							state.current_state = States::CRIT_CHECK_FAILED;
 						}
 					}
@@ -180,7 +181,7 @@ public:
 				next_internal = TIME("00:00:00:000");
 				break;
 			case States::STABILIZING:
-				next_internal = calculate_time_from_double_seconds(state.hover_criteria.timeTol);
+				next_internal = calculate_time_from_double_seconds(hover_criteria.timeTol);
 				break;
 			case States::CRIT_CHECK_FAILED:
 				next_internal = TIME("00:00:00:000");
