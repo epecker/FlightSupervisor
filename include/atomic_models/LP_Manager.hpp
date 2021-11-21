@@ -242,7 +242,6 @@ public:
 				message_out.push_back(state.lp);
 				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = message_out;
 				break;
-
 			default:
 				assert(false && "Unhandled output after internal transition.");
 				break;

@@ -147,11 +147,11 @@ public:
 		vector<bool> bag_port_out;
 
 		switch (state.current_state) {
-			case States::WAIT_FOR_PILOT:
+			case States::NOTIFY_PILOT:
 				bag_port_out.push_back(true);
 				get_messages<typename Handover_Control_defs::o_notify_pilot>(bags) = bag_port_out;
 				break;
-			case States::PILOT_CONTROL:
+			case States::YIELD_CONTROL:
 				bag_port_out.push_back(true);
 				get_messages<typename Handover_Control_defs::o_control_yielded>(bags) = bag_port_out;
 				break;

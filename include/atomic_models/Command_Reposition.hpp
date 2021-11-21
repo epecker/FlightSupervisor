@@ -220,19 +220,19 @@ public:
 		vector<message_hover_criteria_t> bag_port_hover_out;
 
 		switch (state.current_state) {
-			case States::COMMAND_HOVER:
+			case States::COMMAND_VEL:
 				bag_port_fcc_out.push_back(message_fcc_command_t());
 				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
 				break;
-			case States::STABILIZING:
+			case States::COMMAND_HOVER:
 				bag_port_hover_out.push_back(message_hover_criteria_t());
 				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
-			case States::GET_STATE:
+			case States::CANCEL_HOVER:
 				bag_port_out.push_back(true);
 				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;
 				break;
-			case States::LANDING:
+			case States::LP_CRITERIA_MET:
 				bag_port_LP_out.push_back(message_mavlink_mission_item_t());
 				get_messages<typename Command_Reposition_defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
 				break;

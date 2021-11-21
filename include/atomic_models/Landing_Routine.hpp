@@ -164,15 +164,15 @@ public:
 		vector<message_hover_criteria_t> bag_port_hover_out;
 
 		switch (state.current_state) {
-			case States::LANDING:
+			case States::REQUEST_LAND:
 				bag_port_out.push_back(true);
 				get_messages<typename Landing_Routine_defs::o_land_requested>(bags) = bag_port_out;
 				break;
-			case States::LANDED:
+			case States::NOTIFY_LANDED:
 				bag_port_out.push_back(true);
 				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
 				break;
-			case States::STABILIZING:
+			case States::HOVER:
 				bag_port_hover_out.push_back(message_hover_criteria_t());
 				get_messages<typename Landing_Routine_defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;

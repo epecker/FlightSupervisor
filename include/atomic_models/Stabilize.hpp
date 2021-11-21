@@ -156,6 +156,8 @@ public:
 				message_out.push_back(true);
 				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
 				break;
+			case States::CRIT_CHECK_FAILED:
+				break;
 			default:
 				break;
 		}
