@@ -201,7 +201,34 @@ public:
 	}
 
 	// Stub implementation for now so we can always hover.
-	bool calculate_hover_criteria_met(message_aircraft_state_t state) {
+	bool calculate_hover_criteria_met(message_aircraft_state_t i_state) {
+
+		if (abs(i_state.alt_MSL - hover_criteria.desiredAltMSL) >= hover_criteria.vertDistTolFt) {
+			return false;
+		}
+		if (abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg) {
+			return false;
+		}
+		if (abs(i_state.vel_Kts) >= hover_criteria.velTolKts) {
+			return false;
+		}
+
+		//Radius of the earth in meters.
+		const float R = 6371000;
+
+		double i_x = R * cos(i_state.lat) * cos(i_state.lon);
+		double i_y = R * cos(i_state.lat) * sin(i_state.lon);
+		double i_z = R * sin(i_state.lat);
+
+		double goal_x = R * cos(hover_criteria.desiredLat) * cos(hover_criteria.desiredLon);
+		double goal_y = R * cos(hover_criteria.desiredLat) * sin(hover_criteria.desiredLon);
+		double goal_z = R * sin(hover_criteria.desiredLat);
+
+		double distance_m = sqrt(pow((i_x - goal_x), 2) + pow((i_y - goal_y), 2) + pow((i_z - goal_z), 2));
+		if ((distance_m / 0.3048) >= hover_criteria.horDistTolFt) {
+			return false;
+		}
+
 		return true;
 	}
 
