@@ -285,7 +285,7 @@ public:
 
 	bool calculate_new_lp_valid(message_mavlink_mission_item_t i_lp) {
 		//Radius of the earth in meters.
-		float R = 6371000;
+		const float R = 6371000;
 
 		double my_x = R * cos(state.lp.lat) * cos(state.lp.lon);
 		double my_y = R * cos(state.lp.lat) * sin(state.lp.lon);
