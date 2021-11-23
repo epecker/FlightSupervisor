@@ -49,7 +49,6 @@ int main(int argc, char* argv[]) {
 
 		if (!filesystem::exists(input_file_landing_achieved) ||
 			!filesystem::exists(input_file_pilot_takeover) ||
-			!filesystem::exists(input_file_hover_criteria_met) ||
 			!filesystem::exists(input_file_land)
 			) {
 			printf("One of the input files do not exist\n");
@@ -68,8 +67,6 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", move(input_file_landing_achieved.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_land =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_land", move(input_file_land.c_str()));
 
@@ -78,7 +75,6 @@ int main(int argc, char* argv[]) {
 		dynamic::modeling::Models submodels_TestDriver = {
 			ir_landing_achieved,
 			ir_pilot_takeover,
-			ir_hover_criteria_met,
 			ir_land,
 			landing_routine
 		};
@@ -103,7 +99,6 @@ int main(int argc, char* argv[]) {
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_landing_achieved>("ir_landing_achieved", "landing_routine"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_pilot_takeover>("ir_pilot_takeover", "landing_routine"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_hover_crit_met>("ir_hover_criteria_met", "landing_routine"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_land>("ir_land", "landing_routine")
 		};
 

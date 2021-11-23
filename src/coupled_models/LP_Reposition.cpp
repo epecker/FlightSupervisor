@@ -104,7 +104,6 @@ dynamic::modeling::Models submodels_LPReposition = {
 dynamic::modeling::EICs eics_LPReposition = {
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_landing_achieved, Landing_Routine_defs::i_landing_achieved>("landing_routine"),
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Landing_Routine_defs::i_pilot_takeover>("landing_routine"),
-	dynamic::translate::make_EIC<LP_Reposition_defs::i_hover_criteria_met, Landing_Routine_defs::i_hover_crit_met>("landing_routine"),
 
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_hover_criteria_met, Command_Reposition_defs::i_hover_criteria_met>("command_reposition"),
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Command_Reposition_defs::i_pilot_handover>("command_reposition"),

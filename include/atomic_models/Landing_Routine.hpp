@@ -20,9 +20,6 @@
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "../../include/enum_string_conversion.hpp"
 
-// Data structures that are used in message transport
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-
 using namespace cadmium;
 using namespace std;
 
@@ -30,7 +27,6 @@ using namespace std;
 struct Landing_Routine_defs {
 	struct i_landing_achieved : public in_port<bool> {};
 	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_hover_crit_met : public in_port<bool> {};
 	struct i_land : public in_port<bool> {};
 
 	struct o_land_requested : public out_port<bool> {};
@@ -55,7 +51,6 @@ public:
 	using input_ports = tuple<
 		typename Landing_Routine_defs::i_landing_achieved,
 		typename Landing_Routine_defs::i_pilot_takeover,
-		typename Landing_Routine_defs::i_hover_crit_met,
 		typename Landing_Routine_defs::i_land
 	>;
 
