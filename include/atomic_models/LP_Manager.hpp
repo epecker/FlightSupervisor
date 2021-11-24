@@ -150,22 +150,23 @@ public:
 				}
 
 				//If a valid landing point was identified out of the list of landing points,
-				if (valid_lp_recv) {
-					//Based on the current state,
-					switch (state.current_state) {
-						case States::WAYPOINT_MET: case States::LZE_SCAN:
+				switch (state.current_state) {
+					case States::WAYPOINT_MET: case States::LZE_SCAN:
+						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state.
 							state.current_state = States::NOTIFY_LP;
-							break;
-						case States::LP_APPROACH:
+						}
+						break;
+					case States::LP_APPROACH:
+						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
 							state.current_state = States::NOTIFY_LP;
-							state.lp_accept_time_prev = e;
-							break;
-						default:
-							assert(false && "Unhandled external transition on receipt of landing point.");
-							break;
-					}
+						}
+						state.lp_accept_time_prev = state.lp_accept_time_prev - e;
+						break;
+					default:
+						assert(false && "Unhandled external transition on receipt of landing point.");
+						break;
 				}
 			}
 		}

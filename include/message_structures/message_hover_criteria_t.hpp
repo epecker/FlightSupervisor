@@ -86,6 +86,14 @@ istream& operator>> (istream& is, message_hover_criteria_t& msg) {
 	is >> msg.desiredLon;
 	is >> msg.desiredAltMSL;
 	is >> msg.desiredHdgDeg;
+	is >> msg.horDistTolFt;		       
+	is >> msg.vertDistTolFt;		      
+	is >> msg.velTolKts;			      
+	is >> msg.hdgToleranceDeg;            
+	is >> msg.timeTol;			        
+	is >> msg.timeCritFirstMet;           
+	is >> msg.hoverCompleted;             
+	is >> msg.manCtrlRequiredAfterCritMet;
 	return is;
 }
 
