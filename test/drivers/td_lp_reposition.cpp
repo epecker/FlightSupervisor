@@ -28,7 +28,7 @@ struct o_cancel_hover : public out_port<bool> {};
 struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 struct o_land_requested : public out_port<bool> {};
 struct o_mission_complete : public out_port<bool> {};
-struct o_pilot_handover : public out_port<bool> {};
+struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
 struct o_stabilize : public out_port<message_hover_criteria_t> {};
 
 int main(int argc, char* argv[]) {

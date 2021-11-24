@@ -19,6 +19,7 @@
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "../../include/enum_string_conversion.hpp"
+#include "../../include/Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -26,11 +27,12 @@ using namespace std;
 // Input and output port definition
 struct Handover_Control_defs {
 	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_pilot_handover : public in_port<bool> {};
+	struct i_pilot_handover : public in_port<message_mavlink_mission_item_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 
 	struct o_notify_pilot : public out_port<bool> {};
 	struct o_control_yielded : public out_port<bool> {};
+	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 };
 
 // Atomic Model
@@ -58,7 +60,8 @@ public:
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
 		typename Handover_Control_defs::o_notify_pilot,
-		typename Handover_Control_defs::o_control_yielded
+		typename Handover_Control_defs::o_control_yielded,
+		typename Handover_Control_defs::o_stabilize
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -68,6 +71,8 @@ public:
 	};
 
 	state_type state;
+
+	message_mavlink_mission_item_t hover_location;
 
 	// Default constructor
 	Handover_Control() {
@@ -110,6 +115,7 @@ public:
 					state.current_state = States::PILOT_CONTROL;
 				} else if (received_pilot_handover) {
 					state.current_state = States::HOVER;
+					hover_location = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs)[0];
 				}
 				break;
 			case States::STABILIZING:
@@ -145,8 +151,29 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
+		vector<message_hover_criteria_t> bag_port_hover_out;
+		message_hover_criteria_t hover_criteria;
 
 		switch (state.current_state) {
+			case States::HOVER:
+				// Need to add a heading member to the mavlink mission item struct.
+				hover_criteria = message_hover_criteria_t(
+					hover_location.lat,
+					hover_location.lon,
+					hover_location.alt,
+					DEFAULT_LAND_CRITERIA_HDG,
+					DEFAULT_LAND_CRITERIA_HOR_DIST,
+					DEFAULT_LAND_CRITERIA_VERT_DIST,
+					DEFAULT_LAND_CRITERIA_VEL,
+					DEFAULT_LAND_CRITERIA_HDG,
+					DEFAULT_LAND_CRITERIA_TIME,
+					0,
+					0,
+					0
+				);
+				bag_port_hover_out.push_back(hover_criteria);
+				get_messages<typename Handover_Control_defs::o_stabilize>(bags) = bag_port_hover_out;
+				break;
 			case States::NOTIFY_PILOT:
 				bag_port_out.push_back(true);
 				get_messages<typename Handover_Control_defs::o_notify_pilot>(bags) = bag_port_out;
@@ -170,7 +197,7 @@ public:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::HOVER:
-				return numeric_limits<TIME>::infinity();
+				return TIME("00:00:00:000");
 				break;
 			case States::STABILIZING:
 				return numeric_limits<TIME>::infinity();
@@ -195,7 +222,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state);
+		os << "State: " << enumToString(i.current_state) << endl;
 		return os;
 	}
 };

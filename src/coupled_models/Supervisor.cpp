@@ -167,5 +167,6 @@ dynamic::modeling::ICs ics_Supervisor = {
 
 	// handover_control
 	dynamic::translate::make_IC<Handover_Control_defs::o_control_yielded, LP_Manager_defs::i_control_yielded>("handover_control","lp_manager"),
-	dynamic::translate::make_IC<Handover_Control_defs::o_control_yielded, LP_Reposition_defs::i_control_yielded>("handover_control","lp_reposition")
+	dynamic::translate::make_IC<Handover_Control_defs::o_control_yielded, LP_Reposition_defs::i_control_yielded>("handover_control","lp_reposition"),
+	dynamic::translate::make_IC<Handover_Control_defs::o_stabilize, Stabilize_defs::i_stabilize>("handover_control","stabilize")
 };

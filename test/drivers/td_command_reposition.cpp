@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_handover =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_request_reposition =
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Command_Reposition_defs::i_aircraft_state>("ir_aircraft_state", "command_reposition"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_hover_criteria_met>("ir_hover_criteria_met", "command_reposition"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_pilot_handover>("ir_pilot_handover", "command_reposition"),
+			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out,Command_Reposition_defs::i_pilot_handover>("ir_pilot_handover", "command_reposition"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_pilot_takeover>("ir_pilot_takeover", "command_reposition"),
 			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out,Command_Reposition_defs::i_request_reposition>("ir_request_reposition", "command_reposition")
 		};

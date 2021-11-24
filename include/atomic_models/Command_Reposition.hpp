@@ -36,7 +36,7 @@ using namespace std;
 struct Command_Reposition_defs {
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_pilot_handover : public in_port<bool> {};
+	struct i_pilot_handover : public in_port<message_mavlink_mission_item_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_request_reposition : public in_port<message_mavlink_mission_item_t> {};
 

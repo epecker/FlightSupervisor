@@ -61,7 +61,7 @@ struct LP_Reposition_defs {
 	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_cancel_hover : public out_port<bool> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-	struct o_pilot_handover : public out_port<bool> {};
+	struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
 };
 
 
@@ -106,7 +106,7 @@ dynamic::modeling::EICs eics_LPReposition = {
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Landing_Routine_defs::i_pilot_takeover>("landing_routine"),
 
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_hover_criteria_met, Command_Reposition_defs::i_hover_criteria_met>("command_reposition"),
-	dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Command_Reposition_defs::i_pilot_handover>("command_reposition"),
+	dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Command_Reposition_defs::i_pilot_takeover>("command_reposition"),
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_aircraft_state, Command_Reposition_defs::i_aircraft_state>("command_reposition"),
 
 	dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Reposition_Timer_defs::i_pilot_takeover>("reposition_timer"),
