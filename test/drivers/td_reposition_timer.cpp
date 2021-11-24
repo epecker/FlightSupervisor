@@ -24,7 +24,7 @@ ofstream out_messages;
 ofstream out_state;
 
 // Model output ports
-struct o_pilot_handover : public out_port<bool> {};
+struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
 struct o_land : public out_port<bool> {};
 struct o_request_reposition : public out_port<message_mavlink_mission_item_t> {};
 

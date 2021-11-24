@@ -37,7 +37,7 @@ struct Reposition_Timer_defs {
 	struct i_pilot_takeover : public in_port<bool> {};
 
 	struct o_land : public out_port<bool> {};
-	struct o_pilot_handover : public out_port<bool> {};
+	struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
 	struct o_request_reposition : public out_port<message_mavlink_mission_item_t> {};
 };
 
@@ -178,11 +178,11 @@ public:
 				get_messages<typename Reposition_Timer_defs::o_land>(bags) = bag_port_out;
 				break;
 			case States::LP_REPO:
-				bag_port_out.push_back(PILOT_HANDOVER);
-				get_messages<typename Reposition_Timer_defs::o_pilot_handover>(bags) = bag_port_out;
+				bag_port_lp_out.push_back(state.landing_point);
+				get_messages<typename Reposition_Timer_defs::o_pilot_handover>(bags) = bag_port_lp_out;
 				break;
 			case States::NEW_LP_REPO:
-				bag_port_lp_out.push_back(message_mavlink_mission_item_t());
+				bag_port_lp_out.push_back(state.landing_point);
 				get_messages<typename Reposition_Timer_defs::o_request_reposition>(bags) = bag_port_lp_out;
 				break;
 			default:

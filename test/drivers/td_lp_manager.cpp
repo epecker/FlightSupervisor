@@ -39,7 +39,7 @@ ofstream out_state;
 // Define output ports to be used for logging purposes
 struct o_lp_new : public out_port<message_mavlink_mission_item_t> {};
 struct o_lp_expired : public out_port<message_mavlink_mission_item_t> {};
-struct o_pilot_handover : public out_port<bool> {};
+struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
 struct o_stabilize : public out_port<message_hover_criteria_t> {};
 struct o_start_lze_scan : public out_port<bool> {};
 

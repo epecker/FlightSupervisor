@@ -33,7 +33,7 @@ struct LP_Manager_defs {
 
 	struct o_lp_new : public out_port<message_mavlink_mission_item_t> {};
 	struct o_lp_expired : public out_port<message_mavlink_mission_item_t> {};
-	struct o_pilot_handover : public out_port<bool> {};
+	struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
 	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_start_lze_scan : public out_port<bool> {};
 };
@@ -77,6 +77,7 @@ public:
 		States current_state;
 		bool lp_recvd;
 		message_mavlink_mission_item_t lp;
+		message_mavlink_mission_item_t plp;
 		TIME lp_accept_time_prev;
 	};
 	state_type state;
@@ -149,22 +150,23 @@ public:
 				}
 
 				//If a valid landing point was identified out of the list of landing points,
-				if (valid_lp_recv) {
-					//Based on the current state,
-					switch (state.current_state) {
-						case States::WAYPOINT_MET: case States::LZE_SCAN:
+				switch (state.current_state) {
+					case States::WAYPOINT_MET: case States::LZE_SCAN:
+						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state.
 							state.current_state = States::NOTIFY_LP;
-							break;
-						case States::LP_APPROACH:
+						}
+						break;
+					case States::LP_APPROACH:
+						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
 							state.current_state = States::NOTIFY_LP;
-							state.lp_accept_time_prev = e;
-							break;
-						default:
-							assert(false && "Unhandled external transition on receipt of landing point.");
-							break;
-					}
+						}
+						state.lp_accept_time_prev = state.lp_accept_time_prev - e;
+						break;
+					default:
+						assert(false && "Unhandled external transition on receipt of landing point.");
+						break;
 				}
 			}
 		}
@@ -174,6 +176,7 @@ public:
 			case States::WAYPOINT_MET:
 				if (get_messages<typename LP_Manager_defs::i_plp_ach>(mbs).size() >= 1) {
 					state.current_state = States::HOVER_PLP;
+					state.plp = get_messages<typename LP_Manager_defs::i_plp_ach>(mbs)[0];
 				}
 				break;
 
@@ -229,8 +232,8 @@ public:
 				break;
 
 			case States::LZE_SCAN:
-				bool_out.push_back(PILOT_HANDOVER);
-				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = bool_out;
+				message_out.push_back(state.plp);
+				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = message_out;
 				break;
 
 			case States::NOTIFY_LP:

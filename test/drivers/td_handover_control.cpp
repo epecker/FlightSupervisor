@@ -35,6 +35,7 @@ ofstream out_state;
 // Define output ports to be used for logging purposes
 struct o_notify_pilot : public out_port<bool> {};
 struct o_control_yielded : public out_port<bool> {};
+struct o_stabilize : public out_port<message_hover_criteria_t> {};
 
 /**
 * ==========================================================
@@ -78,7 +79,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_handover =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_pilot_handover", move(input_file_pilot_handover.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 
@@ -95,7 +96,8 @@ int main(int argc, char* argv[]) {
 
 		dynamic::modeling::Ports oports_TestDriver = {
 			typeid(o_notify_pilot),
-			typeid(o_control_yielded)
+			typeid(o_control_yielded),
+			typeid(o_stabilize)
 		};
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
@@ -103,13 +105,14 @@ int main(int argc, char* argv[]) {
 		// The output ports will be used to export in logging
 		dynamic::modeling::EOCs eocs_TestDriver = {
 			dynamic::translate::make_EOC<Handover_Control_defs::o_notify_pilot,o_notify_pilot>("handover_control"),
-			dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded,o_control_yielded>("handover_control")
+			dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded,o_control_yielded>("handover_control"),
+			dynamic::translate::make_EOC<Handover_Control_defs::o_stabilize,o_stabilize>("handover_control")
 		};
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control_defs::i_hover_criteria_met>("ir_hover_criteria_met", "handover_control"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control_defs::i_pilot_handover>("ir_pilot_handover", "handover_control"),
+			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out,Handover_Control_defs::i_pilot_handover>("ir_pilot_handover", "handover_control"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control_defs::i_pilot_takeover>("ir_pilot_takeover", "handover_control"),
 		};
 
