@@ -9,18 +9,18 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../include/message_structures/message_hover_criteria_t.hpp"
+#include "../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../include/message_structures/message_mavlink_mission_item_t.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
 
 //Coupled model headers
-#include "../../src/coupled_models/Supervisor.hpp"
+#include "../include/coupled_models/Supervisor.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../../include/SupervisorConfig.hpp"
+#include "../include/SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>

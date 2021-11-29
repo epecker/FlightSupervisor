@@ -32,7 +32,7 @@ find_package(
 set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
 # Create all tests
-add_executable(supervisor				"${CMAKE_SOURCE_DIR}/src/coupled_models/main.cpp")
+add_executable(supervisor				"${CMAKE_SOURCE_DIR}/src/main.cpp")
 add_executable(td_handover_control		"${CMAKE_SOURCE_DIR}/test/drivers/td_handover_control.cpp")
 add_executable(td_landing_routine		"${CMAKE_SOURCE_DIR}/test/drivers/td_landing_routine.cpp")
 add_executable(td_lp_manager			"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_manager.cpp")

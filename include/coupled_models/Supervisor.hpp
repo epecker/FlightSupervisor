@@ -18,28 +18,28 @@
 #include <NDTime.hpp>
 
 //Constants
-#include "../../include/Constants.hpp"
+#include "../Constants.hpp"
 
 //Utility functions
-#include "../../include/time_conversion.hpp"
+#include "../time_conversion.hpp"
 
 //Messages structures
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-#include "../../include/message_structures/message_aircraft_state_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_fcc_command_t.hpp"
+#include "../message_structures/message_hover_criteria_t.hpp"
+#include "../message_structures/message_aircraft_state_t.hpp"
+#include "../message_structures/message_mavlink_mission_item_t.hpp"
+#include "../message_structures/message_mavlink_mission_item_t.hpp"
+#include "../message_structures/message_fcc_command_t.hpp"
 
 //Atomic model headers
-#include "../../include/atomic_models/LP_Manager.hpp"
-#include "../../include/atomic_models/Stabilize.hpp"
-#include "../../include/atomic_models/Handover_Control.hpp"
+#include "../atomic_models/LP_Manager.hpp"
+#include "../atomic_models/Stabilize.hpp"
+#include "../atomic_models/Handover_Control.hpp"
 
 //Coupled model headers
-#include "../../src/coupled_models/LP_Reposition.hpp"
+#include "../coupled_models/LP_Reposition.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../../include/SupervisorConfig.hpp"
+#include "../SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>

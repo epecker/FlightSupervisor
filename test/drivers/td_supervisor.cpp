@@ -24,7 +24,7 @@
 #include "../../include/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "../../src/coupled_models/Supervisor.hpp"
+#include "../../include/coupled_models/Supervisor.hpp"
 //#include "../test_drivers/SupervisorTestDriver/coupled_models/SupervisorTestDriver.cpp"
 
 using namespace std;
