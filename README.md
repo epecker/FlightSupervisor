@@ -1,5 +1,9 @@
 ## About The Project
 
+We will be creating a simulation of a Supervisory Controller modelled using
+DEVS that can be deployed onto the Bell-412 as part of the closed-loop autonomy systems used by
+CVLAD.
+
 ## Built With
 
 * Boost<span>.</span>org
@@ -192,12 +196,6 @@ Using the terminal perform the following.
 	build > build all
 	```
 * Select a startup item to run the project
-
-## Usage
-
-## Roadmap
-
-## License
 
 ## Contact
 
