@@ -19,6 +19,7 @@
 
 #include "../../include/enum_string_conversion.hpp"
 #include "../../include/Constants.hpp"
+#include "../../include/time_conversion.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -75,18 +76,44 @@ public:
 	// state definition
 	struct state_type {
 		States current_state;
-		bool lp_recvd;
-		message_mavlink_mission_item_t lp;
-		message_mavlink_mission_item_t plp;
-		TIME lp_accept_time_prev;
 	};
 	state_type state;
 
-	// default constructor
+	// Public members of the class
+	bool lp_recvd;
+	message_mavlink_mission_item_t lp;
+	message_mavlink_mission_item_t plp;
+	TIME lp_accept_time_prev;
+	TIME orbit_time;
+
+	// Default constructor
 	LP_Manager() {
 		state.current_state = States::WAYPOINT_MET;
-		state.lp_accept_time_prev = calculate_time_from_double_seconds(LP_ACCEPT_TIMER);
-		state.lp_recvd = false;
+		lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
+		orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
+		lp_recvd = false;
+		lp = message_mavlink_mission_item_t();
+		plp = message_mavlink_mission_item_t();
+	}
+
+	// Constructor with timer parameter
+	LP_Manager(TIME i_lp_accept_time, TIME i_orbit_time) {
+		state.current_state = States::WAYPOINT_MET;
+		lp_accept_time_prev = i_lp_accept_time;
+		orbit_time = i_orbit_time;
+		lp_recvd = false;
+		lp = message_mavlink_mission_item_t();
+		plp = message_mavlink_mission_item_t();
+	}
+
+	// Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
+	LP_Manager(TIME i_lp_accept_time, TIME i_orbit_time, States initial_state) {
+		state.current_state = initial_state;
+		lp_accept_time_prev = i_lp_accept_time;
+		orbit_time = i_orbit_time;
+		lp_recvd = false;
+		lp = message_mavlink_mission_item_t();
+		plp = message_mavlink_mission_item_t();
 	}
 
 	// internal transition
@@ -130,13 +157,13 @@ public:
 				bool valid_lp_recv = false;
 
 				//If there was a previous landing point,
-				if (!state.lp_recvd) {
+				if (!lp_recvd) {
 					//For each of the landing points received,
 					for (message_mavlink_mission_item_t new_lp : landing_points) {
 						//If the landing point is far enough away from the previous landing point,
 						if (calculate_new_lp_valid(new_lp)) {
 							//Set the current landing point to be the new landing point.
-							state.lp = new_lp;
+							lp = new_lp;
 							valid_lp_recv = true;
 							break;
 						}
@@ -145,7 +172,7 @@ public:
 				//If this is the first bag of landing points that have been received,
 				else {
 					//Pick the first landing point in the list.
-					state.lp = landing_points[0];
+					lp = landing_points[0];
 					valid_lp_recv = true;
 				}
 
@@ -162,7 +189,7 @@ public:
 							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
 							state.current_state = States::NOTIFY_LP;
 						}
-						state.lp_accept_time_prev = state.lp_accept_time_prev - e;
+						lp_accept_time_prev = lp_accept_time_prev - e;
 						break;
 					default:
 						assert(false && "Unhandled external transition on receipt of landing point.");
@@ -176,7 +203,7 @@ public:
 			case States::WAYPOINT_MET:
 				if (get_messages<typename LP_Manager_defs::i_plp_ach>(mbs).size() >= 1) {
 					state.current_state = States::HOVER_PLP;
-					state.plp = get_messages<typename LP_Manager_defs::i_plp_ach>(mbs)[0];
+					plp = get_messages<typename LP_Manager_defs::i_plp_ach>(mbs)[0];
 				}
 				break;
 
@@ -232,17 +259,17 @@ public:
 				break;
 
 			case States::LZE_SCAN:
-				message_out.push_back(state.plp);
+				message_out.push_back(plp);
 				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = message_out;
 				break;
 
 			case States::NOTIFY_LP:
-				message_out.push_back(state.lp);
+				message_out.push_back(lp);
 				get_messages<typename LP_Manager_defs::o_lp_new>(bags) = message_out;
 				break;
 
 			case States::LP_APPROACH:
-				message_out.push_back(state.lp);
+				message_out.push_back(lp);
 				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = message_out;
 				break;
 			default:
@@ -267,12 +294,12 @@ public:
 				break;
 
 			case States::LZE_SCAN:
-				next_internal = calculate_time_from_double_seconds(ORBIT_TIMER);
+				next_internal = orbit_time;
 				break;
 
 			case States::LP_APPROACH:
 				//Schedule the amount of time that was left on the LP accept timer.
-				next_internal = state.lp_accept_time_prev;
+				next_internal = lp_accept_time_prev;
 				break;
 
 			default:
@@ -282,7 +309,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename LP_Manager<TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state) << "\tLP: " << i.lp;
+		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
 
@@ -290,23 +317,15 @@ public:
 		//Radius of the earth in meters.
 		const float R = 6371000;
 
-		double my_x = R * cos(state.lp.lat) * cos(state.lp.lon);
-		double my_y = R * cos(state.lp.lat) * sin(state.lp.lon);
-		double my_z = R * sin(state.lp.lat);
+		double my_x = R * cos(lp.lat) * cos(lp.lon);
+		double my_y = R * cos(lp.lat) * sin(lp.lon);
+		double my_z = R * sin(lp.lat);
 
 		double i_x = R * cos(i_lp.lat) * cos(i_lp.lon);
 		double i_y = R * cos(i_lp.lat) * sin(i_lp.lon);
 		double i_z = R * sin(i_lp.lat);
 
 		return (sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2)) >= LP_HOR_ACCEPT_TOLERANCE_DISTANCE);
-	}
-
-	static TIME calculate_time_from_double_seconds(double time) {
-		int hours = time / 3600;
-		int mins = (time - hours * 3600) / 60;
-		int secs = (time - hours * 3600 - mins * 60);
-		int millis = (time - hours * 3600 - mins * 60 - secs) * 100;
-		return TIME(to_string(hours) + ":" + to_string(mins) + ":" + to_string(secs) + ":" + to_string(millis));
 	}
 };
 

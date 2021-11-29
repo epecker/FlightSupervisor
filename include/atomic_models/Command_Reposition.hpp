@@ -85,14 +85,22 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		message_mavlink_mission_item_t landing_point;
 	};
-
 	state_type state;
+
+	// Public members of the class
+	message_mavlink_mission_item_t landing_point;
 
 	// Default constructor
 	Command_Reposition() {
 		state.current_state = States::IDLE;
+		landing_point = message_mavlink_mission_item_t();
+	}
+
+	// Constructor with initial state parameter for debugging or partial execution startup.
+	Command_Reposition(States initial_state) {
+		state.current_state = initial_state;
+		landing_point = message_mavlink_mission_item_t();
 	}
 
 	// Internal transitions
@@ -141,7 +149,7 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
-						state.landing_point = new_landing_points[0]; // set the new Landing 
+						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
 					}
 					break;
@@ -157,7 +165,7 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
-						state.landing_point = new_landing_points[0]; // set the new Landing 
+						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
 					}
 					break;
@@ -166,7 +174,7 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
-						state.landing_point = new_landing_points[0]; // set the new Landing 
+						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::GET_STATE;
 					}
 					break;
@@ -176,7 +184,7 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
-						state.landing_point = new_landing_points[0]; // set the new Landing 
+						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
 					} else if (received_hover_criteria_met) {
 						state.current_state = States::LP_CRITERIA_MET;
@@ -187,7 +195,7 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
-						state.landing_point = new_landing_points[0]; // set the new Landing 
+						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
 					}
 					break;
@@ -285,7 +293,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Command_Reposition<TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state) << "\tLP: " << i.landing_point;
+		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
 };

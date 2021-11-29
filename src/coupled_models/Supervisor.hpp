@@ -17,6 +17,12 @@
 //Time class header
 #include <NDTime.hpp>
 
+//Constants
+#include "../../include/Constants.hpp"
+
+//Utility functions
+#include "../../include/time_conversion.hpp"
+
 //Messages structures
 #include "../../include/message_structures/message_hover_criteria_t.hpp"
 #include "../../include/message_structures/message_aircraft_state_t.hpp"
@@ -30,7 +36,7 @@
 #include "../../include/atomic_models/Handover_Control.hpp"
 
 //Coupled model headers
-#include "../../src/coupled_models/LP_Reposition.cpp"
+#include "../../src/coupled_models/LP_Reposition.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "../../include/SupervisorConfig.hpp"
@@ -73,7 +79,7 @@ struct Supervisor_defs {
 /**
 * Instantiate the Atomic models.
 */
-shared_ptr<dynamic::modeling::model> lp_manager = dynamic::translate::make_dynamic_atomic_model<LP_Manager, TIME>("lp_manager");
+shared_ptr<dynamic::modeling::model> lp_manager = dynamic::translate::make_dynamic_atomic_model<LP_Manager, TIME, TIME, TIME>("lp_manager", seconds_to_time<TIME>(LP_ACCEPT_TIMER), seconds_to_time<TIME>(ORBIT_TIMER));
 shared_ptr<dynamic::modeling::model> stabilize = dynamic::translate::make_dynamic_atomic_model<Stabilize, TIME>("stabilize");
 shared_ptr<dynamic::modeling::model> handover_control = dynamic::translate::make_dynamic_atomic_model<Handover_Control, TIME>("handover_control");
 

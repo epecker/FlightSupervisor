@@ -23,6 +23,7 @@
 #include "../../include/message_structures/message_fcc_command_t.hpp"
 
 #include "../../include/enum_string_conversion.hpp"
+#include "../../include/time_conversion.hpp"
 #include "../../include/Constants.hpp"
 
 using namespace cadmium;
@@ -51,10 +52,6 @@ public:
 		(HOVER)
 	)
 
-	// Public members of the class
-	message_hover_criteria_t hover_criteria;
-	message_aircraft_state_t aircraft_state;
-
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
 		typename Stabilize_defs::i_aircraft_state,
@@ -75,9 +72,20 @@ public:
 	};
 	state_type state;
 
+	// Public members of the class
+	message_hover_criteria_t hover_criteria;
+	message_aircraft_state_t aircraft_state;
+
 	// Default constructor
 	Stabilize() {
 		state.current_state = States::IDLE;
+		hover_criteria = message_hover_criteria_t();
+		aircraft_state = message_aircraft_state_t();
+	}
+
+	// Constructor with initial state parameter for debugging or partial execution startup.
+	Stabilize(States initial_state) {
+		state.current_state = initial_state;
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -181,7 +189,7 @@ public:
 				next_internal = TIME("00:00:00:000");
 				break;
 			case States::STABILIZING:
-				next_internal = calculate_time_from_double_seconds(hover_criteria.timeTol);
+				next_internal = seconds_to_time<TIME>(hover_criteria.timeTol);
 				break;
 			case States::CRIT_CHECK_FAILED:
 				next_internal = TIME("00:00:00:000");
@@ -230,14 +238,6 @@ public:
 		}
 
 		return true;
-	}
-
-	static TIME calculate_time_from_double_seconds(double time) {
-		int hours = time / 3600;
-		int mins = (time - hours * 3600) / 60;
-		int secs = (time - hours * 3600 - mins * 60);
-		int millis = (time - hours * 3600 - mins * 60 - secs) * 100;
-		return TIME(to_string(hours) + ":" + to_string(mins) + ":" + to_string(secs) + ":" + to_string(millis));
 	}
 };
 

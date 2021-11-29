@@ -69,14 +69,21 @@ public:
 	struct state_type {
 		States current_state;
 	};
-
 	state_type state;
 
+	// Public members of the class
 	message_mavlink_mission_item_t hover_location;
 
 	// Default constructor
 	Handover_Control() {
 		state.current_state = States::IDLE;
+		hover_location = message_mavlink_mission_item_t();
+	}
+
+	// Constructor with initial state parameter for debugging or partial execution startup.
+	Handover_Control(States initial_state) {
+		state.current_state = initial_state;
+		hover_location = message_mavlink_mission_item_t();
 	}
 
 	// Internal transitions
@@ -222,7 +229,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state) << endl;
+		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
 };

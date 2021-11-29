@@ -17,6 +17,12 @@
 //Time class header
 #include <NDTime.hpp>
 
+//Constants
+#include "../../include/Constants.hpp"
+
+//Utility functions
+#include "../../include/time_conversion.hpp"
+
 //Messages structures
 #include "../../include/message_structures/message_hover_criteria_t.hpp"
 #include "../../include/message_structures/message_aircraft_state_t.hpp"
@@ -28,7 +34,7 @@
 #include "../../include/atomic_models/Reposition_Timer.hpp"
 #include "../../include/atomic_models/Command_Reposition.hpp"
 
-// Project information headers this is created by cmake at generation time!!!!
+//Project information headers this is created by cmake at generation time!!!!
 #include "../../include/SupervisorConfig.hpp"
 
 //C++ headers
@@ -70,7 +76,7 @@ struct LP_Reposition_defs {
 */
 shared_ptr<dynamic::modeling::model> landing_routine = dynamic::translate::make_dynamic_atomic_model<Landing_Routine, TIME>("landing_routine");
 shared_ptr<dynamic::modeling::model> command_reposition = dynamic::translate::make_dynamic_atomic_model<Command_Reposition, TIME>("command_reposition");
-shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME>("reposition_timer");
+shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME, TIME>("reposition_timer", seconds_to_time<TIME>(REPO_TIMER));
 
 //Define the inputs to the Landing Point Reposition coupled model.
 dynamic::modeling::Ports iports_LPReposition = {

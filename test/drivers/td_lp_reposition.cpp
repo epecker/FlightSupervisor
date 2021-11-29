@@ -14,7 +14,7 @@
 #include "../../include/input_readers.hpp" // Input Reader Definitions.
 
 // Atomic model to test.
-#include "../../src/coupled_models/LP_Reposition.cpp" 
+#include "../../src/coupled_models/LP_Reposition.hpp" 
 
 using TIME = NDTime;
 using namespace std;
