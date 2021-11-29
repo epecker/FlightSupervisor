@@ -65,12 +65,16 @@ public:
 	struct state_type {
 		States current_state;
 	};
-
 	state_type state;
 
 	// Default constructor
 	Landing_Routine() {
 		state.current_state = States::IDLE;
+	}
+
+	// Constructor with initial state parameter for debugging or partial execution startup.
+	Landing_Routine(States initial_state) {
+		state.current_state = initial_state;
 	}
 
 	// Internal transitions

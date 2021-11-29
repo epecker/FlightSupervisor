@@ -75,18 +75,32 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-		TIME next_internal;
-
-		message_mavlink_mission_item_t landing_point;
 	};
-
 	state_type state;
+
+	// Public members of the class
+	message_mavlink_mission_item_t landing_point;
+	TIME repo_time;
 
 	// Default constructor
 	Reposition_Timer() {
 		state.current_state = States::IDLE;
-		state.next_internal = numeric_limits<TIME>::infinity();
-		state.landing_point = message_mavlink_mission_item_t();
+		repo_time = TIME(LP_REPOSITION_TIME);
+		landing_point = message_mavlink_mission_item_t();
+	}
+
+	// Constructor with timer parameter
+	Reposition_Timer(TIME i_repo_time) {
+		state.current_state = States::IDLE;
+		repo_time = i_repo_time;
+		landing_point = message_mavlink_mission_item_t();
+	}
+
+	// Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
+	Reposition_Timer(TIME i_repo_time, States initial_state) {
+		state.current_state = initial_state;
+		repo_time = i_repo_time;
+		landing_point = message_mavlink_mission_item_t();
 	}
 
 	// Internal transitions
@@ -99,11 +113,9 @@ public:
 				break;
 			case States::LP_REPO:
 				state.current_state = States::HANDOVER_CTRL;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::REQUEST_LAND:
 				state.current_state = States::LANDING_ROUTINE;
-				state.next_internal = numeric_limits<TIME>::infinity();
 				break;
 			default:
 				break;
@@ -123,14 +135,13 @@ public:
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
-			state.next_internal = numeric_limits<TIME>::infinity();
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
 					received_lp_new = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
-						state.landing_point = new_landing_points[0];
+						landing_point = new_landing_points[0];
 						state.current_state = States::NEW_LP_REPO;
 					}
 					break;
@@ -140,7 +151,7 @@ public:
 
 					if (received_lp_new) {
 						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
-						state.landing_point = new_landing_points[0]; // set the new Landing 
+						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::NEW_LP_REPO;
 					} else if (received_lp_crit_met) {
 						state.current_state = States::REQUEST_LAND;
@@ -178,11 +189,11 @@ public:
 				get_messages<typename Reposition_Timer_defs::o_land>(bags) = bag_port_out;
 				break;
 			case States::LP_REPO:
-				bag_port_lp_out.push_back(state.landing_point);
+				bag_port_lp_out.push_back(landing_point);
 				get_messages<typename Reposition_Timer_defs::o_pilot_handover>(bags) = bag_port_lp_out;
 				break;
 			case States::NEW_LP_REPO:
-				bag_port_lp_out.push_back(state.landing_point);
+				bag_port_lp_out.push_back(landing_point);
 				get_messages<typename Reposition_Timer_defs::o_request_reposition>(bags) = bag_port_lp_out;
 				break;
 			default:
@@ -201,7 +212,7 @@ public:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::LP_REPO:
-				next_internal = TIME(LP_REPOSITION_TIME);
+				next_internal = repo_time;
 				break;
 			case States::NEW_LP_REPO: case States::REQUEST_LAND:
 				next_internal = TIME("00:00:00:000");
@@ -214,7 +225,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Reposition_Timer<TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state) << "\tLP: " << i.landing_point;
+		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
 };
