@@ -9,7 +9,7 @@
 // Time class header
 #include <NDTime.hpp>
 
- // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
+// Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "../../include/enum_string_conversion.hpp"
 
 // Required for testing
@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 
+		// Read the initial state of the model.
 		string initial_state_string;
 
 		fstream f;
