@@ -19,6 +19,7 @@
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "../../include/enum_string_conversion.hpp"
+#include "../../include/Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -171,13 +172,13 @@ public:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::REQUEST_LAND:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::LANDING:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::NOTIFY_LANDED:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::LANDED:
 				return numeric_limits<TIME>::infinity();

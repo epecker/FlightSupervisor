@@ -204,19 +204,19 @@ public:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::HOVER:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::STABILIZING:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::NOTIFY_PILOT:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::WAIT_FOR_PILOT:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::YIELD_CONTROL:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::PILOT_CONTROL:
 				return numeric_limits<TIME>::infinity();

@@ -19,6 +19,7 @@
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "../../include/enum_string_conversion.hpp"
+#include "../../include/Constants.hpp"
 
 // Data structures that are used in message transport
 #include "../../include/message_structures/message_aircraft_state_t.hpp"
@@ -262,22 +263,22 @@ public:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::COMMAND_VEL:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::COMMAND_HOVER:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::STABILIZING:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::LP_CRITERIA_MET:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::LANDING:
 				return numeric_limits<TIME>::infinity();
 				break;
 			case States::CANCEL_HOVER:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 				break;
 			case States::TIMER_EXPIRED:
 				return numeric_limits<TIME>::infinity();

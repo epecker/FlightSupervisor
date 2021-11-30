@@ -186,16 +186,16 @@ public:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::INIT_HOVER:
-				next_internal = TIME("00:00:00:000");
+				next_internal = TIME(TA_ZERO);
 				break;
 			case States::STABILIZING:
 				next_internal = seconds_to_time<TIME>(hover_criteria.timeTol);
 				break;
 			case States::CRIT_CHECK_FAILED:
-				next_internal = TIME("00:00:00:000");
+				next_internal = TIME(TA_ZERO);
 				break;
 			case States::HOVER:
-				next_internal = TIME("00:00:00:000");
+				next_internal = TIME(TA_ZERO);
 				break;
 			default:
 				next_internal = numeric_limits<TIME>::infinity();

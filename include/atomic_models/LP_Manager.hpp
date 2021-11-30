@@ -290,7 +290,7 @@ public:
 				break;
 
 			case States::HOVER_PLP: case States::START_LZE_SCAN: case States::NOTIFY_LP:
-				next_internal = TIME("00:00:00:000");
+				next_internal = TIME(TA_ZERO);
 				break;
 
 			case States::LZE_SCAN:

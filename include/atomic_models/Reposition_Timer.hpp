@@ -215,7 +215,7 @@ public:
 				next_internal = repo_time;
 				break;
 			case States::NEW_LP_REPO: case States::REQUEST_LAND:
-				next_internal = TIME("00:00:00:000");
+				next_internal = TIME(TA_ZERO);
 				break;
 			default:
 				next_internal = numeric_limits<TIME>::infinity();
