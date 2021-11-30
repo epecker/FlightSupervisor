@@ -211,13 +211,7 @@ public:
 	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		bool received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
 
-		if (state.current_state == States::LP_CRITERIA_MET && received_request_reposition) {
-			external_transition(TIME(), move(mbs));
-			internal_transition();
-		} else {
-			internal_transition();
-			external_transition(TIME(), move(mbs));
-		}
+		external_transition(TIME(), move(mbs));
 	}
 
 	// output function
