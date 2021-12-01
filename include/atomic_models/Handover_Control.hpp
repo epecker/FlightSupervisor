@@ -125,6 +125,12 @@ public:
 					hover_location = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs)[0];
 				}
 				break;
+			case States::HOVER:
+				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
+
+				if (received_pilot_takeover) {
+					state.current_state = States::PILOT_CONTROL;
+				}
 			case States::STABILIZING:
 				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
 				received_hover_crit_met = get_messages<typename Handover_Control_defs::i_hover_criteria_met>(mbs).size() >= 1;
@@ -133,6 +139,13 @@ public:
 					state.current_state = States::PILOT_CONTROL;
 				} else if (received_hover_crit_met) {
 					state.current_state = States::NOTIFY_PILOT;
+				}
+				break;
+			case States::NOTIFY_PILOT:
+				received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
+
+				if (received_pilot_takeover) {
+					state.current_state = States::PILOT_CONTROL;
 				}
 				break;
 			case States::WAIT_FOR_PILOT:
@@ -150,8 +163,15 @@ public:
 	// confluence transition
 	// Used to call set call precedence
 	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		internal_transition();
-		external_transition(TIME(), move(mbs));
+		bool received_pilot_takeover = get_messages<typename Handover_Control_defs::i_pilot_takeover>(mbs).size() >= 1;
+
+		if (received_pilot_takeover) {
+			external_transition(TIME(), move(mbs));
+			internal_transition();
+		} else {
+			internal_transition();
+			external_transition(TIME(), move(mbs));
+		}
 	}
 
 	// output function
