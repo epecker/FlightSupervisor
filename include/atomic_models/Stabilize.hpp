@@ -148,8 +148,13 @@ public:
 	// confluence transition
 	// Used to call set call precedence
 	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		external_transition(TIME(), move(mbs));
-		internal_transition();
+		bool received_cancel_hover = get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).size() >= 1;
+
+		if (received_cancel_hover) {
+			external_transition(TIME(), move(mbs));
+		} else {
+			internal_transition();
+		}
 	}
 
 	// output function
