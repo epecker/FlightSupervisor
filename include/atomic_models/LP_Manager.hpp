@@ -135,7 +135,6 @@ public:
 				state.current_state = States::LP_ACCEPT_EXP;
 				break;
 			default:
-				assert(false && "Unhandled internal transition.");
 				break;
 		}
 	}
