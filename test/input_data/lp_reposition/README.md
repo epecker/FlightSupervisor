@@ -1,12 +1,6 @@
 Test Cases
 =============================================================================================================================================================
-Folder	| Test Path
+Folder	| Inputs and Expected Outputs
 --------| ---------------------------------------------------------------------------------------------------------------------------------------------
-0	    | Reposition_Timer: 	IDLE->NEW_LP_REPO-> |**Command_Reposition**| ->LP_REPO->REQUEST_LAND-> |**Landing_Routine**| ->LANDING_ROUTINE
-		| Command_Reposition:	IDLE->GET_STATE->COMMAND_VEL->STABILIZING->LP_CRITERIA_MET->LANDING
-		| LANDING_ROUTINE:		IDLE->REQUEST_LAND->LANDING->NOTIFY_LANDED->LANDED
-
-1	    | Reposition_Timer: 	IDLE->NEW_LP_REPO-> |**Command_Reposition**| ->LP_REPO->HANDOVER_CTRL->PILOT_CONTROL
-		| Command_Reposition:	IDLE->GET_STATE->TIMER_EXPIRED
-		| LANDING_ROUTINE:		IDLE
-
+0	    | Input: lp_new(00:00:10)->aircraft_state(00:00:15)->hover_criteria_met(00:00:20)->landing_achieved(00:00:25) <br> Output: fcc_command_velocity(00:00:15:001)->stabilize(00:00:15:002)->land_requested(00:00:20:003)->mission_complete(00:00:25:001)
+1	    | Input: lp_new(00:00:10)->control_yielded(00:02:01) <br> Output: pilot_handover(00:02:00)->cancel_hover(00:02:00:001)
