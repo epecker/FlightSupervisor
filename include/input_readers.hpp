@@ -11,10 +11,10 @@
 #include <cadmium/basic_model/pdevs/iestream.hpp>
 
 //Messages structures
-#include "../../include/message_structures/message_aircraft_state_t.hpp"
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_fcc_command_t.hpp"
+#include "../include/message_structures/message_aircraft_state_t.hpp"
+#include "../include/message_structures/message_hover_criteria_t.hpp"
+#include "../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../include/message_structures/message_fcc_command_t.hpp"
 
 using namespace cadmium::basic_models::pdevs;
 
