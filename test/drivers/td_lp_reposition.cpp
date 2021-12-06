@@ -68,7 +68,8 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::coupled<TIME>> lp_reposition = make_shared<dynamic::modeling::coupled<TIME>>("lp_reposition", submodels_LPReposition, iports_LPReposition, oports_LPReposition, eics_LPReposition, eocs_LPReposition, ics_LPReposition);
+		LP_Reposition lpr = LP_Reposition();
+		shared_ptr<dynamic::modeling::coupled<TIME>> lp_reposition = make_shared<dynamic::modeling::coupled<TIME>>("lp_reposition", lpr.submodels, lpr.iports, lpr.oports, lpr.eics, lpr.eocs, lpr.ics);
 
 		// Instantiate the input readers.
 		// One for each input

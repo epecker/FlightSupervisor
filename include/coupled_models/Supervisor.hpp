@@ -83,7 +83,8 @@ shared_ptr<dynamic::modeling::model> lp_manager = dynamic::translate::make_dynam
 shared_ptr<dynamic::modeling::model> stabilize = dynamic::translate::make_dynamic_atomic_model<Stabilize, TIME>("stabilize");
 shared_ptr<dynamic::modeling::model> handover_control = dynamic::translate::make_dynamic_atomic_model<Handover_Control, TIME>("handover_control");
 
-shared_ptr<dynamic::modeling::coupled<TIME>> lp_reposition = make_shared<dynamic::modeling::coupled<TIME>>("lp_reposition", submodels_LPReposition, iports_LPReposition, oports_LPReposition, eics_LPReposition, eocs_LPReposition, ics_LPReposition);
+LP_Reposition lpr = LP_Reposition();
+shared_ptr<dynamic::modeling::coupled<TIME>> lp_reposition = make_shared<dynamic::modeling::coupled<TIME>>("lp_reposition", lpr.submodels, lpr.iports, lpr.oports, lpr.eics, lpr.eocs, lpr.ics);
 
 //Define the inputs to the Supervisor coupled model.
 dynamic::modeling::Ports iports_Supervisor = {
