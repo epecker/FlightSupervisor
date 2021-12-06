@@ -87,7 +87,8 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the coupled model to test
-		shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", submodels_Supervisor, iports_Supervisor, oports_Supervisor, eics_Supervisor, eocs_Supervisor, ics_Supervisor);
+		Supervisor supr = Supervisor();
+		shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supr.submodels, supr.iports, supr.oports, supr.eics, supr.eocs, supr.ics);
 
 		// Instantiate the input readers.
 		// One for each input

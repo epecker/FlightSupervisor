@@ -71,12 +71,9 @@ int main(int argc, char* argv[]) {
 	 * ==========================================================
 	 */
 
-	//Declare an object for the Supervisor.
-	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor;
 	//Instantiate the Supervisor with the ports, models, and couplings previsouly defined.
-	supervisor = make_shared<dynamic::modeling::coupled<TIME>>(
-		"supervisor", submodels_Supervisor, iports_Supervisor, oports_Supervisor, eics_Supervisor, eocs_Supervisor, ics_Supervisor
-	);
+	Supervisor supr = Supervisor();
+	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supr.submodels, supr.iports, supr.oports, supr.eics, supr.eocs, supr.ics);
 
 
 	/*
