@@ -157,7 +157,7 @@ Using the terminal perform the following.
 	```
 
 * You can now run the project executables
-* Done
+* If you make any changes to the **CMakeLists.txt** file you will need to run `cmake ..` in the build folder to generate updated make files.
 
 ### MacOS - XCode with Homebrew
 
@@ -196,13 +196,19 @@ Using the terminal perform the following.
 
 * Open Visual Studio Community
 * Click "Open a local folder"
+* Open the repository
 * Generate the build files
 	* Visual Studio Community does this automatically
+	* If it doesn't
+		```
+		Project > Configure Cache
+		```
 * Build the project
 	```
 	build > build all
 	```
 * Select a startup item to run the project
+* Visual Studio Community will regenerate the cmake cache on **CMakeList.txt** changes.
 
 ## Contact
 
