@@ -69,13 +69,13 @@ Using a terminal perform the following.
 	brew search boost
 	```
 
-* Install a suitable version of boost. Replace 1.75 with a version listed above.
+* Install a suitable version of boost. Replace 1.75 with a version listed above that is version 1.75 or lower.
 	```
 	brew search boost@1.75
 	```
 
 * XCode bundles the git binary.
-	* Install Git anyways
+	* If Git is not in the path you can install Git anyways using
 		```
 		brew install git
 		```
@@ -178,12 +178,19 @@ Using the terminal perform the following.
 * Generate the build files
 
 	```
-	cmake -G XCode ..
+	cmake -G Xcode ..
 	```
 
-* Open XCode at the root of the project
-* You can now build and run the project through XCode
-* Done
+	* If the above cmake command did not work you can try resetting your XCode path then running cmake again.
+
+		```
+		xcode-select --reset
+		cmake -G Xcode ..
+		```
+
+* Open XCode using the project solution that cmake created in the build folder
+* You can now build and run the project using XCode's internal tools
+* If you make any changes to the **CMakeLists.txt** file you will need to run `cmake -G Xcode` in the build folder to generate a updated project solution.
 
 ### Windows 10 - Visual Studio Community
 
