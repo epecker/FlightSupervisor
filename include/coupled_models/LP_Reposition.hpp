@@ -61,7 +61,6 @@ struct LP_Reposition_defs {
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_control_yielded : public in_port<bool> {};
 	struct i_LP_new : public in_port<message_mavlink_mission_item_t> {};
-	struct i_LP_criteria_met : public in_port<message_mavlink_mission_item_t> {};
 
 
 	/***** Define output ports for coupled model *****/
@@ -89,8 +88,7 @@ public:
 		typeid(LP_Reposition_defs::i_hover_criteria_met),
 		typeid(LP_Reposition_defs::i_aircraft_state),
 		typeid(LP_Reposition_defs::i_control_yielded),
-		typeid(LP_Reposition_defs::i_LP_new),
-		typeid(LP_Reposition_defs::i_LP_criteria_met)
+		typeid(LP_Reposition_defs::i_LP_new)
 	};
 
 	//Define the outputs of the Landing Point Reposition coupled model.
@@ -121,8 +119,7 @@ public:
 
 		dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Reposition_Timer_defs::i_pilot_takeover>("reposition_timer"),
 		dynamic::translate::make_EIC<LP_Reposition_defs::i_control_yielded, Reposition_Timer_defs::i_control_yielded>("reposition_timer"),
-		dynamic::translate::make_EIC<LP_Reposition_defs::i_LP_new, Reposition_Timer_defs::i_lp_new>("reposition_timer"),
-		dynamic::translate::make_EIC<LP_Reposition_defs::i_LP_criteria_met, Reposition_Timer_defs::i_lp_crit_met>("reposition_timer")
+		dynamic::translate::make_EIC<LP_Reposition_defs::i_LP_new, Reposition_Timer_defs::i_lp_new>("reposition_timer")
 	};
 
 	//Define the internal to external couplings for the Landing Point Reposition model.
