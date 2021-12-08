@@ -63,7 +63,6 @@ int main(int argc, char* argv[]) {
 		string input_dir = i_base_dir + to_string(test_set_enumeration);
 		string input_file_landing_achieved = input_dir + string("/landing_achieved.txt");
 		string input_file_aircraft_state = input_dir + string("/aircraft_state.txt");
-		string input_file_LP_criteria_met = input_dir + string("/LP_criteria_met.txt");
 		string input_file_pilot_takeover = input_dir + string("/pilot_takeover.txt");
 		string input_file_LP_recv = input_dir + string("/LP_recv.txt");
 		string input_file_PLP_ach = input_dir + string("/PLP_ach.txt");
@@ -75,7 +74,6 @@ int main(int argc, char* argv[]) {
 
 		if (!filesystem::exists(input_file_landing_achieved) ||
 			!filesystem::exists(input_file_aircraft_state) ||
-			!filesystem::exists(input_file_LP_criteria_met) ||
 			!filesystem::exists(input_file_pilot_takeover) ||
 			!filesystem::exists(input_file_LP_recv) ||
 			!filesystem::exists(input_file_PLP_ach)) {
@@ -96,8 +94,6 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", move(input_file_landing_achieved.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_aircraft_state =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_lp_criteria_met =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_criteria_met", move(input_file_LP_criteria_met.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_lp_recv =
@@ -111,7 +107,6 @@ int main(int argc, char* argv[]) {
 			supervisor,
 			ir_landing_achieved,
 			ir_aircraft_state,
-			ir_lp_criteria_met,
 			ir_pilot_takeover,
 			ir_lp_recv,
 			ir_plp_ach
@@ -148,7 +143,6 @@ int main(int argc, char* argv[]) {
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Supervisor_defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
-			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_LP_criteria_met>("ir_lp_criteria_met", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_LP_recv>("ir_lp_recv", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_PLP_ach>("ir_plp_ach", "supervisor")

@@ -188,7 +188,6 @@ public:
 							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
 							state.current_state = States::NOTIFY_LP;
 						}
-						lp_accept_time_prev = lp_accept_time_prev - e;
 						break;
 					default:
 						assert(false && "Unhandled external transition on receipt of landing point.");
@@ -223,6 +222,7 @@ public:
 			default:
 				break;
 		}
+		lp_accept_time_prev = lp_accept_time_prev - e;
 	}
 
 	// confluence transition

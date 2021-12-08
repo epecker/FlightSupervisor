@@ -61,7 +61,6 @@ using TIME = NDTime;
 struct Supervisor_defs {
 	struct i_landing_achieved : public in_port<bool> {};
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_LP_criteria_met : public in_port<message_mavlink_mission_item_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_LP_recv : public in_port<message_mavlink_mission_item_t> {};
 	struct i_PLP_ach : public in_port<message_mavlink_mission_item_t> {};
@@ -95,7 +94,6 @@ public:
 	dynamic::modeling::Ports iports = {
 		typeid(Supervisor_defs::i_landing_achieved),
 		typeid(Supervisor_defs::i_aircraft_state),
-		typeid(Supervisor_defs::i_LP_criteria_met),
 		typeid(Supervisor_defs::i_pilot_takeover),
 		typeid(Supervisor_defs::i_LP_recv),
 		typeid(Supervisor_defs::i_PLP_ach)
@@ -131,7 +129,6 @@ public:
 		// lp_reposition
 		dynamic::translate::make_EIC<Supervisor_defs::i_landing_achieved, LP_Reposition_defs::i_landing_achieved>("lp_reposition"),
 		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, LP_Reposition_defs::i_aircraft_state>("lp_reposition"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_LP_criteria_met, LP_Reposition_defs::i_LP_criteria_met>("lp_reposition"),
 		dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, LP_Reposition_defs::i_pilot_takeover>("lp_reposition"),
 
 		// stabilize
