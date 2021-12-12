@@ -1,19 +1,3 @@
-#ifndef RT_LINUX
-#define RT_LINUX
-#endif
-
-#ifndef CADMIUM_EXECUTE_CONCURRENT
-#define CADMIUM_EXECUTE_CONCURRENT
-#endif
-
-// #ifndef DEBUG_SCHEDULING
-// #define DEBUG_SCHEDULING
-// #endif
-
-#ifndef MISSED_DEADLINE_TOLERANCE
-#define MISSED_DEADLINE_TOLERANCE -10
-#endif
-
 //C++ headers
 #include <chrono>
 #include <algorithm>
@@ -32,7 +16,6 @@
 #include <cadmium/basic_model/pdevs/generator.hpp>
 #include <cadmium/modeling/coupling.hpp>
 #include <cadmium/concept/coupled_model_assert.hpp>
-//#include <cadmium/engine/pdevs_runner.hpp>
 
 //Time class header
 #include <NDTime.hpp>
@@ -50,8 +33,6 @@
 
 using namespace std;
 using namespace cadmium;
-using namespace cadmium::embedded;
-//using namespace cadmium::basic_models::pdevs;
 
 using hclock = chrono::high_resolution_clock;
 using TIME = NDTime;
@@ -83,7 +64,6 @@ int main(int argc, char* argv[]) {
 		string input_dir = i_base_dir + to_string(test_set_enumeration);
 		string input_file_landing_achieved = input_dir + string("/landing_achieved.txt");
 		string input_file_aircraft_state = input_dir + string("/aircraft_state.txt");
-		string input_file_LP_criteria_met = input_dir + string("/LP_criteria_met.txt");
 		string input_file_pilot_takeover = input_dir + string("/pilot_takeover.txt");
 		string input_file_LP_recv = input_dir + string("/LP_recv.txt");
 		string input_file_PLP_ach = input_dir + string("/PLP_ach.txt");
@@ -96,7 +76,6 @@ int main(int argc, char* argv[]) {
 
 		if (!filesystem::exists(input_file_landing_achieved) ||
 			!filesystem::exists(input_file_aircraft_state) ||
-			!filesystem::exists(input_file_LP_criteria_met) ||
 			!filesystem::exists(input_file_pilot_takeover) ||
 			!filesystem::exists(input_file_LP_recv) ||
 			!filesystem::exists(input_file_PLP_ach)) {
@@ -108,7 +87,8 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the coupled model to test
-		shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", submodels_Supervisor, iports_Supervisor, oports_Supervisor, eics_Supervisor, eocs_Supervisor, ics_Supervisor);
+		Supervisor supervisor_object = Supervisor();
+		shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supervisor_object.submodels, supervisor_object.iports, supervisor_object.oports, supervisor_object.eics, supervisor_object.eocs, supervisor_object.ics);
 
 		// Instantiate the input readers.
 		// One for each input
@@ -116,8 +96,6 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", move(input_file_landing_achieved.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_aircraft_state =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_lp_criteria_met =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_criteria_met", move(input_file_LP_criteria_met.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_lp_recv =
@@ -131,7 +109,6 @@ int main(int argc, char* argv[]) {
 			supervisor,
 			ir_landing_achieved,
 			ir_aircraft_state,
-			ir_lp_criteria_met,
 			ir_pilot_takeover,
 			ir_lp_recv,
 			ir_plp_ach
@@ -166,12 +143,11 @@ int main(int argc, char* argv[]) {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<Input_Reader_Boolean_defs::out, Supervisor_defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
-			dynamic::translate::make_IC<Input_Reader_Aircraft_State_defs::out, Supervisor_defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
-			dynamic::translate::make_IC<Input_Reader_Mavlink_Mission_Item_defs::out, Supervisor_defs::i_LP_criteria_met>("ir_lp_criteria_met", "supervisor"),
-			dynamic::translate::make_IC<Input_Reader_Boolean_defs::out, Supervisor_defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),
-			dynamic::translate::make_IC<Input_Reader_Mavlink_Mission_Item_defs::out, Supervisor_defs::i_LP_recv>("ir_lp_recv", "supervisor"),
-			dynamic::translate::make_IC<Input_Reader_Mavlink_Mission_Item_defs::out, Supervisor_defs::i_PLP_ach>("ir_plp_ach", "supervisor")
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
+			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Supervisor_defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),
+			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_LP_recv>("ir_lp_recv", "supervisor"),
+			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_PLP_ach>("ir_plp_ach", "supervisor")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

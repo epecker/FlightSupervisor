@@ -11,6 +11,12 @@ configure_file("${CMAKE_SOURCE_DIR}/include/SupervisorConfig.hpp.in" "${CMAKE_SO
 # Cadmium requires this to be set to run in parallel
 add_compile_definitions(CADMIUM_EXECUTE_CONCURRENT)
 
+#RT-Cadmium Definitions needed in order to use the real-time clock.
+add_compile_definitions(RT_LINUX)
+add_compile_definitions(RT_DEVS)
+#The value of this definition can be changed to anything other than -1.
+add_compile_definitions(MISSED_DEADLINE_TOLERANCE=-10)
+
 # These definitions are required to use Boost thread pools
 add_compile_definitions(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION)
 add_compile_definitions(BOOST_THREAD_PROVIDES_EXECUTORS)
@@ -19,7 +25,8 @@ add_compile_definitions(BOOST_THREAD_USES_MOVE)
 
 # Setup dependancies
 include(deps/cadmium.cmake)
-include(deps/rt-cadmium.cmake)
+#include(deps/rt-cadmium.cmake)
+set(RT_CADMIUM_INCLUDE_DIR "../cadmium/include")
 include(deps/destimes.cmake)
 
 # Setup boost
@@ -44,6 +51,7 @@ add_executable(td_stabilize				"${CMAKE_SOURCE_DIR}/test/drivers/td_stabilize.cp
 add_executable(td_command_reposition	"${CMAKE_SOURCE_DIR}/test/drivers/td_command_reposition.cpp")
 add_executable(td_supervisor			"${CMAKE_SOURCE_DIR}/test/drivers/td_supervisor.cpp")
 add_executable(td_lp_reposition			"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_reposition.cpp")
+add_executable(td_user_input			"${CMAKE_SOURCE_DIR}/test/drivers/td_user_input.cpp")
 
 target_include_directories(supervisor				PUBLIC ${includes_list})
 target_include_directories(rt-supervisor			PUBLIC ${rt_includes_list})
@@ -55,6 +63,7 @@ target_include_directories(td_stabilize				PUBLIC ${includes_list})
 target_include_directories(td_command_reposition	PUBLIC ${includes_list})
 target_include_directories(td_supervisor			PUBLIC ${includes_list})
 target_include_directories(td_lp_reposition			PUBLIC ${includes_list})
+target_include_directories(td_user_input			PUBLIC ${rt_includes_list})
 
 target_link_libraries(supervisor			${Boost_LIBRARIES})
 target_link_libraries(rt-supervisor			${Boost_LIBRARIES})
@@ -66,3 +75,4 @@ target_link_libraries(td_stabilize			${Boost_LIBRARIES})
 target_link_libraries(td_command_reposition ${Boost_LIBRARIES})
 target_link_libraries(td_supervisor			${Boost_LIBRARIES})
 target_link_libraries(td_lp_reposition		${Boost_LIBRARIES})
+target_link_libraries(td_user_input 		${Boost_LIBRARIES})
