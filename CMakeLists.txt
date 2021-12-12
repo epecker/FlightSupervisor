@@ -19,6 +19,7 @@ add_compile_definitions(BOOST_THREAD_USES_MOVE)
 
 # Setup dependancies
 include(deps/cadmium.cmake)
+include(deps/rt-cadmium.cmake)
 include(deps/destimes.cmake)
 
 # Setup boost
@@ -30,9 +31,11 @@ find_package(
 
 # Setup includes
 set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
+set(rt_includes_list ${Boost_INCLUDE_DIRS} ${RT_CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
 
 # Create all tests
 add_executable(supervisor				"${CMAKE_SOURCE_DIR}/src/main.cpp")
+add_executable(rt-supervisor			"${CMAKE_SOURCE_DIR}/src/rt_supervisor.cpp")
 add_executable(td_handover_control		"${CMAKE_SOURCE_DIR}/test/drivers/td_handover_control.cpp")
 add_executable(td_landing_routine		"${CMAKE_SOURCE_DIR}/test/drivers/td_landing_routine.cpp")
 add_executable(td_lp_manager			"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_manager.cpp")
@@ -43,6 +46,7 @@ add_executable(td_supervisor			"${CMAKE_SOURCE_DIR}/test/drivers/td_supervisor.c
 add_executable(td_lp_reposition			"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_reposition.cpp")
 
 target_include_directories(supervisor				PUBLIC ${includes_list})
+target_include_directories(rt-supervisor			PUBLIC ${rt_includes_list})
 target_include_directories(td_handover_control		PUBLIC ${includes_list})
 target_include_directories(td_landing_routine		PUBLIC ${includes_list})
 target_include_directories(td_lp_manager			PUBLIC ${includes_list})
@@ -53,6 +57,7 @@ target_include_directories(td_supervisor			PUBLIC ${includes_list})
 target_include_directories(td_lp_reposition			PUBLIC ${includes_list})
 
 target_link_libraries(supervisor			${Boost_LIBRARIES})
+target_link_libraries(rt-supervisor			${Boost_LIBRARIES})
 target_link_libraries(td_handover_control	${Boost_LIBRARIES})
 target_link_libraries(td_landing_routine	${Boost_LIBRARIES})
 target_link_libraries(td_lp_manager			${Boost_LIBRARIES})
