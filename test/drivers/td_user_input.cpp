@@ -41,7 +41,7 @@ ofstream out_state;
 ofstream out_info;
 
 // Define output ports to be used for logging purposes
-struct out : public out_port<bool> {};
+struct out : public out_port<string> {};
 
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> user_input = dynamic::translate::make_dynamic_atomic_model<User_Input, TIME>("user_input");
+		shared_ptr<dynamic::modeling::model> user_input = dynamic::translate::make_dynamic_atomic_model<User_Input, TIME, TIME>("user_input", move(TIME("00:00:00:100")));
 
 		// Instantiate the input readers.
 		// One for each input
@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
 		auto start = hclock::now(); //to measure simulation execution time
 
 		cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, { TIME("00:00:00:000:000") });
-		r.run_until(TIME("00:01:00:000:000"));
+		r.run_until(TIME("00:00:20:000:000"));
 
 		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>
 			(hclock::now() - start).count();
