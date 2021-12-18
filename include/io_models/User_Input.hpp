@@ -44,15 +44,12 @@ class User_Input {
 
 // Private members for thread management.
 private:
-    mutex *user_input_lock; 
     string *user_input;
     TIME polling_rate;
-
 
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
-
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(INPUT)
@@ -70,7 +67,7 @@ public:
         state.current_state = States::IDLE;
 
         //Create the mutex and user input variable
-        user_input_lock = new mutex();
+        state.user_input_mutex = new mutex();
         user_input = new string();
         polling_rate = rate;
     }
@@ -79,6 +76,7 @@ public:
 	// (required for the simulator)
     struct state_type{
         States current_state;
+        mutex *user_input_mutex; 
     };
     state_type state;
 
@@ -94,9 +92,9 @@ public:
     void internal_transition() {
         if (state.current_state == States::INPUT) {
             //If the thread has finished receiving input, change state.
-            if (user_input_lock->try_lock()) {
+            if (state.user_input_mutex->try_lock()) {
                 state.current_state = States::IDLE;
-                user_input_lock->unlock();
+                state.user_input_mutex->unlock();
             }
         }
     }
@@ -110,7 +108,7 @@ public:
             if (start){
                 state.current_state = States::INPUT;
                 //Start the user input thread on changing to the input state.
-                thread(get_user_input, user_input_lock, user_input).detach();
+                thread(get_user_input, state.user_input_mutex, user_input).detach();
             }
         }
     }
@@ -127,10 +125,10 @@ public:
         typename make_message_bags<output_ports>::type bags;
         if(state.current_state == States::INPUT) {
             //If the thread has finished receiving input, send the string as output.
-            if(user_input_lock->try_lock()) {
+            if(state.user_input_mutex->try_lock()) {
                 get_messages<typename User_Input_defs::out>(bags).push_back(*user_input);
                 cout << "Output sent: " << *user_input << endl;
-                user_input_lock->unlock();
+                state.user_input_mutex->unlock();
             } 
         }
         return bags;
@@ -150,7 +148,11 @@ public:
     }
 
     friend std::ostringstream& operator<<(std::ostringstream& os, const typename User_Input<TIME>::state_type& i) {
-        os << "State: " << enumToString(i.current_state);
+        bool is_unlocked = i.user_input_mutex->try_lock();
+        if (is_unlocked) {
+            i.user_input_mutex->unlock();
+        }
+        os << "State: " << enumToString(i.current_state) << ", Mutex: " << (is_unlocked ? "Unlocked" : "Locked");
         return os;
     }
 };
