@@ -27,7 +27,7 @@
 #include "../../include/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "../../include/io_models/User_Input.hpp"
+#include "../../include/io_models/Blocking_Input.hpp"
 
 using namespace std;
 using namespace cadmium;
@@ -46,8 +46,8 @@ struct out : public out_port<string> {};
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
-	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/user_input/");
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/user_input/");
+	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/blocking_input/");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/blocking_input/");
 
 	do {
 		// Input Files
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> user_input = dynamic::translate::make_dynamic_atomic_model<User_Input, TIME, TIME>("user_input", move(TIME("00:00:00:100")));
+		shared_ptr<dynamic::modeling::model> blocking_input = dynamic::translate::make_dynamic_atomic_model<User_Input, TIME, TIME>("blocking_input", move(TIME("00:00:00:100")));
 
 		// Instantiate the input readers.
 		// One for each input
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
-			user_input,
+			blocking_input,
 			ir_in
 		};
 
@@ -93,12 +93,12 @@ int main(int argc, char* argv[]) {
 
 		// The output ports will be used to export in logging
 		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<User_Input_defs::out, out>("user_input")
+			dynamic::translate::make_EOC<User_Input_defs::out, out>("blocking_input")
 		};
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, User_Input_defs::in>("ir_in", "user_input")
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, User_Input_defs::in>("ir_in", "blocking_input")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -139,9 +139,8 @@ int main(int argc, char* argv[]) {
 		cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, { TIME("00:00:00:000:000") });
 		r.run_until(TIME("00:00:20:000:000"));
 
-		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>
-			(hclock::now() - start).count();
-		cout << "Simulation took: " << elapsed << " seconds" << endl;
+		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
+		cout << "\nSimulation took: " << elapsed << " seconds" << endl;
 
 		test_set_enumeration++;
 	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));

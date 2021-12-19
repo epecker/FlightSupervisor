@@ -16,6 +16,7 @@
 #include <thread>
 #include <mutex>
 #include <string>
+#include <chrono>
 
 // RT-Cadmium
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
@@ -30,6 +31,7 @@
 using namespace cadmium;
 using namespace std;
 
+chrono::time_point<chrono::high_resolution_clock> start;
 void get_user_input(mutex *lock, string *input);
 
 // Input and output port definitions
@@ -70,6 +72,8 @@ public:
         state.user_input_mutex = new mutex();
         user_input = new string();
         polling_rate = rate;
+
+		start = chrono::high_resolution_clock::now(); //to measure simulation execution time
     }
 
 	// This is used to track the state of the atomic model. 
@@ -127,7 +131,8 @@ public:
             //If the thread has finished receiving input, send the string as output.
             if(state.user_input_mutex->try_lock()) {
                 get_messages<typename User_Input_defs::out>(bags).push_back(*user_input);
-                cout << "Output sent: " << *user_input << endl;
+                auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(chrono::high_resolution_clock::now() - start).count();
+                cout << "(" << elapsed << ") Output sent: " << *user_input << endl;
                 state.user_input_mutex->unlock();
             } 
         }
@@ -160,7 +165,8 @@ public:
 // Function used to retrieve user input in a thread.
 void get_user_input(mutex *lock, string *input) {
     lock->lock();
-    cout << "Please enter any input:\t";
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(chrono::high_resolution_clock::now() - start).count();
+    cout << "(" << elapsed << ") Please enter any input: ";
     cin >> *input;
     lock->unlock();
 }
