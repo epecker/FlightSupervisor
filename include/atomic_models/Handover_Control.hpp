@@ -249,7 +249,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state);
+		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
 };
