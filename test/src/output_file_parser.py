@@ -144,8 +144,8 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
     table.sort(key=lambda list: list[0])
 
     for i, value in enumerate(table):
-        if i >= len(table)-1:
-            break
+        if i == 0: continue
+        if i >= len(table)-1: break
         if (value[1] != '') and (value[0] == table[i+1][0]):
             temp = copy.copy(value[:len(header)-3])
             temp2 = copy.copy(table[i+1][len(header)-3:])
