@@ -54,11 +54,8 @@ def create_message_tree(file_path):
             message = match.group(1)
             if ">::out" not in message:
                 message = message.split("::")[1]
-            elif "<" in message:
-                message = message.split("<")[1]
-                message = message.replace(">::out", "")
             else:
-                message = message.replace(">::out", "")
+                message = message[len(message)-3:]
             value = match.group(2)
             tokens = current_line.split()
             model = tokens[len(tokens)-1]
@@ -99,7 +96,7 @@ def create_message_table(file_path):
         return
 
     table = []
-    header = ["time", "Output From", "Message", "Value"]
+    header = ["Time", "Output From", "Output Port", "Value"]
 
     i = 0
     for index, message in enumerate(tree):
@@ -123,9 +120,9 @@ def create_state_table(file_path):
         table.append([state[0]])
         for key, value in sorted(state[1].items()):
             table[i].append(value)
-    header.append("time")
+    header.append("Time")
     for key, value in sorted(tree[0][1].items()):
-        header.append(key)
+        header.append((key + " State"))
     return table, header
 
 # Combines the state table and the message table.
@@ -154,7 +151,7 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
             table.pop(i+1)
         elif value[1] == '':
             table[i][0] = ''
-    return tabulate(table, headers=header)
+    return tabulate(table, headers=header, tablefmt="github")
 
 ## Example Usage
 # state_table, state_headers = create_state_table("test/simulation_results/lp_reposition/0/output_state.txt")
