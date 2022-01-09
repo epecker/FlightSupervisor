@@ -144,8 +144,8 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
         if i == 0: continue
         if i >= len(table)-1: break
         if (value[1] != '') and (value[0] == table[i+1][0]):
-            temp = copy.copy(value[:len(header)-3])
-            temp2 = copy.copy(table[i+1][len(header)-3:])
+            temp = copy.copy(value[:len(header)-pad])
+            temp2 = copy.copy(table[i+1][len(header)-pad:])
             temp.extend(temp2)
             table[i] = temp
             table.pop(i+1)
@@ -154,6 +154,6 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
     return tabulate(table, headers=header, tablefmt="github")
 
 ## Example Usage
-# state_table, state_headers = create_state_table("test/simulation_results/lp_reposition/0/output_state.txt")
-# message_table, message_header = create_message_table("test/simulation_results/lp_reposition/0/output_messages.txt")
-# print(create_state_and_message_table(state_table, state_headers, message_table, message_header))
+state_table, state_headers = create_state_table("test/simulation_results/lp_reposition/0/output_state.txt")
+message_table, message_header = create_message_table("test/simulation_results/lp_reposition/0/output_messages.txt")
+print(create_state_and_message_table(state_table, state_headers, message_table, message_header))
