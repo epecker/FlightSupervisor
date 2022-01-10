@@ -105,7 +105,7 @@ Installing Boost
 	* We are currently using "boost_1_75_0-msvc-14.2-64.exe"
 * Install the boost library using the executable you downloaded above. The path **must** be set to the default location.
 
-## Installation
+## Build Guide
 
 * Navigate your repository folder
 
@@ -209,6 +209,36 @@ Using the terminal perform the following.
 	```
 * Select a startup item to run the project
 * Visual Studio Community will regenerate the cmake cache on **CMakeList.txt** changes.
+
+## Testing
+
+Currently the tests are built by default when building the project. After building the project there will be executables named td_*.exe, for example, td_command_reposition.
+
+### Prerequisite Steps
+
+Complete the following:
+
+* [Project Build Prerequisites](#prerequisites)
+* [Project Build Guide](#build-guide)
+* Install python 3
+* Install tabulate for python 3
+  * pip install tabulate
+
+### Performing the Tests
+
+1. Execute one of the test drivers(td) with the name td_*.exe
+	* This test driver will cycle through all of the provided tests.
+	* The logs of these tests are stored in `<Project_Directory>/test/simulation_results/<Model_Name>/<Test_Number>`
+2. Open a terminal
+3. Navigate to the project directory
+	```
+	cd <Project_Directory>
+	```
+4. Run the python Script
+	```
+	python ./test/scripts/simulation_cleanup.py
+	```
+5. The output can be found in `<Project_Directory>/test/simulation_results/<Model_Name>.md`
 
 ## Contact
 
