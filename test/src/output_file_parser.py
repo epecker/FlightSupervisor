@@ -154,6 +154,6 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
     return tabulate(table, headers=header, tablefmt="github")
 
 ## Example Usage
-state_table, state_headers = create_state_table("test/simulation_results/lp_reposition/0/output_state.txt")
-message_table, message_header = create_message_table("test/simulation_results/lp_reposition/0/output_messages.txt")
-print(create_state_and_message_table(state_table, state_headers, message_table, message_header))
+# state_table, state_headers = create_state_table("test/simulation_results/lp_reposition/0/output_state.txt")
+# message_table, message_header = create_message_table("test/simulation_results/lp_reposition/0/output_messages.txt")
+# print(create_state_and_message_table(state_table, state_headers, message_table, message_header))
