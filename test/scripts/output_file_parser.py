@@ -96,7 +96,7 @@ def create_message_table(file_path):
         return
 
     table = []
-    header = ["Time", "Output From", "Output Port", "Value"]
+    header = ["Time", "Output Model", "Output Port", "Value"]
 
     i = 0
     for index, message in enumerate(tree):
