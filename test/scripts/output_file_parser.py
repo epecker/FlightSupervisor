@@ -140,17 +140,20 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
     table.extend(padded_message_table)
     table.sort(key=lambda list: list[0])
 
+    viewed_times = {}
     for i, value in enumerate(table):
         if i == 0: continue
         if i >= len(table)-1: break
-        if (value[1] != '') and (value[0] == table[i+1][0]):
-            temp = copy.copy(value[:len(header)-pad])
-            temp2 = copy.copy(table[i+1][len(header)-pad:])
-            temp.extend(temp2)
-            table[i] = temp
+        if value[1] != '' and table[i+1][1] == '' and (value[0] == table[i+1][0]):
+            row1 = copy.copy(value[:len(header)-3])
+            row2 = copy.copy(table[i+1][len(header)-3:])
+            row1.extend(row2)
+            table[i] = row1
             table.pop(i+1)
-        elif value[1] == '':
+        if viewed_times.get(value[0]):
             table[i][0] = ''
+        else:
+            viewed_times[value[0]] = True
     return tabulate(table, headers=header, tablefmt="github")
 
 ## Example Usage
