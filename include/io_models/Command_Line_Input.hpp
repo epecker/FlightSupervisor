@@ -17,6 +17,7 @@
 #include <mutex>
 #include <string>
 #include <chrono>
+#include <sstream>
 
 // RT-Cadmium
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
@@ -31,16 +32,15 @@
 using namespace cadmium;
 using namespace std;
 
-chrono::time_point<chrono::high_resolution_clock> start;
 void get_input(mutex *lock, string *input);
 
 // Input and output port definitions
-struct Command_Line_Input_defs{
-    struct out  : public out_port<string> { };
+template<typename MSG> struct Command_Line_Input_defs{
+    struct out  : public out_port<MSG> { };
 };
 
 // Atomic model
-template<typename TIME>
+template<typename MSG, typename TIME>
 class Command_Line_Input {
 
 // Private members for thread management.
@@ -88,7 +88,7 @@ public:
     using input_ports=std::tuple<>;
  
     // Create a tuple of output ports (required for the simulator)
-    using output_ports=std::tuple<typename Command_Line_Input_defs::out>;
+    using output_ports=std::tuple<typename Command_Line_Input_defs<MSG>::out>;
 
 	// Internal transitions
 	// These are transitions occuring from internal inputs
@@ -129,7 +129,16 @@ public:
             //If the thread has finished receiving input, send the string as output.
             if(state.input_mutex->try_lock()) {
                 if (input->compare("q") != 0) {
-                    get_messages<typename Command_Line_Input_defs::out>(bags).push_back(*input);
+                    MSG message;
+                    try {
+                        stringstream ss(*input);
+                        ss >> message;
+                        cout << "Output sent: " << message << endl;
+                        get_messages<typename Command_Line_Input_defs<MSG>::out>(bags).push_back(message);
+                    }
+                    catch(const string exception) {
+                        cout << "Error parsing text input into message struct: " << exception << endl;
+                    }
                 }
                 state.input_mutex->unlock();
             } 
@@ -150,7 +159,7 @@ public:
         }
     }
 
-    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Command_Line_Input<TIME>::state_type& i) {
+    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Command_Line_Input<MSG, TIME>::state_type& i) {
         bool is_unlocked = i.input_mutex->try_lock();
         if (is_unlocked) {
             i.input_mutex->unlock();
@@ -164,7 +173,7 @@ public:
 void get_input(mutex *lock, string *input) {
     lock->lock();
     cout << "Please enter any input (enter q to quit): ";
-    cin >> *input;
+    getline(cin, *input);
     lock->unlock();
 }
 
