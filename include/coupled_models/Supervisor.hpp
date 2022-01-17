@@ -53,7 +53,6 @@
 
 using namespace std;
 using namespace cadmium;
-using namespace cadmium::basic_models::pdevs;
 
 using TIME = NDTime;
 

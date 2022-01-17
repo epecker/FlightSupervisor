@@ -27,6 +27,10 @@
 
 #include "../enum_string_conversion.hpp"
 
+//Messages structures
+#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "../../include/message_structures/message_aircraft_state_t.hpp"
+
 #ifdef RT_LINUX
 
 using namespace cadmium;
@@ -35,13 +39,17 @@ using namespace std;
 void get_input(mutex *lock, string *input);
 
 // Input and output port definitions
-template<typename MSG> struct Command_Line_Input_defs{
-    struct out  : public out_port<MSG> { };
+struct Supervisor_Command_Line_Input_defs{
+	struct o_landing_achieved : public out_port<bool> {};
+	struct o_aircraft_state : public out_port<message_aircraft_state_t> {};
+	struct o_pilot_takeover : public out_port<bool> {};
+	struct o_LP_recv : public out_port<message_mavlink_mission_item_t> {};
+	struct o_PLP_ach : public out_port<message_mavlink_mission_item_t> {};
 };
 
 // Atomic model
-template<typename MSG, typename TIME>
-class Command_Line_Input {
+template<typename TIME>
+class Supervisor_Command_Line_Input {
 
 // Private members for thread management.
 private:
@@ -57,13 +65,13 @@ public:
 	);
 
     // Default constructor
-    Command_Line_Input() {
+    Supervisor_Command_Line_Input() {
         //Just use the other constructor with 100ms polling
-        Command_Line_Input(TIME("00:00:00:100"));
+        Supervisor_Command_Line_Input(TIME("00:00:00:100"));
     }
 
     // Constructor with polling rate parameter
-    Command_Line_Input(TIME rate) {
+    Supervisor_Command_Line_Input(TIME rate) {
         //Initialise the current state
         state.current_state = States::INPUT;
 
@@ -88,7 +96,13 @@ public:
     using input_ports=std::tuple<>;
  
     // Create a tuple of output ports (required for the simulator)
-    using output_ports=std::tuple<typename Command_Line_Input_defs<MSG>::out>;
+    using output_ports=std::tuple<
+        typename Supervisor_Command_Line_Input_defs::o_landing_achieved,
+        typename Supervisor_Command_Line_Input_defs::o_aircraft_state,
+        typename Supervisor_Command_Line_Input_defs::o_pilot_takeover,
+        typename Supervisor_Command_Line_Input_defs::o_LP_recv,
+        typename Supervisor_Command_Line_Input_defs::o_PLP_ach
+    >;
 
 	// Internal transitions
 	// These are transitions occuring from internal inputs
@@ -129,15 +143,42 @@ public:
             //If the thread has finished receiving input, send the string as output.
             if(state.input_mutex->try_lock()) {
                 if (input->compare("q") != 0) {
-                    MSG message;
+                    string port;
                     try {
                         stringstream ss(*input);
-                        ss >> message;
-                        cout << "Output sent: " << message << endl;
-                        get_messages<typename Command_Line_Input_defs<MSG>::out>(bags).push_back(message);
+                        ss >> port;
+                        //cout << "Port: " << port << "\nValue: " << message << endl;
+                        if(port.compare("LANDING_ACHIEVED") == 0) {
+                            bool value;
+                            ss >> value;
+                            get_messages<typename Supervisor_Command_Line_Input_defs::o_landing_achieved>(bags).push_back(value);
+                        }
+                        else if (port.compare("AIRCRAFT_STATE") == 0) {
+                            message_aircraft_state_t value;
+                            ss >> value;
+                            get_messages<typename Supervisor_Command_Line_Input_defs::o_aircraft_state>(bags).push_back(value);
+                        }
+                        else if (port.compare("PILOT_TAKEOVER") == 0) {
+                            bool value;
+                            ss >> value;
+                            get_messages<typename Supervisor_Command_Line_Input_defs::o_pilot_takeover>(bags).push_back(value);
+                        }
+                        else if (port.compare("LP_RECEIVED") == 0) {
+                            message_mavlink_mission_item_t value;
+                            ss >> value;
+                            get_messages<typename Supervisor_Command_Line_Input_defs::o_LP_recv>(bags).push_back(value);
+                        }
+                        else if (port.compare("PLP_ACHIEVED") == 0) {
+                            message_mavlink_mission_item_t value;
+                            ss >> value;
+                            get_messages<typename Supervisor_Command_Line_Input_defs::o_PLP_ach>(bags).push_back(value);
+                        }
+                        else {
+                            cout << "Invalid port: " << port << endl;
+                        }
                     }
                     catch(const string exception) {
-                        cout << "Error parsing text input into message struct: " << exception << endl;
+                        cout << "Error parsing text input into port and message struct: " << exception << endl;
                     }
                 }
                 state.input_mutex->unlock();
@@ -159,7 +200,7 @@ public:
         }
     }
 
-    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Command_Line_Input<MSG, TIME>::state_type& i) {
+    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Supervisor_Command_Line_Input<TIME>::state_type& i) {
         bool is_unlocked = i.input_mutex->try_lock();
         if (is_unlocked) {
             i.input_mutex->unlock();
@@ -172,7 +213,7 @@ public:
 // Function used to retrieve user input in a thread.
 void get_input(mutex *lock, string *input) {
     lock->lock();
-    cout << "Please enter any input (enter q to quit): ";
+    cout << "Please enter a port name and value (enter q to quit): ";
     getline(cin, *input);
     lock->unlock();
 }
