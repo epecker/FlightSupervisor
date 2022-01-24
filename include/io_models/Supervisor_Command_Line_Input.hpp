@@ -143,38 +143,38 @@ public:
             //If the thread has finished receiving input, send the string as output.
             if(state.input_mutex->try_lock()) {
                 if (input->compare("q") != 0) {
-                    string port;
+                    int port;
                     try {
                         stringstream ss(*input);
                         ss >> port;
                         //cout << "Port: " << port << "\nValue: " << message << endl;
-                        if(port.compare("LANDING_ACHIEVED") == 0) {
+                        if (0) {
                             bool value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_landing_achieved>(bags).push_back(value);
                         }
-                        else if (port.compare("AIRCRAFT_STATE") == 0) {
+                        else if (1) {
                             message_aircraft_state_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_aircraft_state>(bags).push_back(value);
                         }
-                        else if (port.compare("PILOT_TAKEOVER") == 0) {
+                        else if (2) {
                             bool value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_pilot_takeover>(bags).push_back(value);
                         }
-                        else if (port.compare("LP_RECEIVED") == 0) {
+                        else if (3) {
                             message_mavlink_mission_item_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_LP_recv>(bags).push_back(value);
                         }
-                        else if (port.compare("PLP_ACHIEVED") == 0) {
+                        else if (4) {
                             message_mavlink_mission_item_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_PLP_ach>(bags).push_back(value);
                         }
                         else {
-                            cout << "Invalid port: " << port << endl;
+                            cout << "Invalid port number: " << port << endl;
                         }
                     }
                     catch(const string exception) {
@@ -213,7 +213,14 @@ public:
 // Function used to retrieve user input in a thread.
 void get_input(mutex *lock, string *input) {
     lock->lock();
-    cout << "Please enter a port name and value (enter q to quit): ";
+    cout << "Please enter a port name and value:" << endl;
+    cout << "\tLanding Achieved: \t0 value(boolean)" << endl;
+    cout << "\tAircraft State: \t1 lat(float) lon(double) alt(double) hdg(float) vel(float)" << endl;
+    cout << "\tPilot Takeover: \t2 value(boolean)" << endl;
+    cout << "\tLP Received: \t3 id(int) lat(double) lon(double) alt(double)" << endl;
+    cout << "\tPLP Achieved: \t4 id(int) lat(double) lon(double) alt(double)" << endl;
+    cout << "Enter q to quit" << endl;
+    cout << ">>> ";
     getline(cin, *input);
     lock->unlock();
 }
