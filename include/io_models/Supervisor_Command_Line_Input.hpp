@@ -147,28 +147,28 @@ public:
                     try {
                         stringstream ss(*input);
                         ss >> port;
-                        //cout << "Port: " << port << "\nValue: " << message << endl;
-                        if (0) {
+                        //cout << "Port: " << port << "Input: " << *input << endl;
+                        if (port == 0) {
                             bool value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_landing_achieved>(bags).push_back(value);
                         }
-                        else if (1) {
+                        else if (port == 1) {
                             message_aircraft_state_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_aircraft_state>(bags).push_back(value);
                         }
-                        else if (2) {
+                        else if (port == 2) {
                             bool value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_pilot_takeover>(bags).push_back(value);
                         }
-                        else if (3) {
+                        else if (port == 3) {
                             message_mavlink_mission_item_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_LP_recv>(bags).push_back(value);
                         }
-                        else if (4) {
+                        else if (port == 4) {
                             message_mavlink_mission_item_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_PLP_ach>(bags).push_back(value);
