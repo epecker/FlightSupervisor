@@ -28,6 +28,8 @@ include(deps/cadmium.cmake)
 include(deps/rt-cadmium.cmake)
 include(deps/destimes.cmake)
 
+configure_file("${CADMIUM_INCLUDE_DIR}/cadmium/basic_model/pdevs/iestream.hpp" "${RT_CADMIUM_INCLUDE_DIR}/cadmium/basic_model/pdevs/iestream.hpp" COPYONLY) # Used to copy a missing file to rt cadmium
+
 # Setup boost
 set(Boost_USE_STATIC_LIBS on)
 find_package(
