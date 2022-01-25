@@ -175,11 +175,8 @@ int main(int argc, char* argv[]) {
     string command = python_command + path_to_script + script_name;
     
     if(system(command.c_str()) != 0) {
-        python_command = string("python") + string(" ");
-        command = python_command + path_to_script + script_name;
-        if(system(command.c_str()) != 0) {
-            return -1;
-        }
+        cout << "Error cleaning file." << endl;
+        return 1;
     }
 
 	return 0;
