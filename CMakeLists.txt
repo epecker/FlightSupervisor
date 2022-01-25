@@ -25,8 +25,7 @@ add_compile_definitions(BOOST_THREAD_USES_MOVE)
 
 # Setup dependancies
 include(deps/cadmium.cmake)
-#include(deps/rt-cadmium.cmake)
-set(RT_CADMIUM_INCLUDE_DIR "../cadmium/include")
+include(deps/rt-cadmium.cmake)
 include(deps/destimes.cmake)
 
 # Setup boost
