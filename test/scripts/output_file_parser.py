@@ -80,12 +80,12 @@ def create_state_tree(file_path):
         if match:
             current_line = file.readline()
             continue
-        match = re.search("State:", current_line)
+        match = re.search("\s[a-zA-Z_0-9]+\sis\sState:\s[a-zA-Z_\-0-9]+\n", current_line)
         if match:
-            tokens = current_line.split()
-            model = tokens[3]
-            model_state = tokens[len(tokens)-1]
-            tree[len(tree)-1][1][model]=model_state
+                tokens = current_line.split()
+                model = tokens[3]
+                model_state = tokens[len(tokens)-1]
+                tree[len(tree)-1][1][model]=model_state
         current_line = file.readline()
     return tree
 
@@ -115,14 +115,20 @@ def create_state_table(file_path):
         return
 
     header = []
+    header.append("Time")
+    for key, value in sorted(tree[0][1].items()):
+        header.append(key)
     table = []
     for i, state in enumerate(tree):
         table.append([state[0]])
+        table[i] = table[i] + [""]*(len(header)-1)
         for key, value in sorted(state[1].items()):
-            table[i].append(value)
-    header.append("Time")
-    for key, value in sorted(tree[0][1].items()):
-        header.append((key + " State"))
+            for j in range(1, len(header)):
+                if key == header[j]:
+                    table[i][j] = value
+                    break
+    for i in range(1, len(header)):
+        header[i] = header[i] + " State"
     return table, header
 
 # Combines the state table and the message table.
