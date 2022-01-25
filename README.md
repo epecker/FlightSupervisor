@@ -1,3 +1,21 @@
+# CVLAD Supervisory Controller
+
+## Contents
+
+* [About the Project](#about-the-project)
+* [Built With](#built-with)
+* [prerequisites](#prerequisites)
+  * [GNU/Linux - Ubuntu](#gnulinux---ubuntu)
+  * [MacOS - XCode with Homebrew](#macos---xcode-with-homebrew)
+  * [Windows 10 - Visual Studio Community](#windows-10---visual-studio-community)
+* [Build Guide](#build-guide)
+  * [GNU/Linux - Ubuntu](#gnulinux---ubuntu-1)
+  * [MacOS - XCode with Homebrew](#macos---xcode-with-homebrew-1)
+  * [Windows 10 - Visual Studio Community](#windows-10---visual-studio-community-1)
+* [Testing](test/README.md)
+* [Contact](#contact)
+* [Acknowledgements](#acknowledgements)
+
 ## About The Project
 
 We will be creating a simulation of a Supervisory Controller modelled using
@@ -209,36 +227,6 @@ Using the terminal perform the following.
 	```
 * Select a startup item to run the project
 * Visual Studio Community will regenerate the cmake cache on **CMakeList.txt** changes.
-
-## Testing
-
-Currently the tests are built by default when building the project. After building the project there will be executables named td_*.exe, for example, td_command_reposition.
-
-### Prerequisite Steps
-
-Complete the following:
-
-* [Project Build Prerequisites](#prerequisites)
-* [Project Build Guide](#build-guide)
-* Install python 3
-* Install tabulate for python 3
-  * pip install tabulate
-
-### Performing the Tests
-
-1. Execute one of the test drivers(td) with the name td_*.exe
-	* This test driver will cycle through all of the provided tests.
-	* The logs of these tests are stored in `<Project_Directory>/test/simulation_results/<Model_Name>/<Test_Number>`
-2. Open a terminal
-3. Navigate to the project directory
-	```
-	cd <Project_Directory>
-	```
-4. Run the python Script
-	```
-	python ./test/scripts/simulation_cleanup.py
-	```
-5. The output can be found in `<Project_Directory>/test/simulation_results/<Model_Name>.md`
 
 ## Contact
 
