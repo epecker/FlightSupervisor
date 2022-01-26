@@ -164,7 +164,7 @@ public:
         if (is_unlocked) {
             i.input_mutex->unlock();
         }
-        os << "State: " << enumToString(i.current_state) << ", Mutex: " << (is_unlocked ? "Unlocked" : "Locked");
+        os << "State: " << enumToString(i.current_state) << "-" << (is_unlocked ? "UNLOCKED" : "LOCKED");
         return os;
     }
 };
