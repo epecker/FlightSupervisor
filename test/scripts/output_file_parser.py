@@ -49,13 +49,9 @@ def create_message_tree(file_path):
             tree.append([match.group(), {}])
             current_line = file.readline()
             continue
-        match = re.search("([^}{,\s]+):\s{(?!\s*})([^}{]+)}", current_line)
+        match = re.search("::([^}{,\s]+):\s{(?!\s*})([^}{]+)}", current_line)
         if match:
             message = match.group(1)
-            if ">::out" not in message:
-                message = message.split("::")[1]
-            else:
-                message = message[len(message)-3:]
             value = match.group(2)
             tokens = current_line.split()
             model = tokens[len(tokens)-1]
