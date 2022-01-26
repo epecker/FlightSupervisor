@@ -161,5 +161,19 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
+	fcloseall();
+	fflush(NULL);
+	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
+	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
+	if (system("python3 --version") == 0) {
+		string command = "python3 " + path_to_script + string(" ") + path_to_simulation_results;
+		system(command.c_str());
+	} else if (system("python --version") == 0) {
+		string command = "python " + path_to_script + string(" ") + path_to_simulation_results;
+		system(command.c_str());
+	} else {
+		cout << "\nPython is not installed!\n";
+	}
+
 	return 0;
 }

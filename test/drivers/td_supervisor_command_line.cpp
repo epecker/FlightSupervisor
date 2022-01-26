@@ -166,18 +166,19 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
-    filesystem::current_path(PROJECT_DIRECTORY);
-    system("pwd");
-
-    string path_to_script = string("test/scripts/");
-    string script_name = string("simulation_cleanup.py");
-    string python_command = string("python3") + string(" ");
-    string command = python_command + path_to_script + script_name;
-    
-    if(system(command.c_str()) != 0) {
-        cout << "Error cleaning file." << endl;
-        return 1;
-    }
+	fcloseall();
+	fflush(NULL);
+    string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
+	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
+	if (system("python3 --version") == 0) {
+		string command = "python3 " + path_to_script + string(" ") + path_to_simulation_results;
+		system(command.c_str());
+	} else if (system("python --version") == 0) {
+		string command = "python " + path_to_script + string(" ") + path_to_simulation_results;
+		system(command.c_str());
+	} else {
+		cout << "\nPython is not installed!\n";
+	}
 
 	return 0;
 }
