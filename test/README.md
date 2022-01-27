@@ -44,7 +44,7 @@ The command line Supervisor test driver (td_supervisor_command_line.exe) is a us
 3. The landing point received port which takes a mavlink mission item structure input.
 4. The planned landing point achieved port which takes a mavlink mission item structure input.
 The description of each of the ports can be found in the port description document. The members of each of the structures can be found in either the source code or on the terminal during test execution.
-
+Example test cases can be found here [Command Line Supervisor Test Driver Example Test Cases](input_data/supervisor_command_line/README.md)
 ## Preparing the test outputs for review
 
 ### Prerequisites
