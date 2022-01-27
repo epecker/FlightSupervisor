@@ -17,14 +17,14 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-#include "../../include/message_structures/message_aircraft_state_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
-#include "../../include/enum_string_conversion.hpp"
-#include "../../include/time_conversion.hpp"
-#include "../../include/Constants.hpp"
+#include "enum_string_conversion.hpp"
+#include "time_conversion.hpp"
+#include "Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -166,8 +166,17 @@ public:
 
 		switch (state.current_state) {
 			case States::INIT_HOVER:
-				message_fcc_out.push_back(message_fcc_command_t());
+			{
+				message_fcc_command_t mfc = message_fcc_command_t();
+				mfc.x = hover_criteria.desiredLat * (1E7);
+				mfc.y = hover_criteria.desiredLon * (1E7);
+				mfc.z = hover_criteria.desiredAltMSL;
+				mfc.param4 = -NAN;
+				mfc.param1 = 0.0;
+				mfc.command = MAV_CMD_DO_REPOSITION;
+				message_fcc_out.push_back(mfc);
 				get_messages<typename Stabilize_defs::o_fcc_command_hover>(bags) = message_fcc_out;
+			}
 				break;
 			case States::STABILIZING:
 				message_out.push_back(true);
