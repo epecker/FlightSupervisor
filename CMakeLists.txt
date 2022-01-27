@@ -49,7 +49,7 @@ add_executable(td_landing_routine		"${CMAKE_SOURCE_DIR}/test/drivers/td_landing_
 add_executable(td_lp_manager			"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_manager.cpp")
 add_executable(td_reposition_timer		"${CMAKE_SOURCE_DIR}/test/drivers/td_reposition_timer.cpp")
 add_executable(td_stabilize				"${CMAKE_SOURCE_DIR}/test/drivers/td_stabilize.cpp")
-add_executable(td_command_reposition	"${CMAKE_SOURCE_DIR}/test/drivers/td_command_reposition.cpp")
+add_executable(td_command_reposition	"${CMAKE_SOURCE_DIR}/test/drivers/td_command_reposition.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
 add_executable(td_supervisor			"${CMAKE_SOURCE_DIR}/test/drivers/td_supervisor.cpp")
 add_executable(td_lp_reposition			"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_reposition.cpp")
 add_executable(td_blocking_input		"${CMAKE_SOURCE_DIR}/test/drivers/td_blocking_input.cpp")

@@ -37,5 +37,15 @@
 #define DEFAULT_LAND_CRITERIA_HDG 15.0 // to meet heading criteria for landing 
 #define MAX_REPO_VEL 10.0 //knots, max velocity to do reposition, used to command to the FCC
 
+// Used in Command_Reposition. This is temporary remove when intergrating.
+#define MAV_CMD_DO_CHANGE_SPEED 178 // Code for fcc commands
+#define MAX_REPO_VEL 10.0 // Max speed in knots to reposition at
+#define KTS_TO_MPS 0.514444 // Convert knots to m/s
+#define METERS_TO_FT 3.281
+#define DEFAULT_LAND_CRITERIA_HOR_DIST 16.40
+#define DEFAULT_LAND_CRITERIA_VERT_DIST 5.0
+#define DEFAULT_LAND_CRITERIA_VEL 3.0
+#define DEFAULT_LAND_CRITERIA_HDG 15.0
+#define DEFAULT_LAND_CRITERIA_TIME 3.0
 
 #endif /* CONSTANTS_HPP */

@@ -2,6 +2,7 @@
 #define FCC_COMMAND_HPP
 
 #include <stdint.h>
+#include "Constants.hpp"
 
 struct message_fcc_command_t {
 	float param1;				/*<  PARAM1, see MAV_CMD enum*/
@@ -69,6 +70,16 @@ struct message_fcc_command_t {
 		current(i_current),
 		autocontinue(i_autocontinue),
 		mission_type(i_mission_type) {}
+
+	void change_velocity(float velocity) {
+		x = 0;
+		y = 0;
+		z = 0;
+		param1 = 0.0;
+		param2 = velocity;
+		param4 = -NAN;
+		command = MAV_CMD_DO_CHANGE_SPEED;
+	}
 };
 
 /***************************************************/

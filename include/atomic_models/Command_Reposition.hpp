@@ -18,17 +18,15 @@
 #include <string>
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../../include/enum_string_conversion.hpp"
-#include "../../include/Constants.hpp"
+#include "enum_string_conversion.hpp"
+#include "Constants.hpp"
+#include "mavNRC/geo.h"
 
 // Data structures that are used in message transport
-#include "../../include/message_structures/message_aircraft_state_t.hpp"
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_fcc_command_t.hpp"
-
-// Macros
-#include "../../include/Constants.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -91,6 +89,7 @@ public:
 
 	// Public members of the class
 	message_mavlink_mission_item_t landing_point;
+	message_aircraft_state_t aircraft_state;
 
 	// Default constructor
 	Command_Reposition() {
@@ -102,6 +101,7 @@ public:
 	Command_Reposition(States initial_state) {
 		state.current_state = initial_state;
 		landing_point = message_mavlink_mission_item_t();
+		aircraft_state = message_aircraft_state_t();
 	}
 
 	// Internal transitions
@@ -158,6 +158,8 @@ public:
 					received_aircraft_state = get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs).size() >= 1;
 
 					if (received_aircraft_state) {
+						vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs);
+						aircraft_state = new_aircraft_state[0];
 						state.current_state = States::COMMAND_VEL;
 					}
 					break;
@@ -224,13 +226,39 @@ public:
 
 		switch (state.current_state) {
 			case States::COMMAND_VEL:
-				bag_port_fcc_out.push_back(message_fcc_command_t());
+			{
+				message_fcc_command_t mfc = message_fcc_command_t();
+				float distance, altitude;
+				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon, aircraft_state.alt_MSL, landing_point.lat, landing_point.lon, landing_point.alt * METERS_TO_FT, &distance, &altitude);
+				float velocity = distance / (REPO_TIMER - 2.0);
+				if (velocity > MAX_REPO_VEL * KTS_TO_MPS) {
+					velocity = MAX_REPO_VEL * KTS_TO_MPS;
+				}
+				mfc.change_velocity(velocity);
+				bag_port_fcc_out.push_back(mfc);
 				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
-				break;
+			}
+			break;
 			case States::COMMAND_HOVER:
-				bag_port_hover_out.push_back(message_hover_criteria_t());
+			{
+				message_hover_criteria_t mhc = message_hover_criteria_t(
+					landing_point.lat,
+					landing_point.lon,
+					landing_point.alt,
+					aircraft_state.hdg_Deg,
+					DEFAULT_LAND_CRITERIA_HOR_DIST,
+					DEFAULT_LAND_CRITERIA_VERT_DIST,
+					DEFAULT_LAND_CRITERIA_VEL,
+					DEFAULT_LAND_CRITERIA_HDG,
+					DEFAULT_LAND_CRITERIA_TIME,
+					-1,
+					0,
+					0
+				);
+				bag_port_hover_out.push_back(mhc);
 				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_hover_out;
-				break;
+			}
+			break;
 			case States::CANCEL_HOVER:
 				bag_port_out.push_back(true);
 				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;

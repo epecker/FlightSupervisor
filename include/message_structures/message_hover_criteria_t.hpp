@@ -22,7 +22,7 @@ struct message_hover_criteria_t {
 	double  hoverCompleted;             // Flag that hover is completed
 	int     manCtrlRequiredAfterCritMet;// Allows supervisor to flag display system that MAN CTRL needed – pilot in control
 
-	message_hover_criteria_t():
+	message_hover_criteria_t() :
 		desiredLat(0.0),
 		desiredLon(0.0),
 		desiredAltMSL(0.0),
@@ -34,8 +34,7 @@ struct message_hover_criteria_t {
 		timeTol(0.0),
 		timeCritFirstMet(0.0),
 		hoverCompleted(0.0),
-		manCtrlRequiredAfterCritMet(0)
-	{}
+		manCtrlRequiredAfterCritMet(0) {}
 
 	message_hover_criteria_t(
 		double  i_desiredLat,
@@ -70,10 +69,18 @@ struct message_hover_criteria_t {
 /***************************************************/
 
 ostream& operator<<(ostream& os, const message_hover_criteria_t& msg) {
-	os << msg.desiredLat << " "
-		<< msg.desiredLon << " "
-		<< msg.desiredAltMSL << " "
-		<< msg.desiredHdgDeg;
+	os << msg.desiredLat << " ";
+	os << msg.desiredLon << " ";
+	os << msg.desiredAltMSL << " ";
+	os << msg.desiredHdgDeg << " ";
+	os << msg.horDistTolFt << " ";
+	os << msg.vertDistTolFt << " ";
+	os << msg.velTolKts << " ";
+	os << msg.hdgToleranceDeg << " ";
+	os << msg.timeTol << " ";
+	os << msg.timeCritFirstMet << " ";
+	os << msg.hoverCompleted << " ";
+	os << msg.manCtrlRequiredAfterCritMet << " ";
 	return os;
 }
 
@@ -86,13 +93,13 @@ istream& operator>> (istream& is, message_hover_criteria_t& msg) {
 	is >> msg.desiredLon;
 	is >> msg.desiredAltMSL;
 	is >> msg.desiredHdgDeg;
-	is >> msg.horDistTolFt;		       
-	is >> msg.vertDistTolFt;		      
-	is >> msg.velTolKts;			      
-	is >> msg.hdgToleranceDeg;            
-	is >> msg.timeTol;			        
-	is >> msg.timeCritFirstMet;           
-	is >> msg.hoverCompleted;             
+	is >> msg.horDistTolFt;
+	is >> msg.vertDistTolFt;
+	is >> msg.velTolKts;
+	is >> msg.hdgToleranceDeg;
+	is >> msg.timeTol;
+	is >> msg.timeCritFirstMet;
+	is >> msg.hoverCompleted;
 	is >> msg.manCtrlRequiredAfterCritMet;
 	return is;
 }
