@@ -10,7 +10,7 @@ This test demonstrates a nominal trajectory through the SUpervisor from the init
 	3 1 45.6 -75.4 100.0
 	```
 2. Then once a landing point has been received, an aircraft state is required to form the command to traverse to the landing point. Using the aircraft state the Supervisor can request a velocity from the FCC then tell it to reach a hover criteria over the landing point. 
-	'''
+	```
 	1 45.6 -75.4 100.0 90.0 10.0
 	```
 3. Then the user should wait 3 seconds to ensure that the Supervisor has reached a hover criteria (3 seconds is the default hover time tolerance). After the three seconds has elapsed a message should be sent informing the Supervisor that the aircraft has landed.
@@ -32,7 +32,7 @@ This test demonstrates that the Supervisor will send a command to start orbiting
 	3 1 45.6 -75.4 100.0
 	```
 4. Once a landing point has been received, an aircraft state is required to form the command to traverse to the landing point. Using the aircraft state the Supervisor can request a velocity from the FCC then tell it to reach a hover criteria over the landing point. 
-	'''
+	```
 	1 45.6 -75.4 100.0 90.0 10.0
 	```
 5. Then the user should wait 3 seconds to ensure that the Supervisor has reached a hover criteria (3 seconds is the default hover time tolerance). After the three seconds has elapsed a message should be sent informing the Supervisor that the aircraft has landed.
