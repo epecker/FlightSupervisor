@@ -13,13 +13,14 @@
 #include <assert.h>
 #include <string>
 
-#include "../../include/message_structures/message_hover_criteria_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_mavlink_mission_item_t.hpp"
 
-#include "../../include/enum_string_conversion.hpp"
-#include "../../include/Constants.hpp"
-#include "../../include/time_conversion.hpp"
+#include "enum_string_conversion.hpp"
+#include "Constants.hpp"
+#include "time_conversion.hpp"
+#include "mavNRC/geo.h"
 
 using namespace cadmium;
 using namespace std;
@@ -159,8 +160,15 @@ public:
 				if (!lp_recvd) {
 					//For each of the landing points received,
 					for (message_mavlink_mission_item_t new_lp : landing_points) {
+                        float distance_xy;
+                        float distance_z;
+                        get_distance_to_point_global_wgs84(
+                            lp.lat, lp.lon, lp.alt,
+                            new_lp.lat, new_lp.lon, new_lp.alt,
+                            &distance_xy, &distance_z);
+                        bool new_lp_valid = (distance_xy > LP_SEPARATION);
 						//If the landing point is far enough away from the previous landing point,
-						if (calculate_new_lp_valid(new_lp)) {
+						if (new_lp_valid) {
 							//Set the current landing point to be the new landing point.
 							lp = new_lp;
 							valid_lp_recv = true;
@@ -310,21 +318,6 @@ public:
 	friend ostringstream& operator<<(ostringstream& os, const typename LP_Manager<TIME>::state_type& i) {
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
-	}
-
-	bool calculate_new_lp_valid(message_mavlink_mission_item_t i_lp) {
-		//Radius of the earth in meters.
-		const float R = 6371000;
-
-		double my_x = R * cos(lp.lat) * cos(lp.lon);
-		double my_y = R * cos(lp.lat) * sin(lp.lon);
-		double my_z = R * sin(lp.lat);
-
-		double i_x = R * cos(i_lp.lat) * cos(i_lp.lon);
-		double i_y = R * cos(i_lp.lat) * sin(i_lp.lon);
-		double i_z = R * sin(i_lp.lat);
-
-		return (sqrt(pow((i_x - my_x), 2) + pow((i_y - my_y), 2) + pow((i_z - my_z), 2)) >= LP_HOR_ACCEPT_TOLERANCE_DISTANCE);
 	}
 };
 
