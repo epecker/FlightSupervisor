@@ -138,10 +138,35 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
         padded_message_table.append([value[0]] + [''] * pad)
         padded_message_table[i].extend(value[1:])
 
-    table = copy.copy(state_table)
+    pad = len(message_header) - 1
+    padded_state_table = []
+    for i, value in enumerate(state_table):
+        padded_state_table.append(value)
+        padded_state_table[i].extend([''] * pad)
+
+    table = padded_state_table
     table.extend(padded_message_table)
     table.sort(key=lambda list: list[0])
 
+    items_to_remove = []
+    current_foundation = 0
+    for i, value in enumerate(table):
+        if i == 0: continue
+        if table[current_foundation][1:len(value)-1] == value[1:len(value)-1]:
+            items_to_remove.append(i)
+        else:
+            is_line_appended = False
+            part = value[1:len(value)-3]
+            for j in part:
+                if j == "" and value[len(value)-2] == "":
+                    items_to_remove.append(i)
+                    is_line_appended = True
+                    break
+            if not is_line_appended:
+                current_foundation = i
+    for i in reversed(items_to_remove):
+        table.pop(i)
+        
     viewed_times = {}
     for i, value in enumerate(table):
         if i == 0: continue
