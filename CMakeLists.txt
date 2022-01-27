@@ -38,8 +38,8 @@ find_package(
 )
 
 # Setup includes
-set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
-set(rt_includes_list ${Boost_INCLUDE_DIRS} ${RT_CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR})
+set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/include")
+set(rt_includes_list ${Boost_INCLUDE_DIRS} ${RT_CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/include")
 
 # Create all tests
 add_executable(supervisor				"${CMAKE_SOURCE_DIR}/src/main.cpp")

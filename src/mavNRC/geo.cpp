@@ -42,7 +42,7 @@
  * @author Anton Babushkin <anton.babushkin@me.com>
  */
 
-#include "geo.h"
+#include "mavNRC/geo.h"
 #include "ecl.h" // was <ecl.h>
 #include <float.h>
 #include <math.h>
