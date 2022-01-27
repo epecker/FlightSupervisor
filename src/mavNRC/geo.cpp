@@ -42,8 +42,9 @@
  * @author Anton Babushkin <anton.babushkin@me.com>
  */
 
+#define _USE_MATH_DEFINES
 #include "mavNRC/geo.h"
-#include "ecl.h" // was <ecl.h>
+#include "mavNRC/ecl.h" // was <ecl.h>
 #include <float.h>
 #include <math.h>
 
