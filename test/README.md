@@ -38,13 +38,16 @@ To use these drivers simply run the .EXE and follow the instructions on the cons
 
 ## The Command Line Supervisor Test Driver
 The command line Supervisor test driver (td_supervisor_command_line.exe) is a user driven method of testing the Supervisor in real-time. The driver works by receiving port value pairs from the user on the command line and forwarding them as event messsages to the Supervisors input ports. The user will continually be prompted for input until 'q' is entered. To send a message to a certain port on the Supervisor, akin to how it will receive messages via a network, the user specifies which port the message should be sent to:
-0. The landing achieved port which takes a single boolean (0/1) value.
-1. The aircraft state port which takes an aircraft state structure as a value.
-2. The pilot takeover port which takes a single boolean (0/1) value.
-3. The landing point received port which takes a mavlink mission item structure input.
-4. The planned landing point achieved port which takes a mavlink mission item structure input.
+	
+	0. The landing achieved port which takes a single boolean (0/1) value.
+	1. The aircraft state port which takes an aircraft state structure as a value.
+	2. The pilot takeover port which takes a single boolean (0/1) value.
+	3. The landing point received port which takes a mavlink mission item structure input.
+	4. The planned landing point achieved port which takes a mavlink mission item structure input.
+
 The description of each of the ports can be found in the port description document. The members of each of the structures can be found in either the source code or on the terminal during test execution.
 Example test cases can be found here [Command Line Supervisor Test Driver Example Test Cases](input_data/supervisor_command_line/README.md)
+	
 ## Preparing the test outputs for review
 
 ### Prerequisites
