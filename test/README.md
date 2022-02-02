@@ -55,6 +55,7 @@ Example test cases can be found here [Command Line Supervisor Test Driver Exampl
 * Install python 3
 * Install tabulate for python 3
   * pip install tabulate
+  * python3 -m pip install tabulate 
 * Add python to your system environment path
 
 ### Perform the Tests
@@ -68,6 +69,6 @@ Example test cases can be found here [Command Line Supervisor Test Driver Exampl
 	```
 4. Run the python Script
 	```
-	python ./test/scripts/simulation_cleanup.py
+	python ./test/scripts/simulation_cleanup.py ./<simulation_results>
 	```
 5. The output can be found in `<Project_Directory>/test/simulation_results/<Model_Name>.md` 
