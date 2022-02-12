@@ -9,18 +9,17 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../include/message_structures/message_hover_criteria_t.hpp"
-#include "../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
 
 //Atomic model headers
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
 
 //Coupled model headers
-#include "../include/coupled_models/Supervisor.hpp"
+#include "coupled_models/Supervisor.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../include/SupervisorConfig.hpp"
+#include "SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
@@ -40,10 +39,10 @@ using TIME = NDTime;
 * Create an atomic model to read the input file.
 */
 template<typename T>
-class InputReader_message_mavlink_mission_item_t : public iestream_input<message_mavlink_mission_item_t, T> {
+class InputReader_message_mavlink_mission_item_t : public iestream_input<message_landing_point_t, T> {
 public:
 	InputReader_message_mavlink_mission_item_t() = default;
-	InputReader_message_mavlink_mission_item_t(const char* file_path) : iestream_input<message_mavlink_mission_item_t, T>(file_path) {}
+	InputReader_message_mavlink_mission_item_t(const char* file_path) : iestream_input<message_landing_point_t, T>(file_path) {}
 };
 
 int main(int argc, char* argv[]) {
@@ -96,7 +95,7 @@ int main(int argc, char* argv[]) {
 
 	//Define the one coupling from the input reader to the landing point receipt port on the Supervisor.
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_LP_recv>("input_reader", "supervisor")
+		dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_LP_recv>("input_reader", "supervisor")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver;

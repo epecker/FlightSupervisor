@@ -18,8 +18,11 @@
 #include <string>
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../../include/enum_string_conversion.hpp"
-#include "../../include/Constants.hpp"
+#include "enum_string_conversion.hpp"
+#include "Constants.hpp"
+
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -27,7 +30,7 @@ using namespace std;
 // Input and output port definition
 struct Handover_Control_defs {
 	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_pilot_handover : public in_port<message_mavlink_mission_item_t> {};
+	struct i_pilot_handover : public in_port<message_landing_point_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 
 	struct o_notify_pilot : public out_port<bool> {};
@@ -72,18 +75,18 @@ public:
 	state_type state;
 
 	// Public members of the class
-	message_mavlink_mission_item_t hover_location;
+	message_landing_point_t hover_location;
 
 	// Default constructor
 	Handover_Control() {
 		state.current_state = States::IDLE;
-		hover_location = message_mavlink_mission_item_t();
+		hover_location = message_landing_point_t();
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
 	Handover_Control(States initial_state) {
 		state.current_state = initial_state;
-		hover_location = message_mavlink_mission_item_t();
+		hover_location = message_landing_point_t();
 	}
 
 	// Internal transitions

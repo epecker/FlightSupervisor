@@ -25,7 +25,7 @@
 #include <cadmium/modeling/message_bag.hpp>
 #include <cadmium/modeling/dynamic_model.hpp>
 
-#include "../enum_string_conversion.hpp"
+#include "enum_string_conversion.hpp"
 
 #ifdef RT_LINUX
 

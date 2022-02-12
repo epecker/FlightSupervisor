@@ -23,11 +23,11 @@
 //Messages structures
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../../include/SupervisorConfig.hpp"
-#include "../../include/input_readers.hpp" // Input Reader Definitions.
+#include "SupervisorConfig.hpp"
+#include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "../../include/io_models/Blocking_Input.hpp"
+#include "io_models/Blocking_Input.hpp"
 
 using namespace std;
 using namespace cadmium;

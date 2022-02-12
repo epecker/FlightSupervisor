@@ -21,24 +21,24 @@
 #include <NDTime.hpp>
 
 //Constants
-#include "../Constants.hpp"
+#include "Constants.hpp"
 
 //Utility functions
-#include "../time_conversion.hpp"
+#include "time_conversion.hpp"
 
 //Messages structures
-#include "../message_structures/message_hover_criteria_t.hpp"
-#include "../message_structures/message_aircraft_state_t.hpp"
-#include "../message_structures/message_mavlink_mission_item_t.hpp"
-#include "../message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 //Atomic model headers
-#include "../atomic_models/Landing_Routine.hpp"
-#include "../atomic_models/Reposition_Timer.hpp"
-#include "../atomic_models/Command_Reposition.hpp"
+#include "atomic_models/Landing_Routine.hpp"
+#include "atomic_models/Reposition_Timer.hpp"
+#include "atomic_models/Command_Reposition.hpp"
 
 //Project information headers this is created by cmake at generation time!!!!
-#include "../SupervisorConfig.hpp"
+#include "SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
@@ -59,7 +59,7 @@ struct LP_Reposition_defs {
 	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_control_yielded : public in_port<bool> {};
-	struct i_LP_new : public in_port<message_mavlink_mission_item_t> {};
+	struct i_LP_new : public in_port<message_landing_point_t> {};
 
 
 	/***** Define output ports for coupled model *****/
@@ -68,7 +68,7 @@ struct LP_Reposition_defs {
 	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_cancel_hover : public out_port<bool> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-	struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
+	struct o_pilot_handover : public out_port<message_landing_point_t> {};
 };
 
 class LP_Reposition {

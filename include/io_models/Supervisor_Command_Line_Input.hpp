@@ -28,8 +28,8 @@
 #include "../enum_string_conversion.hpp"
 
 //Messages structures
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
 
 #ifdef RT_LINUX
 
@@ -43,8 +43,8 @@ struct Supervisor_Command_Line_Input_defs{
 	struct o_landing_achieved : public out_port<bool> {};
 	struct o_aircraft_state : public out_port<message_aircraft_state_t> {};
 	struct o_pilot_takeover : public out_port<bool> {};
-	struct o_LP_recv : public out_port<message_mavlink_mission_item_t> {};
-	struct o_PLP_ach : public out_port<message_mavlink_mission_item_t> {};
+	struct o_LP_recv : public out_port<message_landing_point_t> {};
+	struct o_PLP_ach : public out_port<message_landing_point_t> {};
 };
 
 // Atomic model
@@ -164,12 +164,12 @@ public:
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_pilot_takeover>(bags).push_back(value);
                         }
                         else if (port == 3) {
-                            message_mavlink_mission_item_t value;
+                            message_landing_point_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_LP_recv>(bags).push_back(value);
                         }
                         else if (port == 4) {
-                            message_mavlink_mission_item_t value;
+                            message_landing_point_t value;
                             ss >> value;
                             get_messages<typename Supervisor_Command_Line_Input_defs::o_PLP_ach>(bags).push_back(value);
                         }

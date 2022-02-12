@@ -16,15 +16,15 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../../include/SupervisorConfig.hpp"
-#include "../../include/input_readers.hpp" // Input Reader Definitions.
+#include "SupervisorConfig.hpp"
+#include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "../../include/coupled_models/Supervisor.hpp"
+#include "coupled_models/Supervisor.hpp"
 //#include "../test_drivers/SupervisorTestDriver/coupled_models/SupervisorTestDriver.cpp"
 
 using namespace std;
@@ -38,7 +38,7 @@ ofstream out_messages;
 ofstream out_state;
 
 // Define output ports to be used for logging purposes
-struct o_LP_expired : public out_port<message_mavlink_mission_item_t> {};
+struct o_LP_expired : public out_port<message_landing_point_t> {};
 struct o_start_LZE_scan : public out_port<bool> {};
 struct o_mission_complete : public out_port<bool> {};
 struct o_land_requested : public out_port<bool> {};
@@ -144,8 +144,8 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Supervisor_defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),
-			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_LP_recv>("ir_lp_recv", "supervisor"),
-			dynamic::translate::make_IC<iestream_input_defs<message_mavlink_mission_item_t>::out, Supervisor_defs::i_PLP_ach>("ir_plp_ach", "supervisor")
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_LP_recv>("ir_lp_recv", "supervisor"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_PLP_ach>("ir_plp_ach", "supervisor")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

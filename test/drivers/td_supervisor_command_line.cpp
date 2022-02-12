@@ -16,16 +16,16 @@
 #include <NDTime.hpp>
 
 //Messages structures
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../../include/message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../../include/SupervisorConfig.hpp"
-//#include "../../include/input_readers.hpp" // Input Reader Definitions.
+#include "SupervisorConfig.hpp"
+//#include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "../../include/coupled_models/Supervisor.hpp"
-#include "../../include/io_models/Supervisor_Command_Line_Input.hpp"
+#include "coupled_models/Supervisor.hpp"
+#include "io_models/Supervisor_Command_Line_Input.hpp"
 
 using namespace std;
 using namespace cadmium;
@@ -39,7 +39,7 @@ ofstream out_state;
 ofstream out_info;
 
 // Define output ports to be used for logging purposes
-struct o_LP_expired : public out_port<message_mavlink_mission_item_t> {};
+struct o_LP_expired : public out_port<message_landing_point_t> {};
 struct o_start_LZE_scan : public out_port<bool> {};
 struct o_mission_complete : public out_port<bool> {};
 struct o_land_requested : public out_port<bool> {};

@@ -19,7 +19,6 @@
 
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_aircraft_state_t.hpp"
-#include "message_structures/message_mavlink_mission_item_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
 
 #include "enum_string_conversion.hpp"

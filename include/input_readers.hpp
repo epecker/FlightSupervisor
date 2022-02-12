@@ -11,10 +11,10 @@
 #include <cadmium/basic_model/pdevs/iestream.hpp>
 
 //Messages structures
-#include "../include/message_structures/message_aircraft_state_t.hpp"
-#include "../include/message_structures/message_hover_criteria_t.hpp"
-#include "../include/message_structures/message_mavlink_mission_item_t.hpp"
-#include "../include/message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 using namespace cadmium::basic_models::pdevs;
 
@@ -54,10 +54,10 @@ public:
 
 // Mavlink Mission Item
 template<typename T>
-class Input_Reader_Mavlink_Mission_Item : public iestream_input<message_mavlink_mission_item_t, T> {
+class Input_Reader_Mavlink_Mission_Item : public iestream_input<message_landing_point_t, T> {
 public:
 	Input_Reader_Mavlink_Mission_Item() = default;
-	Input_Reader_Mavlink_Mission_Item(const char* file_path) : iestream_input<message_mavlink_mission_item_t, T>(file_path) {};
+	Input_Reader_Mavlink_Mission_Item(const char* file_path) : iestream_input<message_landing_point_t, T>(file_path) {};
 };
 
 #endif // INPUT_READERS_HPP

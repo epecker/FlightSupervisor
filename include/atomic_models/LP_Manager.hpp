@@ -14,8 +14,7 @@
 #include <string>
 
 #include "message_structures/message_hover_criteria_t.hpp"
-#include "message_structures/message_mavlink_mission_item_t.hpp"
-#include "message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -27,15 +26,15 @@ using namespace std;
 
 //Port definition
 struct LP_Manager_defs {
-	struct i_lp_recv : public in_port<message_mavlink_mission_item_t> {};
-	struct i_plp_ach : public in_port<message_mavlink_mission_item_t> {};
+	struct i_lp_recv : public in_port<message_landing_point_t> {};
+	struct i_plp_ach : public in_port<message_landing_point_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_control_yielded : public in_port<bool> {};
 
-	struct o_lp_new : public out_port<message_mavlink_mission_item_t> {};
-	struct o_lp_expired : public out_port<message_mavlink_mission_item_t> {};
-	struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
+	struct o_lp_new : public out_port<message_landing_point_t> {};
+	struct o_lp_expired : public out_port<message_landing_point_t> {};
+	struct o_pilot_handover : public out_port<message_landing_point_t> {};
 	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_start_lze_scan : public out_port<bool> {};
 };
@@ -82,8 +81,8 @@ public:
 
 	// Public members of the class
 	bool lp_recvd;
-	message_mavlink_mission_item_t lp;
-	message_mavlink_mission_item_t plp;
+	message_landing_point_t lp;
+	message_landing_point_t plp;
 	TIME lp_accept_time_prev;
 	TIME orbit_time;
 
@@ -93,8 +92,8 @@ public:
 		lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
 		orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
 		lp_recvd = false;
-		lp = message_mavlink_mission_item_t();
-		plp = message_mavlink_mission_item_t();
+		lp = message_landing_point_t();
+		plp = message_landing_point_t();
 	}
 
 	// Constructor with timer parameter
@@ -103,8 +102,8 @@ public:
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
 		lp_recvd = false;
-		lp = message_mavlink_mission_item_t();
-		plp = message_mavlink_mission_item_t();
+		lp = message_landing_point_t();
+		plp = message_landing_point_t();
 	}
 
 	// Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
@@ -113,8 +112,8 @@ public:
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
 		lp_recvd = false;
-		lp = message_mavlink_mission_item_t();
-		plp = message_mavlink_mission_item_t();
+		lp = message_landing_point_t();
+		plp = message_landing_point_t();
 	}
 
 	// internal transition
@@ -151,7 +150,7 @@ public:
 			//If there are landing points that have been received,
 			if (get_messages<typename LP_Manager_defs::i_lp_recv>(mbs).size() >= 1) {
 				//Store the landing points in a vector.
-				vector<message_mavlink_mission_item_t> landing_points = get_messages<typename LP_Manager_defs::i_lp_recv>(mbs);
+				vector<message_landing_point_t> landing_points = get_messages<typename LP_Manager_defs::i_lp_recv>(mbs);
 
 				//Create a flag for if one of them is a valid landing point to be transitioned to.
 				bool valid_lp_recv = false;
@@ -159,7 +158,7 @@ public:
 				//If there was a previous landing point,
 				if (!lp_recvd) {
 					//For each of the landing points received,
-					for (message_mavlink_mission_item_t new_lp : landing_points) {
+					for (message_landing_point_t new_lp : landing_points) {
                         float distance_xy;
                         float distance_z;
                         get_distance_to_point_global_wgs84(
@@ -249,8 +248,8 @@ public:
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<message_mavlink_mission_item_t> message_out;
-		message_mavlink_mission_item_t temp_lp;
+		vector<message_landing_point_t> message_out;
+		message_landing_point_t temp_lp;
 		vector<bool> bool_out;
 		vector<message_hover_criteria_t> stabilize_messages;
 

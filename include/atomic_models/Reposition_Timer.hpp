@@ -18,13 +18,13 @@
 #include <string>
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../../include/enum_string_conversion.hpp"
+#include "enum_string_conversion.hpp"
 
 // Data structures that are used in message transport
-#include "../../include/message_structures/message_mavlink_mission_item_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
 
 // Macros
-#include "../../include/Constants.hpp"
+#include "Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -32,13 +32,13 @@ using namespace std;
 // Input and output port definition
 struct Reposition_Timer_defs {
 	struct i_control_yielded : public in_port<bool> {};
-	struct i_lp_crit_met : public in_port<message_mavlink_mission_item_t> {};
-	struct i_lp_new : public in_port<message_mavlink_mission_item_t> {};
+	struct i_lp_crit_met : public in_port<message_landing_point_t> {};
+	struct i_lp_new : public in_port<message_landing_point_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 
 	struct o_land : public out_port<bool> {};
-	struct o_pilot_handover : public out_port<message_mavlink_mission_item_t> {};
-	struct o_request_reposition : public out_port<message_mavlink_mission_item_t> {};
+	struct o_pilot_handover : public out_port<message_landing_point_t> {};
+	struct o_request_reposition : public out_port<message_landing_point_t> {};
 };
 
 // Atomic Model
@@ -79,28 +79,28 @@ public:
 	state_type state;
 
 	// Public members of the class
-	message_mavlink_mission_item_t landing_point;
+	message_landing_point_t landing_point;
 	TIME repo_time;
 
 	// Default constructor
 	Reposition_Timer() {
 		state.current_state = States::IDLE;
 		repo_time = TIME(LP_REPOSITION_TIME);
-		landing_point = message_mavlink_mission_item_t();
+		landing_point = message_landing_point_t();
 	}
 
 	// Constructor with timer parameter
 	Reposition_Timer(TIME i_repo_time) {
 		state.current_state = States::IDLE;
 		repo_time = i_repo_time;
-		landing_point = message_mavlink_mission_item_t();
+		landing_point = message_landing_point_t();
 	}
 
 	// Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
 	Reposition_Timer(TIME i_repo_time, States initial_state) {
 		state.current_state = initial_state;
 		repo_time = i_repo_time;
-		landing_point = message_mavlink_mission_item_t();
+		landing_point = message_landing_point_t();
 	}
 
 	// Internal transitions
@@ -140,7 +140,7 @@ public:
 				case States::IDLE:
 					received_lp_new = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
-						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
 						landing_point = new_landing_points[0];
 						state.current_state = States::NEW_LP_REPO;
 					}
@@ -150,7 +150,7 @@ public:
 					received_lp_crit_met = get_messages<typename Reposition_Timer_defs::i_lp_crit_met>(mbs).size() >= 1;
 
 					if (received_lp_new) {
-						vector<message_mavlink_mission_item_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::NEW_LP_REPO;
 					} else if (received_lp_crit_met) {
@@ -181,7 +181,7 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
-		vector<message_mavlink_mission_item_t> bag_port_lp_out;
+		vector<message_landing_point_t> bag_port_lp_out;
 
 		switch (state.current_state) {
 			case States::REQUEST_LAND:

@@ -21,28 +21,27 @@
 #include <NDTime.hpp>
 
 //Constants
-#include "../Constants.hpp"
+#include "Constants.hpp"
 
 //Utility functions
-#include "../time_conversion.hpp"
+#include "time_conversion.hpp"
 
 //Messages structures
-#include "../message_structures/message_hover_criteria_t.hpp"
-#include "../message_structures/message_aircraft_state_t.hpp"
-#include "../message_structures/message_mavlink_mission_item_t.hpp"
-#include "../message_structures/message_mavlink_mission_item_t.hpp"
-#include "../message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_hover_criteria_t.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 //Atomic model headers
-#include "../atomic_models/LP_Manager.hpp"
-#include "../atomic_models/Stabilize.hpp"
-#include "../atomic_models/Handover_Control.hpp"
+#include "atomic_models/LP_Manager.hpp"
+#include "atomic_models/Stabilize.hpp"
+#include "atomic_models/Handover_Control.hpp"
 
 //Coupled model headers
-#include "../coupled_models/LP_Reposition.hpp"
+#include "coupled_models/LP_Reposition.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "../SupervisorConfig.hpp"
+#include "SupervisorConfig.hpp"
 
 //C++ headers
 #include <chrono>
@@ -61,12 +60,12 @@ struct Supervisor_defs {
 	struct i_landing_achieved : public in_port<bool> {};
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_LP_recv : public in_port<message_mavlink_mission_item_t> {};
-	struct i_PLP_ach : public in_port<message_mavlink_mission_item_t> {};
+	struct i_LP_recv : public in_port<message_landing_point_t> {};
+	struct i_PLP_ach : public in_port<message_landing_point_t> {};
 
 
 	/***** Define output ports for coupled model *****/
-	struct o_LP_expired : public out_port<message_mavlink_mission_item_t> {};
+	struct o_LP_expired : public out_port<message_landing_point_t> {};
 	struct o_start_LZE_scan : public out_port<bool> {};
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_land_requested : public out_port<bool> {};

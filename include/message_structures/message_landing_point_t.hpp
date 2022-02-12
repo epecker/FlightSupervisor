@@ -1,26 +1,22 @@
 #ifndef BOOST_SIMULATION_PLP_MESSAGE_HPP
 #define BOOST_SIMULATION_PLP_MESSAGE_HPP
 
-#include <assert.h>
 #include <iostream>
-#include <string>
-#include <math.h>
-#include <fstream>
 
 using namespace std;
 
 /*******************************************/
 /**************** Message_t ****************/
 /*******************************************/
-struct message_mavlink_mission_item_t{
+struct message_landing_point_t{
 	int		id;
 	double	lat;
 	double	lon;
 	double	alt;
 
-	message_mavlink_mission_item_t()
+	message_landing_point_t()
 		:id(0), lat(0), lon(0), alt(0) {}
-	message_mavlink_mission_item_t(int i_id, double i_lat, double i_lon, double i_alt)
+	message_landing_point_t(int i_id, double i_lat, double i_lon, double i_alt)
 		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt){}
 };
 
@@ -28,7 +24,7 @@ struct message_mavlink_mission_item_t{
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const message_mavlink_mission_item_t& msg) {
+ostream& operator<<(ostream& os, const message_landing_point_t& msg) {
 	os << msg.id << " " << msg.lat << " " << msg.lon << " " << msg.alt;
 	return os;
 }
@@ -37,7 +33,7 @@ ostream& operator<<(ostream& os, const message_mavlink_mission_item_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, message_mavlink_mission_item_t& msg) {
+istream& operator>> (istream& is, message_landing_point_t& msg) {
 	is >> msg.id;
 	is >> msg.lat;
 	is >> msg.lon;
