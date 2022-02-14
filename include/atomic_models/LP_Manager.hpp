@@ -300,7 +300,7 @@ public:
 						plp.lat,
 						plp.lon,
 						plp.alt,
-						aircraft_state.hdg_Deg,
+						plp.hdg,
 						DEFAULT_LAND_CRITERIA_HOR_DIST,
 						DEFAULT_LAND_CRITERIA_VERT_DIST,
 						DEFAULT_LAND_CRITERIA_VEL,

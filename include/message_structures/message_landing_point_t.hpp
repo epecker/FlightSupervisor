@@ -17,8 +17,8 @@ struct message_landing_point_t{
 
 	message_landing_point_t()
 		:id(0), lat(0), lon(0), alt(0), hdg(0) {}
-	message_landing_point_t(int i_id, double i_lat, double i_lon, double i_alt)
-		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt){}
+	message_landing_point_t(int i_id, double i_lat, double i_lon, double i_alt, double i_hdg)
+		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt), hdg(i_hdg) {}
 };
 
 /***************************************************/
@@ -26,7 +26,7 @@ struct message_landing_point_t{
 /***************************************************/
 
 ostream& operator<<(ostream& os, const message_landing_point_t& msg) {
-	os << msg.id << " " << msg.lat << " " << msg.lon << " " << msg.alt;
+	os << msg.id << " " << msg.lat << " " << msg.lon << " " << msg.alt << " " << msg.hdg;
 	return os;
 }
 
@@ -39,6 +39,7 @@ istream& operator>> (istream& is, message_landing_point_t& msg) {
 	is >> msg.lat;
 	is >> msg.lon;
 	is >> msg.alt;
+	is >> msg.hdg;
 	return is;
 }
 
