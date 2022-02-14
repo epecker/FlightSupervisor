@@ -48,6 +48,7 @@ struct message_aircraft_state_t {
 ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
 	os << msg.lat << " "
 		<< msg.lon << " "
+		<< msg.alt_AGL << " "
 		<< msg.alt_MSL << " "
 		<< msg.hdg_Deg << " "
 		<< msg.vel_Kts;
@@ -61,6 +62,7 @@ ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
 istream& operator>> (istream& is, message_aircraft_state_t& msg) {
 	is >> msg.lat;
 	is >> msg.lon;
+	is >> msg.alt_AGL;
 	is >> msg.alt_MSL;
 	is >> msg.hdg_Deg;
 	is >> msg.vel_Kts;
