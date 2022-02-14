@@ -123,6 +123,7 @@ public:
 		dynamic::translate::make_EIC<Supervisor_defs::i_LP_recv, LP_Manager_defs::i_lp_recv>("lp_manager"),
 		dynamic::translate::make_EIC<Supervisor_defs::i_PLP_ach, LP_Manager_defs::i_plp_ach>("lp_manager"),
 		dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, LP_Manager_defs::i_pilot_takeover>("lp_manager"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, LP_Manager_defs::i_aircraft_state>("lp_manager"),
 
 		// lp_reposition
 		dynamic::translate::make_EIC<Supervisor_defs::i_landing_achieved, LP_Reposition_defs::i_landing_achieved>("lp_reposition"),

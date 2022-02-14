@@ -215,10 +215,10 @@ void get_input(mutex *lock, string *input) {
     lock->lock();
     cout << "Please enter a port name and value:" << endl;
     cout << "\tLanding Achieved: \t0 value(boolean)" << endl;
-    cout << "\tAircraft State: \t1 lat(float) lon(double) alt(double) hdg(float) vel(float)" << endl;
+    cout << "\tAircraft State: \t1 lat(float) lon(double) alt_AGL(double) alt_MSL(double) hdg(float) vel(float)" << endl;
     cout << "\tPilot Takeover: \t2 value(boolean)" << endl;
-    cout << "\tLP Received: \t3 id(int) lat(double) lon(double) alt(double)" << endl;
-    cout << "\tPLP Achieved: \t4 id(int) lat(double) lon(double) alt(double)" << endl;
+    cout << "\tLP Received: \t\t3 id(int) lat(double) lon(double) alt(double) hdg(double_" << endl;
+    cout << "\tPLP Achieved: \t\t4 id(int) lat(double) lon(double) alt(double) hdg(double)" << endl;
     cout << "Enter q to quit" << endl;
     cout << ">>> ";
     getline(cin, *input);
