@@ -15,6 +15,7 @@
 
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_aircraft_state_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -28,6 +29,7 @@ using namespace std;
 struct LP_Manager_defs {
 	struct i_lp_recv : public in_port<message_landing_point_t> {};
 	struct i_plp_ach : public in_port<message_landing_point_t> {};
+	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_control_yielded : public in_port<bool> {};
@@ -45,6 +47,8 @@ public:
 	// Enum of the automata-like states of the atomic model.
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(WAYPOINT_MET)
+		(GET_STATE_PLP)
+		(GET_STATE_LP)
 		(HOVER_PLP)
 		(STABILIZING)
 		(START_LZE_SCAN)
@@ -60,6 +64,7 @@ public:
 	using input_ports = tuple<
 		typename LP_Manager_defs::i_lp_recv,
 		typename LP_Manager_defs::i_plp_ach,
+		typename LP_Manager_defs::i_aircraft_state,
 		typename LP_Manager_defs::i_pilot_takeover,
 		typename LP_Manager_defs::i_hover_criteria_met,
 		typename LP_Manager_defs::i_control_yielded
@@ -83,6 +88,7 @@ public:
 	bool lp_recvd;
 	message_landing_point_t lp;
 	message_landing_point_t plp;
+	message_aircraft_state_t aircraft_state;
 	TIME lp_accept_time_prev;
 	TIME orbit_time;
 
@@ -94,6 +100,7 @@ public:
 		lp_recvd = false;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
+		aircraft_state = message_aircraft_state_t();
 	}
 
 	// Constructor with timer parameter
@@ -184,16 +191,21 @@ public:
 
 				//If a valid landing point was identified out of the list of landing points,
 				switch (state.current_state) {
-					case States::WAYPOINT_MET: case States::LZE_SCAN:
+					case States::WAYPOINT_MET: 
 						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state.
-							state.current_state = States::NOTIFY_LP;
+							state.current_state = States::GET_STATE_LP;
+						}
+					case States::LZE_SCAN:
+						if (valid_lp_recv) {
+							//Transition into the notify reposition loop state.
+							state.current_state = States::GET_STATE_LP;
 						}
 						break;
 					case States::LP_APPROACH:
 						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
-							state.current_state = States::NOTIFY_LP;
+							state.current_state = States::GET_STATE_LP;
 						}
 						break;
 					default:
@@ -203,16 +215,44 @@ public:
 			}
 		}
 
+		bool received_aircraft_state;
 		switch (state.current_state) {
 			//If we are in a state that can receive a planned landing point acheived input,
 			case States::WAYPOINT_MET:
 				if (get_messages<typename LP_Manager_defs::i_plp_ach>(mbs).size() >= 1) {
-					state.current_state = States::HOVER_PLP;
+					state.current_state = States::GET_STATE_PLP;
 					plp = get_messages<typename LP_Manager_defs::i_plp_ach>(mbs)[0];
 				}
 				break;
+			case States::GET_STATE_PLP:
+				received_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs).size() >= 1;
 
-				//If we are in a state that can receive a hover criteria met input,
+				if (received_aircraft_state) {
+					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
+					aircraft_state = new_aircraft_state[0];
+					if (aircraft_state.alt_AGL > DEFAULT_HOVER_ALTITUDE_AGL) {
+						plp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL) * FEET_TO_M;
+					} else {
+						plp.alt = aircraft_state.alt_MSL * FEET_TO_M;
+					}
+					state.current_state = States::HOVER_PLP;
+				}
+				break;
+			case States::GET_STATE_LP:
+				received_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs).size() >= 1;
+
+				if (received_aircraft_state) {
+					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
+					message_aircraft_state_t aircraft_state = new_aircraft_state[0];
+					if (aircraft_state.alt_AGL > DEFAULT_HOVER_ALTITUDE_AGL) {
+						lp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL) * FEET_TO_M;
+					} else {
+						lp.alt = aircraft_state.alt_MSL * FEET_TO_M;
+					}
+					state.current_state = States::NOTIFY_LP;
+				}
+				break;
+			//If we are in a state that can receive a hover criteria met input,
 			case States::STABILIZING:
 				if (get_messages<typename LP_Manager_defs::i_hover_criteria_met>(mbs).size() >= 1) {
 					state.current_state = States::START_LZE_SCAN;
@@ -255,8 +295,24 @@ public:
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
-				stabilize_messages.push_back(message_hover_criteria_t());
-				get_messages<typename LP_Manager_defs::o_stabilize>(bags) = stabilize_messages;
+				{
+					message_hover_criteria_t mhc = message_hover_criteria_t(
+						plp.lat,
+						plp.lon,
+						plp.alt,
+						aircraft_state.hdg_Deg,
+						DEFAULT_LAND_CRITERIA_HOR_DIST,
+						DEFAULT_LAND_CRITERIA_VERT_DIST,
+						DEFAULT_LAND_CRITERIA_VEL,
+						DEFAULT_LAND_CRITERIA_HDG,
+						DEFAULT_LAND_CRITERIA_TIME,
+						-1,
+						0,
+						0
+					);
+					stabilize_messages.push_back(mhc);
+					get_messages<typename LP_Manager_defs::o_stabilize>(bags) = stabilize_messages;
+				}
 				break;
 
 			case States::START_LZE_SCAN:

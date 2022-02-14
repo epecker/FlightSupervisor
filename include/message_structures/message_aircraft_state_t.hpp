@@ -11,6 +11,7 @@ using namespace std;
 struct message_aircraft_state_t {
 	double  lat;		            // Decimal degrees
 	double  lon;		            // Decimal degrees
+	float	alt_AGL;				// Ft
 	float   alt_MSL;	            // Ft
 	float   hdg_Deg;	            // 0360 True hdg
 	double  vel_Kts;			        // Kts, tolerance for velocity  - horizontal
@@ -18,6 +19,7 @@ struct message_aircraft_state_t {
 	message_aircraft_state_t() :
 		lat(0.0),
 		lon(0.0),
+		alt_AGL(0.0),
 		alt_MSL(0.0),
 		hdg_Deg(0.0),
 		vel_Kts(0.0) 
@@ -26,12 +28,14 @@ struct message_aircraft_state_t {
 	message_aircraft_state_t(
 		double  i_lat,
 		double  i_lon,
+		float   i_alt_AGL,
 		float   i_alt_MSL,
 		float   i_hdg_Deg,
 		double  i_vel_Kts
 	)
 		: lat(i_lat),
 		lon(i_lon),
+		alt_AGL(i_alt_AGL),
 		alt_MSL(i_alt_MSL),
 		hdg_Deg(i_hdg_Deg),
 		vel_Kts(i_vel_Kts) {}

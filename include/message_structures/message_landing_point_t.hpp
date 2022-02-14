@@ -13,9 +13,10 @@ struct message_landing_point_t{
 	double	lat;
 	double	lon;
 	double	alt;
+	double	hdg;
 
 	message_landing_point_t()
-		:id(0), lat(0), lon(0), alt(0) {}
+		:id(0), lat(0), lon(0), alt(0), hdg(0) {}
 	message_landing_point_t(int i_id, double i_lat, double i_lon, double i_alt)
 		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt){}
 };

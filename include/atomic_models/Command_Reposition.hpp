@@ -245,7 +245,7 @@ public:
 					landing_point.lat,
 					landing_point.lon,
 					landing_point.alt,
-					aircraft_state.hdg_Deg,
+					landing_point.hdg,
 					DEFAULT_LAND_CRITERIA_HOR_DIST,
 					DEFAULT_LAND_CRITERIA_VERT_DIST,
 					DEFAULT_LAND_CRITERIA_VEL,
