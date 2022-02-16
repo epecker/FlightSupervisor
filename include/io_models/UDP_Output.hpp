@@ -25,10 +25,11 @@
 #include <cadmium/modeling/dynamic_model.hpp>
 
 #include "enum_string_conversion.hpp"
+#include "Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
-using namespace boost::asio::ip;
+using namespace boost;
 
 // Input and output port definitions
 template<typename MSG> struct UDP_Output_defs{
@@ -41,14 +42,10 @@ class UDP_Output {
 
 // Private members for thread management.
 private:
+    asio::io_service io_service;
+    asio::ip::udp::endpoint network_endpoint;
     MSG message;
     
-    string destination_address;
-    int destination_port;
-
-    udp::socket m_socket; 
-    udp::resolver::results_type m_endpoint;
-
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
@@ -64,40 +61,9 @@ public:
     }
 
     // Constructor with polling rate parameter
-    UDP_Output(string address, string port) {
-        //Initialise the current state
+    UDP_Output(string address, unsigned short port) {
         state.current_state = States::IDLE;
-
-        boost::asio::io_context io_context;
-
-        udp::resolver resolver(io_context);
-        m_endpoint = resolver.resolve(udp::v4(), address, port);
-
-        m_socket = udp::socket(io_context, m_endpoint.begin());
-
-
-        // udp::resolver resolver(io_service);
-
-        // socket = socket(io_service);
-        // socket.open(udp::v4());
-        // socket.set_option(socket_base::broadcast(true));
-
-        // addrinfo hints;
-        // memset(&hints, 0, sizeof(hints));
-        // hints.ai_family = AF_UNSPEC;
-        // hints.ai_socktype = SOCK_DGRAM;
-        // hints.ai_protocol = IPPROTO_UDP;
-        // int r(getaddrinfo(address.c_str(), string(destination_port).c_str(), &hints, &address_info));
-        // if(r != 0 || address_info == NULL)
-        // {
-        //     throw udp_client_server_runtime_error(("invalid address or port: \"" + destination_address + ":" + destination_port + "\"").c_str());
-        // }
-        // socket = socket(address_info->ai_family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
-        // if(socket == -1)
-        // {
-        //     freeaddrinfo(address_info);
-        //     throw udp_client_server_runtime_error(("could not create socket for: \"" + destination_address + ":" + destination_port + "\"").c_str());
-        // }
+        network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port);
     }
 
 	// This is used to track the state of the atomic model. 
@@ -145,13 +111,16 @@ public:
     // Output function
     typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-        if(state.current_state == States::SENDING) {
-            string message_string;
-            message_string  = "test";
-            // sendto(socket, message_string.c_str, message_string.size(), 0, address_info->ai_addr, address_info->aiaddrlen);
-            //socket.send_to(boost::asio::buffer(message_string), receiver_endpoint);
-            boost::system::error_code err;
-            m_socket.send_to(boost::asio::buffer(message), m_endpoint.begin(), 0, err);
+        asio::ip::udp::socket socket(io_service);
+        boost::system::error_code err;
+        switch(state.current_state) {
+            case States::SENDING:
+                socket.open(asio::ip::udp::v4());
+                socket.send_to(asio::buffer(message), network_endpoint, 0, err);
+                socket.close();
+                break;
+            default:
+                break;
         }
         return bags;
     }

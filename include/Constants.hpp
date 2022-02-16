@@ -51,4 +51,9 @@
 
 #define FEET_TO_M 0.3048
 
+// Networking
+#define PEREGRINE_IP "10.1.10.2"
+#define MAVLINK_OVER_UDP_PORT 14601
+#define MAX_SER_BUFFER_CHARS 1024 // Given in serialToEthThreads.c 168
+
 #endif /* CONSTANTS_HPP */
