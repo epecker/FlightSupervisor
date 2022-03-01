@@ -31,6 +31,8 @@ using namespace cadmium;
 using namespace std;
 using namespace boost;
 
+
+
 // Input and output port definitions
 template<typename MSG> struct UDP_Output_defs{
     struct i_message   : public in_port<MSG> { };
@@ -42,7 +44,6 @@ class UDP_Output {
 
 // Private members for thread management.
 private:
-    asio::io_service io_service;
     asio::ip::udp::endpoint network_endpoint;
     MSG message;
     
@@ -61,9 +62,10 @@ public:
     }
 
     // Constructor with polling rate parameter
-    UDP_Output(string address, unsigned short port) {
+    UDP_Output(string address, string port) {
         state.current_state = States::IDLE;
-        network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port);
+        unsigned short port_num = (unsigned short) strtoul(port.c_str(), NULL, 0);
+        network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port_num);
     }
 
 	// This is used to track the state of the atomic model. 
@@ -111,12 +113,15 @@ public:
     // Output function
     typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
+        asio::io_service io_service;
         asio::ip::udp::socket socket(io_service);
         boost::system::error_code err;
+        char data[sizeof(MSG)];
         switch(state.current_state) {
             case States::SENDING:
+                memcpy(data, &message, sizeof(data)); // Convert back to MSG: MSG recv = MSG(); memcpy(recv, data, sizeof(data));
                 socket.open(asio::ip::udp::v4());
-                socket.send_to(asio::buffer(message), network_endpoint, 0, err);
+                socket.send_to(asio::buffer(data), network_endpoint, 0, err);
                 socket.close();
                 break;
             default:
