@@ -33,7 +33,7 @@
 using namespace std;
 using namespace cadmium;
 
-using hclock = chrono::high_resolution_clock;
+using hclock = std::chrono::high_resolution_clock;
 using TIME = NDTime;
 
 // Used for oss_sink_state and oss_sink_messages
@@ -76,7 +76,8 @@ int main(int argc, char* argv[]) {
 		string out_state_file = out_directory + string("/output_state.txt");
 		string out_info_file = out_directory + string("/output_info.txt");
 
-		if (!filesystem::exists(input_file_in)) {
+		if (!filesystem::exists(input_file_message) ||
+			!filesystem::exists(input_file_quit)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
@@ -85,15 +86,15 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", move("127.0.0.1"), move("23"));
-		shared_ptr<dynamic::modeling::model> udp_input = dynamic::translate::make_dynamic_atomic_model<UDP_Input_LP, TIME, TIME>("udp_output", move(TIME("00:00:00:100")));
+		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23"));
+		std::shared_ptr<dynamic::modeling::model> udp_input = dynamic::translate::make_dynamic_atomic_model<UDP_Input_LP, TIME, TIME>("udp_output", std::move(TIME("00:00:00:100")));
 
 		// Instantiate the input readers.
 		// One for each input
-		shared_ptr<dynamic::modeling::model> ir_message =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", move(input_file_message.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_quit =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", move(input_file_quit.c_str()));
+		std::shared_ptr<dynamic::modeling::model> ir_message =
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", std::move(input_file_message.c_str()));
+		std::shared_ptr<dynamic::modeling::model> ir_quit =
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", std::move(input_file_quit.c_str()));
 
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
@@ -123,7 +124,7 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, UDP_Output_defs<message_landing_point_t>::i_message>("ir_quit", "udp_input")
 		};
 
-		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
+		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
 			"test_driver", submodels_TestDriver, iports_TestDriver, oports_TestDriver, eics_TestDriver, eocs_TestDriver, ics_TestDriver
 		);
 
@@ -170,12 +171,12 @@ int main(int argc, char* argv[]) {
 	fflush(NULL);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
-	if (system("python3 --version") == 0) {
+	if (std::system("python3 --version") == 0) {
 		string command = "python3 " + path_to_script + string(" ") + path_to_simulation_results;
-		system(command.c_str());
-	} else if (system("python --version") == 0) {
+		std::system(command.c_str());
+	} else if (std::system("python --version") == 0) {
 		string command = "python " + path_to_script + string(" ") + path_to_simulation_results;
-		system(command.c_str());
+		std::system(command.c_str());
 	} else {
 		cout << "\nPython is not installed!\n";
 	}

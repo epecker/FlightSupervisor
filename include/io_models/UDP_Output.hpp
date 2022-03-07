@@ -57,8 +57,9 @@ public:
 
     // Default constructor
     UDP_Output() {
-        //Just use the other constructor with 100ms polling
-        UDP_Output(TIME("00:00:00:100"));
+        state.current_state = States::IDLE;
+        unsigned short port_num = (unsigned short) MAVLINK_OVER_UDP_PORT;
+        network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(PEREGRINE_IP), port_num);
     }
 
     // Constructor with polling rate parameter
