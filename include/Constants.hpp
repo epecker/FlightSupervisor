@@ -2,7 +2,7 @@
 #define CONSTANTS_HPP
 
 // Time Advance 0 Macro 1 milli second
-#define TA_ZERO "00:00:00:010"
+#define TA_ZERO "00:00:00:020"
 
 // Macros for LP_Reposition.hpp
 #define LP_REPOSITION_TIME "00:01:00:000"
