@@ -9,11 +9,6 @@
 #ifndef BOOST_SIMULATION_PDEVS_INTERRUPTINPUT_HPP
 #define BOOST_SIMULATION_PDEVS_INTERRUPTINPUT_HPP
 
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/message_bag.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
-
 #include <limits>
 #include <math.h>
 #include <assert.h>
@@ -27,90 +22,97 @@
 #include <limits>
 #include <random>
 
-  //This class will interface with a interrupt input pin.
-  using namespace cadmium;
-  using namespace std;
+#include <cadmium/engine/pdevs_dynamic_runner.hpp>
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+#include <cadmium/modeling/dynamic_model.hpp>
 
-  //Port definition
-  struct Async_Test_defs{
-      struct out : public out_port<bool> { };
-  };
+#include "Callback_Tester.hpp"
 
-  template<typename TIME>
-  class Async_Test {
+//This class will interface with a interrupt input pin.
+using namespace cadmium;
+using namespace std;
 
-    private:
-      cadmium::dynamic::modeling::AsyncEventSubject *_sub;
+//Port definition
+struct Async_Test_defs {
+	struct out : public out_port<int> { };
+};
 
-    public:
-    //Parameters to be overwriten when instantiating the atomic model
-    Callback_Tester* tester;
+template<typename TIME>
+class Async_Test {
 
-    // default constructor
-    Async_Test() {
-    }
+private:
+	cadmium::dynamic::modeling::AsyncEventSubject* _sub;
 
-    Async_Test (cadmium::dynamic::modeling::AsyncEventSubject* sub, string name) {
-      tester = new Callback_Tester(name);
-      tester->monitor(sub);
-      state.output = intPin->read();
-      state.last = state.output;
-      state.prop = true;
-    }
+public:
+	//Parameters to be overwriten when instantiating the atomic model
+	Callback_Tester* tester;
 
-    // state definition
-    struct state_type{
-      bool output;
-      bool last;
-      bool prop;
-    };
-    state_type state;
+	// default constructor
+	Async_Test() {
+	}
 
-    // ports definition
-    using input_ports=std::tuple<>;
-    using output_ports=std::tuple<typename Async_Test_defs::out>;
+	Async_Test(cadmium::dynamic::modeling::AsyncEventSubject* sub, string name) {
+		tester = new Callback_Tester(name);
+		tester->monitor(sub);
+		state.output = tester->read();
+		state.last = state.output;
+		state.prop = true;
+	}
 
-    // internal transition
-    void internal_transition() {
-      state.prop = false;
-    }
+	// state definition
+	struct state_type {
+		int output;
+		int last;
+		bool prop;
+	};
+	state_type state;
 
-    // external transition
-    void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-        state.prop = true;
-        state.last = state.output;
-        state.output = (true);
-      }
+	// ports definition
+	using input_ports = std::tuple<>;
+	using output_ports = std::tuple<typename Async_Test_defs::out>;
 
-    // confluence transition
-    void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-        internal_transition();
-        external_transition(TIME(), std::move(mbs));
-    }
+	// internal transition
+	void internal_transition() {
+		state.prop = false;
+	}
 
-    // output function
-    typename make_message_bags<output_ports>::type output() const {
-      typename make_message_bags<output_ports>::type bags;
-      if(state.last != state.output) {
-        bool out = state.output;
-        get_messages<typename Async_Test_defs::out>(bags).push_back(out);
-      }
-      return bags;
-    }
+	// external transition
+	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+		state.prop = true;
+		state.last = state.output;
+		state.output = tester->read();
+	}
 
-    // time_advance function
-    TIME time_advance() const {
-      if(state.prop){
-        return TIME("00:00:00:00");
-      }
+	// confluence transition
+	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+		internal_transition();
+		external_transition(TIME(), std::move(mbs));
+	}
 
-      return std::numeric_limits<TIME>::infinity();
-    }
+	// output function
+	typename make_message_bags<output_ports>::type output() const {
+		typename make_message_bags<output_ports>::type bags;
+		if (state.last != state.output) {
+			int out = state.output;
+			get_messages<typename Async_Test_defs::out>(bags).push_back(out);
+		}
+		return bags;
+	}
 
-    friend std::ostringstream& operator<<(std::ostringstream& os, const typename InterruptInput<TIME>::state_type& i) {
-      os << "Input Pin: " << (i.output ? 1 : 0);
-      return os;
-    }
-  };
+	// time_advance function
+	TIME time_advance() const {
+		if (state.prop) {
+			return TIME("00:00:00:00");
+		}
+
+		return std::numeric_limits<TIME>::infinity();
+	}
+
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Async_Test<TIME>::state_type& i) {
+		os << "Input Value: " << i.output;
+		return os;
+	}
+};
 
 #endif // BOOST_SIMULATION_PDEVS_INTERRUPTINPUT_HPP
