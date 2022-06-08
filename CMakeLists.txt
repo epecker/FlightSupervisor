@@ -34,7 +34,7 @@ configure_file("${CADMIUM_INCLUDE_DIR}/cadmium/basic_model/pdevs/iestream.hpp" "
 set(Boost_USE_STATIC_LIBS on)
 find_package(
 	Boost 1.65 REQUIRED
-	COMPONENTS system thread regex
+	COMPONENTS system thread regex interprocess
 )
 
 # Setup includes
