@@ -35,6 +35,9 @@
 using namespace cadmium;
 using namespace std;
 
+// Global static mutex for thread synchronization using unique locks.
+std::mutex input_mutex; 
+
 // Input and output port definitions
 template<typename MSG> struct UDP_Input_defs{
     struct o_message  : public out_port<MSG> { };
@@ -67,9 +70,9 @@ public:
     UDP_Input() {
         //Initialise the current state
         state.current_state = States::INPUT;
+		state.has_messages = false;
 
-        //Create the mutex and user input variable
-        state.input_mutex = new std::mutex();
+        //Create the network endpoint using a default address and port.
         polling_rate = TIME("00:00:00:100");
         unsigned short port_num = (unsigned short) MAVLINK_OVER_UDP_PORT;
         network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(PEREGRINE_IP), port_num);
@@ -81,9 +84,9 @@ public:
     UDP_Input(TIME rate, string address, string port) {
         //Initialise the current state
         state.current_state = States::INPUT;
+		state.has_messages = false;
 
-        //Create the mutex and user input variable
-        state.input_mutex = new std::mutex();
+        //Create the network endpoint using the supplied address and port.
         polling_rate = rate;
         unsigned short port_num = (unsigned short) strtoul(port.c_str(), NULL, 0);
         network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port_num);
@@ -96,7 +99,7 @@ public:
 	// (required for the simulator)
     struct state_type{
         States current_state;
-        std::mutex * input_mutex; 
+		bool has_messages;
     };
     state_type state;
 
@@ -111,11 +114,10 @@ public:
 	// (required for the simulator)
     void internal_transition() {
         if (state.current_state == States::INPUT) {
-            //If the thread has finished receiving input, change state.
-            if (state.input_mutex->try_lock()) {
-                //Restart the user input thread.
-                std::thread(&UDP_Input::receive_packet_thread, this).detach();
-                state.input_mutex->unlock();
+			std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
+            //If the thread has finished receiving input, change state if there are messages.
+            if (mutexLock.try_lock()) {
+				state.has_messages = !message.empty();
             }
         }
     }
@@ -140,12 +142,15 @@ public:
     typename make_message_bags<output_ports>::type output() const {
         typename make_message_bags<output_ports>::type bags;
         vector<MSG> message_out;
-    
+		
         if(state.current_state == States::INPUT) {
-            //If the thread has finished receiving input, send the string as output.
-            if(state.input_mutex->try_lock()) {
-                message_out.push_back(message.back());
-                message.pop_back();
+            //If the lock is free and there are messages, send the messages.
+			std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
+            if (state.has_messages && mutexLock.try_lock()) {
+				for (auto &msg : message) {
+	                message_out.push_back(msg);
+				}
+                message.clear();
                 get_messages<typename UDP_Input_defs<MSG>::o_message>(bags) = message_out;
             } 
         }
@@ -159,41 +164,57 @@ public:
             case States::IDLE:
                 return std::numeric_limits<TIME>::infinity();
             case States::INPUT:
-                return polling_rate;
+				if(state.has_messages) {
+					return TIME("00:00:00:000");
+				}
+				else {
+	                return polling_rate;
+				}
             default:
                 return TIME("00:00:00:000");
         }
     }
 
+	// Child thread for receiving UDP packets
     void receive_packet_thread() {
-        state.input_mutex->lock();
-        socket.open(asio::ip::udp::v4());
-        socket.bind(network_endpoint);
-        socket.async_receive_from(
-            asio::buffer(recv_buffer),
-            network_endpoint,
-            bind(
-                &UDP_Input::receive_packet, 
-                this, 
-                boost::asio::placeholders::error, 
-                boost::asio::placeholders::bytes_transferred));
-        io_service.run();
-        state.input_mutex->unlock();
+		//Open and bind the socket using Boost.
+		socket.open(asio::ip::udp::v4());
+		socket.bind(network_endpoint);
+
+		//While the model is not passivated,
+		while(state.current_state != States::IDLE) {
+			//Reset the io service then asynchronously receive a packet and 
+			//use the handler to add it to the message vector.
+			io_service.reset();
+			socket.async_receive_from(
+				asio::buffer(recv_buffer),
+				network_endpoint,
+				bind(
+					&UDP_Input::receive_packet, 
+					this, 
+					boost::asio::placeholders::error, 
+					boost::asio::placeholders::bytes_transferred));
+			//Receive one packet then loop.
+			io_service.run_one();
+		}
+		//Once done, close the socket.
+		socket.close();
     }
 
+	//Message handler that is called on UDP packet receipt.
     void receive_packet(const boost::system::error_code& error, size_t bytes_transferred) {
+		//Aquire the unique lock for the message vector.
+		std::unique_lock<std::mutex> mutexLock(input_mutex);
         if (error) return;
+
+		//Add the message to the vector.
         MSG recv = MSG();
-        memcpy(&recv, &recv_buffer, bytes_transferred);
+        memcpy(&recv, &recv_buffer, bytes_transferred); 
         message.insert(message.begin(), recv);
     }
 
     friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Input<MSG, TIME>::state_type& i) {
-        bool is_unlocked = i.input_mutex->try_lock();
-        if (is_unlocked) {
-            i.input_mutex->unlock();
-        }
-        os << "State: " << enumToString(i.current_state) << "-" << (is_unlocked ? "UNLOCKED" : "LOCKED");
+        os << "State: " << enumToString(i.current_state) << "-" << (i.has_messages ? "MESSAGES" : "NO_MESSAGES");
         return os;
     }
 };
