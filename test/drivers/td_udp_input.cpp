@@ -55,7 +55,7 @@ template<typename T>
 class UDP_Input_LP : public UDP_Input<message_landing_point_t, T> {
 public:
     UDP_Input_LP() = default;
-    UDP_Input_LP(T poll_rate, string address, string port) : UDP_Input<message_landing_point_t, T>(poll_rate, address, port){}
+    UDP_Input_LP(T poll_rate, bool ack_required, string address, string port) : UDP_Input<message_landing_point_t, T>(poll_rate, ack_required, address, port){}
 };
 
 int main(int argc, char* argv[]) {
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 
 		// Instantiate the atomic model to test
 		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
-		std::shared_ptr<dynamic::modeling::model> udp_input = dynamic::translate::make_dynamic_atomic_model<UDP_Input_LP, TIME, TIME>("udp_input", std::move(TIME("00:00:00:100")), std::move("127.0.0.1"), std::move("23000"));
+		std::shared_ptr<dynamic::modeling::model> udp_input = dynamic::translate::make_dynamic_atomic_model<UDP_Input_LP, TIME, TIME, bool, const char*, const char*>("udp_input", std::move(TIME("00:00:00:100")), true, std::move("127.0.0.1"), std::move("23000"));
 
 		// Instantiate the input readers.
 		// One for each input

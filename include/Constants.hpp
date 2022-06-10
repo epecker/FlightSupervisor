@@ -56,4 +56,15 @@
 #define MAVLINK_OVER_UDP_PORT 14601
 #define MAX_SER_BUFFER_CHARS 1024 // Given in serialToEthThreads.c 168
 
+// Mavlink Acknowledgements
+#define MAV_CMD_DEFAULT 0
+#define MAV_RESULT_ACCEPTED 0
+#define MAV_RESULT_TEMPORARILY_REJECTED 1
+#define MAV_RESULT_DENIED 2
+#define MAV_RESULT_UNSUPPORTED 3
+#define MAV_RESULT_FAILED 4
+#define MAV_RESULT_IN_PROGRESS 5
+#define MAV_RESULT_CANCELLED 6
+
+
 #endif /* CONSTANTS_HPP */
