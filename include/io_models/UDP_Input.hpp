@@ -41,7 +41,6 @@ using namespace std;
 
 // Global mutexes for thread synchronization using unique locks.
 std::mutex input_mutex;
-std::mutex io_mutex;
 
 // Input and output port definitions
 template<typename MSG> struct UDP_Input_defs {
@@ -103,8 +102,10 @@ public:
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
+	// Destructor for the class that stops the packet receipt thread
 	~UDP_Input() {
-		std::unique_lock<std::mutex> ioLock(io_mutex);
+		//Before exiting stop the Boost IO service to interupt the receipt handler.
+		io_service.stop();
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -188,8 +189,6 @@ public:
 
 	// Child thread for receiving UDP packets
 	void receive_packet_thread() {
-		std::unique_lock<std::mutex> ioLock(io_mutex);
-
 		//Open and bind the socket using Boost.
 		socket.open(asio::ip::udp::v4());
 		socket.bind(network_endpoint);
@@ -207,13 +206,12 @@ public:
 				this,
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::bytes_transferred));
+
 			//Receive one packet then loop.
 			io_service.run_one();
 		}
-		std::cout << "Closing socket." << std::endl;
 		//Once done, close the socket.
 		socket.close();
-		ioLock.unlock();
 	}
 
 	//Message handler that is called on UDP packet receipt.
@@ -235,12 +233,9 @@ public:
 			char ack_data[sizeof(message_command_ack_t)];
 			memcpy(ack_data, &ack_message, sizeof(ack_data));
 
-			std::cout << "Sending ack with service "  << std::endl;
-
 			//Send the ack to the origin of the packet.
 			socket.send_to(asio::buffer(ack_data), remote_endpoint, 0, ack_err);
 		}
-		std::cout << "Finished receiving packet." << std::endl;
 	}
 
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Input<MSG, TIME>::state_type& i) {
