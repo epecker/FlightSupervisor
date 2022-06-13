@@ -7,8 +7,8 @@
  *	\author		James Horner
  */
 
-#ifndef USER_INPUT_HPP
-#define USER_INPUT_HPP
+#ifndef UDP_INPUT_HPP
+#define UDP_INPUT_HPP
 
  // System libraries
 #include <iostream>
