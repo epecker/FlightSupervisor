@@ -24,7 +24,7 @@
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
-//#include "input_readers.hpp" // Input Reader Definitions.
+#include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
 #include "io_models/Async_Test.hpp"
@@ -42,16 +42,18 @@ ofstream out_info;
 
 // Define output ports to be used for logging purposes
 struct out : public out_port<int> {};
+struct delay : public out_port<bool> {};
 
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
-	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/blocking_input/");
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/blocking_input/");
+	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/async_test/");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/async_test/");
 
 	do {
 		// Input Files
 		string input_dir = i_base_dir + to_string(test_set_enumeration);
+		string input_file_in = input_dir + string("/delay.txt");
 
 		// Output locations
 		string out_directory = o_base_dir + to_string(test_set_enumeration);
@@ -59,32 +61,42 @@ int main(int argc, char* argv[]) {
 		string out_state_file = out_directory + string("/output_state.txt");
 		string out_info_file = out_directory + string("/output_info.txt");
 
+		if (!filesystem::exists(input_file_in)) {
+			printf("One of the input files do not exist\n");
+			return 1;
+		}
+
 		// Create the output location
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> async_test = dynamic::translate::make_dynamic_atomic_model<Async_Test, string, TIME>("async_test", move(string("async_test")));
+		shared_ptr<dynamic::modeling::model> async_test = dynamic::translate::make_dynamic_atomic_model<Async_Test, TIME>("async_test");
 
 		// Instantiate the input readers.
 		// One for each input
+		std::shared_ptr<dynamic::modeling::model> ir_delay =
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_delay", std::move(input_file_in.c_str()));
 
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
-			async_test
+			async_test,
+			ir_delay
 		};
 
 		dynamic::modeling::Ports iports_TestDriver = {	};
 
 		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(out)
+			typeid(out),
+			typeid(delay)
 		};
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
 		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Async_Test_defs::out, out>("async_test")
+			dynamic::translate::make_EOC<Async_Test_defs::out, out>("async_test"),
+			dynamic::translate::make_EOC<iestream_input_defs<bool>::out, delay>("ir_delay")
 		};
 
 		// This will connect our outputs from our input reader to the file
@@ -127,7 +139,7 @@ int main(int argc, char* argv[]) {
 		auto start = hclock::now(); //to measure simulation execution time
 
 		cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, { TIME("00:00:00:000:000") });
-		r.run_until(TIME("00:00:30:000:000"));
+		r.run_until(TIME("00:00:40:000:000"));
 
 		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 		cout << "\nSimulation took: " << elapsed << " seconds" << endl;

@@ -1,13 +1,5 @@
-/**
-* Ben Earle
-* ARSLab - Carleton University
-*
-* Interrupt Input:
-* Model to interface with a interrupt Input pin for Embedded Cadmium.
-*/
-
-#ifndef BOOST_SIMULATION_PDEVS_INTERRUPTINPUT_HPP
-#define BOOST_SIMULATION_PDEVS_INTERRUPTINPUT_HPP
+#ifndef ASYNC_TEST_HPP
+#define ASYNC_TEST_HPP
 
 #include <limits>
 #include <math.h>
@@ -27,7 +19,7 @@
 #include <cadmium/modeling/message_bag.hpp>
 #include <cadmium/modeling/dynamic_model.hpp>
 
-#include "Callback_Tester.hpp"
+#include "io_models/Callback_Tester.hpp"
 
 //This class will interface with a interrupt input pin.
 using namespace cadmium;
@@ -53,9 +45,12 @@ public:
 	}
 
 	Async_Test(cadmium::dynamic::modeling::AsyncEventSubject* sub, string name) {
+		std::cout << "Creating Async Test." << std::endl;
 		tester = new Callback_Tester(name);
+		std::cout << "Starting Callback Tester." << std::endl;
 		tester->monitor(sub);
 		state.output = tester->read();
+		std::cout << "Output:\t" << state.output << std::endl;
 		state.last = state.output;
 		state.prop = true;
 	}
@@ -115,4 +110,4 @@ public:
 	}
 };
 
-#endif // BOOST_SIMULATION_PDEVS_INTERRUPTINPUT_HPP
+#endif // ASYNC_TEST_HPP
