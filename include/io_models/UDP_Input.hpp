@@ -39,7 +39,7 @@
 using namespace cadmium;
 using namespace std;
 
-// Global static mutex for thread synchronization using unique locks.
+// Global mutexes for thread synchronization using unique locks.
 std::mutex input_mutex;
 
 // Input and output port definitions
@@ -100,6 +100,12 @@ public:
 
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
+	}
+
+	// Destructor for the class that stops the packet receipt thread
+	~UDP_Input() {
+		//Before exiting stop the Boost IO service to interupt the receipt handler.
+		io_service.stop();
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -200,6 +206,7 @@ public:
 				this,
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::bytes_transferred));
+
 			//Receive one packet then loop.
 			io_service.run_one();
 		}
@@ -228,7 +235,6 @@ public:
 
 			//Send the ack to the origin of the packet.
 			socket.send_to(asio::buffer(ack_data), remote_endpoint, 0, ack_err);
-			io_service.run_one();
 		}
 	}
 
