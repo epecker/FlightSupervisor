@@ -100,7 +100,7 @@ public:
 		_sub = sub;
 
 		//Create the network endpoint using the supplied address and port.
-		send_ack = false;
+		send_ack = ack_required;
 		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
 		network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port_num);
 
@@ -206,7 +206,7 @@ public:
 
 			//Receive one packet then loop.
 			io_service.run_one();
-			std::cout << "Calling notify." << std::endl;
+			// std::cout << "Calling notify." << std::endl;
 			_sub->notify();
 		}
 		//Once done, close the socket.

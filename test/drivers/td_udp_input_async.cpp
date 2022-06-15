@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
 		auto start = hclock::now(); //to measure simulation execution time
 
 		cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, { TIME("00:00:00:000:000") });
-		r.run_until(TIME("00:00:40:000:000"));
+		r.run_until(TIME("00:01:40:000:000"));
 
 		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 		cout << "\nSimulation took: " << elapsed << " seconds" << endl;
