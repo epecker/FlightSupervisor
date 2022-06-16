@@ -58,13 +58,13 @@ class UDP_Input_Async {
 private:
 	cadmium::dynamic::modeling::AsyncEventSubject* _sub;
 	
-	mutable std::vector<MSG> message;
 	asio::ip::udp::endpoint network_endpoint;
 	asio::ip::udp::endpoint remote_endpoint;
 	asio::io_service io_service;
 	asio::ip::udp::socket socket{ io_service };
 	bool send_ack;
 	char recv_buffer[MAX_SER_BUFFER_CHARS];
+	int notifies;
 
 public:
 	// Used to keep track of the states
@@ -81,7 +81,7 @@ public:
 	UDP_Input_Async() {
 		//Initialise the current state
 		state.current_state = States::INPUT;
-		state.has_messages = false;
+		state.has_messages = !state.message.empty();
 
 		//Create the network endpoint using a default address and port.
 		send_ack = false;
@@ -96,7 +96,7 @@ public:
 	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) {
 		//Initialise the current state
 		state.current_state = States::INPUT;
-		state.has_messages = false;
+		state.has_messages = !state.message.empty();
 		_sub = sub;
 
 		//Create the network endpoint using the supplied address and port.
@@ -119,6 +119,7 @@ public:
 	struct state_type {
 		States current_state;
 		bool has_messages;
+		mutable std::vector<MSG> message;
 	};
 	state_type state;
 
@@ -135,7 +136,7 @@ public:
 		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 		//If the thread has finished receiving input, change state if there are messages.
 		if (mutexLock.try_lock()) {
-			state.has_messages = !message.empty();
+			state.has_messages = !state.message.empty();
 		}
 	}
 
@@ -143,7 +144,12 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		state.has_messages = !message.empty();
+		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
+		//If the thread has finished receiving input, change state if there are messages.
+		if (mutexLock.try_lock()) {
+			state.has_messages = !state.message.empty();
+		}
+
 		if (get_messages<typename UDP_Input_Async_defs<MSG>::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
@@ -163,11 +169,11 @@ public:
 		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 		if (state.current_state == States::INPUT) {
 			//If the lock is free and there are messages, send the messages.
-			if (state.has_messages && mutexLock.try_lock()) {
-				for (auto& msg : message) {
+			if (!state.message.empty() && mutexLock.try_lock()) {
+				for (auto& msg : state.message) {
 					message_out.push_back(msg);
 				}
-				message.clear();
+				state.message.clear();
 				get_messages<typename UDP_Input_Async_defs<MSG>::o_message>(bags) = message_out;
 			}
 		}
@@ -177,7 +183,7 @@ public:
 	// Time advance
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
-		if (state.has_messages && state.current_state == States::INPUT) {
+		if (!state.message.empty() && state.current_state == States::INPUT) {
 			return TIME("00:00:00:00");
 		}
 
@@ -193,7 +199,7 @@ public:
 		//While the model is not passivated,
 		while (state.current_state != States::IDLE) {
 			//Reset the io service then asynchronously receive a packet and 
-			//use the handler to add it to the message vector.
+			//use the handler to add it to the state.message vector.
 			io_service.reset();
 			socket.async_receive_from(
 				asio::buffer(recv_buffer),
@@ -206,27 +212,25 @@ public:
 
 			//Receive one packet then loop.
 			io_service.run_one();
-			// std::cout << "Calling notify." << std::endl;
-			_sub->notify();
 		}
 		//Once done, close the socket.
 		socket.close();
 	}
 
-	//Message handler that is called on UDP packet receipt.
+	//state.message handler that is called on UDP packet receipt.
 	void receive_packet(const boost::system::error_code& error, size_t bytes_transferred) {
-		//Aquire the unique lock for the message vector.
+		//Aquire the unique lock for the state.message vector.
 		std::unique_lock<std::mutex> mutexLock(input_mutex);
 		if (error) return;
 
-		//Add the message to the vector.
+		//Add the state.message to the vector.
 		MSG recv = MSG();
 		memcpy(&recv, &recv_buffer, bytes_transferred);
-		message.insert(message.begin(), recv);
+		state.message.insert(state.message.begin(), recv);
 
 		//If an ack is required,
 		if (send_ack) {
-			//Construct the ack message and associated data array.
+			//Construct the ack state.message and associated data array.
 			message_command_ack_t ack_message(MAV_CMD_DEFAULT, MAV_RESULT_ACCEPTED, 0, 0, 0, 0);
 			boost::system::error_code ack_err;
 			char ack_data[sizeof(message_command_ack_t)];
@@ -235,6 +239,8 @@ public:
 			//Send the ack to the origin of the packet.
 			socket.send_to(asio::buffer(ack_data), remote_endpoint, 0, ack_err);
 		}
+		notifies++;
+		_sub->notify();
 	}
 
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Input_Async<MSG, TIME>::state_type& i) {
