@@ -11,11 +11,11 @@
  // System libraries
 #include <iostream>
 #include <assert.h>
-#include <thread>
-#include <mutex>
 #include <string>
-#include <chrono>
-#include <sstream>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <exception>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -32,7 +32,6 @@
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
 
-#define RT_LINUX
 #ifdef RT_LINUX
 
 using namespace cadmium;
@@ -72,10 +71,34 @@ public:
 		polling_rate = TIME("00:00:00:100");
 		
 		//Open and map the shared memory segment.
-		shared_memory_object shdmem{open_or_create, DEFAULT_SHARED_MEMORY_NAME, read_only, sizeof(MSG)};
-		shdmem.truncate(sizeof(MSG));
-		mapped_region region{shdmem, read_only};
-		message = static_cast<MSG*>(region.get_address());
+		// shared_memory_object shdmem{open_or_create, DEFAULT_SHARED_MEMORY_NAME, read_only, sizeof(MSG)};
+		// shdmem.truncate(sizeof(MSG));
+		// mapped_region region{shdmem, read_only};
+		// message = static_cast<MSG*>(region.get_address());
+#ifndef WIN32
+        //Get an ID for the shared memory segement with the name.
+        int hMapFile = shm_open(DEFAULT_SHARED_MEMORY_NAME, O_CREAT | O_RDWR, 0666); //Create file descriptor for shared mem. Create the mem if it doesn't already exist. Set permissions to 666
+
+        //If the ID is invalid,
+        if (hMapFile < 0) {
+            //Could not create the shared memory file descriptor via shm_open()
+            //Print an error message and return failure.
+            throw(std::runtime_error("Couldn't connect to shared memory."));
+        }
+
+        //Try to map the shared memory segement to a shared_data_t structure.
+        ftruncate(hMapFile, sizeof(MSG));
+        message = (MSG*)mmap(NULL, sizeof(MSG), PROT_READ | PROT_WRITE, MAP_SHARED, hMapFile, 0);
+
+        //If the mapping is unsuccessful,
+        if (message == MAP_FAILED) {
+            //Print an error message, and return failure.
+            throw(std::runtime_error("Couldn't map view of file."));
+        }
+#else 
+        //Windows is unsupported at this time.
+        throw(std::runtime_error("Windows is unsupported at this time for this model."))
+#endif
 	}
 
 	// Constructor with polling rate and name parameters
@@ -87,10 +110,35 @@ public:
 		polling_rate = rate;
 
 		//Open and map the shared memory segment.
-		shared_memory_object shdmem{open_or_create, name, read_only, sizeof(MSG)};
-		shdmem.truncate(sizeof(MSG));
-		mapped_region region{shdmem, read_only};
-		message = static_cast<MSG*>(region.get_address());
+		// shared_memory_object shdmem{open_or_create, name, read_only, sizeof(MSG)};
+		// shdmem.truncate(sizeof(MSG));
+		// mapped_region region{shdmem, read_only};
+		// message = static_cast<MSG*>(region.get_address());
+
+#ifndef WIN32
+        //Get an ID for the shared memory segement with the name.
+        int hMapFile = shm_open(name.c_str(), O_CREAT | O_RDWR, 0666); //Create file descriptor for shared mem. Create the mem if it doesn't already exist. Set permissions to 666
+
+        //If the ID is invalid,
+        if (hMapFile < 0) {
+            //Could not create the shared memory file descriptor via shm_open()
+            //Print an error message and return failure.
+            throw(std::runtime_error("Couldn't connect to shared memory."));
+        }
+
+        //Try to map the shared memory segement to a shared_data_t structure.
+        ftruncate(hMapFile, sizeof(MSG));
+        message = (MSG*)mmap(NULL, sizeof(MSG), PROT_READ | PROT_WRITE, MAP_SHARED, hMapFile, 0);
+
+        //If the mapping is unsuccessful,
+        if (message == MAP_FAILED) {
+            //Print an error message, and return failure.
+            throw(std::runtime_error("Couldn't map view of file."));
+        }
+#else 
+        //Windows is unsupported at this time.
+        throw(std::runtime_error("Windows is unsupported at this time for this model."))
+#endif
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -112,11 +160,11 @@ public:
 	void internal_transition() {
 		switch (state.current_state)
 		{
-			case states::POLL:
+			case States::POLL:
 				state.current_state = States::SEND;
 				break;
 
-			case states::SEND:
+			case States::SEND:
 				state.current_state = States::POLL;
 				break;
 

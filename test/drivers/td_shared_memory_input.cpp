@@ -28,6 +28,7 @@
 
 //Coupled model headers
 #include "io_models/Shared_Memory_Input.hpp"
+#include "io_models/Shared_Memory_Output.hpp"
 
 using namespace std;
 using namespace cadmium;
@@ -48,6 +49,13 @@ class Shared_Memory_Input_LP : public Shared_Memory_Input<message_landing_point_
 public:
     Shared_Memory_Input_LP() = default;
     Shared_Memory_Input_LP(T poll_rate, string name) : Shared_Memory_Input<message_landing_point_t, T>(poll_rate, name){}
+};
+
+template<typename T>
+class Shared_Memory_Output_LP : public Shared_Memory_Output<message_landing_point_t, T> {
+public:
+    Shared_Memory_Output_LP() = default;
+    Shared_Memory_Output_LP(string name) : Shared_Memory_Output<message_landing_point_t, T>(name){}
 };
 
 int main(int argc, char* argv[]) {
@@ -78,8 +86,8 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
-		std::shared_ptr<dynamic::modeling::model> Shared_Memory_Input = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Input_LP, TIME, TIME, bool, const char*, const char*>("Shared_Memory_Input", std::move(TIME("00:00:00:100")), true, std::move("127.0.0.1"), std::move("23000"));
+		std::shared_ptr<dynamic::modeling::model> shared_memory_output = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Output_LP, TIME, const char*>("shared_memory_output", std::move(DEFAULT_SHARED_MEMORY_NAME));
+		std::shared_ptr<dynamic::modeling::model> shared_memory_input = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Input_LP, TIME, TIME, const char*>("shared_memory_input", std::move(TIME("00:00:00:100")), std::move(DEFAULT_SHARED_MEMORY_NAME));
 
 		// Instantiate the input readers.
 		// One for each input
@@ -91,8 +99,8 @@ int main(int argc, char* argv[]) {
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
-			udp_output,
-			Shared_Memory_Input,
+			shared_memory_output,
+			shared_memory_input,
 			ir_message,
             ir_quit
 		};
@@ -106,13 +114,12 @@ int main(int argc, char* argv[]) {
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-        };
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output_defs<message_landing_point_t>::i_message>("ir_message", "udp_output"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Shared_Memory_Input_defs<message_landing_point_t>::i_quit>("ir_quit", "Shared_Memory_Input")
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Shared_Memory_Output_defs<message_landing_point_t>::i_message>("ir_message", "shared_memory_output"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Shared_Memory_Input_defs<message_landing_point_t>::i_quit>("ir_quit", "shared_memory_input")
 		};
 
 		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
