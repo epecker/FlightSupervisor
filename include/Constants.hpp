@@ -67,4 +67,7 @@
 #define MAV_RESULT_CANCELLED 6
 
 
+// Shared memory
+#define DEFAULT_SHARED_MEMORY_NAME "asraSharedMem"
+
 #endif /* CONSTANTS_HPP */
