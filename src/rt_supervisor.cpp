@@ -118,11 +118,11 @@ int main(int argc, char* argv[]) {
 
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<UDP_Input_defs<bool>::out, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
-		dynamic::translate::make_IC<Shared_Memory_Input_defs<message_aircraft_state_t>::out, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
-		dynamic::translate::make_IC<UDP_Input_defs<bool>::out, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
-		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::out, Supervisor_defs::i_LP_recv>("im_lp_recv", "supervisor"),
-		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::out, Supervisor_defs::i_PLP_ach>("im_plp_ach", "supervisor")
+		dynamic::translate::make_IC<UDP_Input_defs<bool>::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
+		dynamic::translate::make_IC<Shared_Memory_Input_defs<message_aircraft_state_t>::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
+		dynamic::translate::make_IC<UDP_Input_defs<bool>::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
+		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_LP_recv>("im_lp_recv", "supervisor"),
+		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_PLP_ach>("im_plp_ach", "supervisor")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

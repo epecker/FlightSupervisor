@@ -38,7 +38,6 @@
 
 using namespace cadmium;
 using namespace std;
-using namespace boost;
 
 // Input and output port definitions
 template<typename MSG> struct UDP_Input_defs {
@@ -54,10 +53,10 @@ class UDP_Input {
 private:
 	mutable std::vector<MSG> message;
 	TIME polling_rate;
-	asio::ip::udp::endpoint network_endpoint;
-	asio::ip::udp::endpoint remote_endpoint;
-	asio::io_service io_service;
-	asio::ip::udp::socket socket{ io_service };
+	boost::asio::ip::udp::endpoint network_endpoint;
+	boost::asio::ip::udp::endpoint remote_endpoint;
+	boost::asio::io_service io_service;
+	boost::asio::ip::udp::socket socket{ io_service };
 	bool send_ack;
 	char recv_buffer[MAX_SER_BUFFER_CHARS];
 
@@ -82,7 +81,7 @@ public:
 		polling_rate = TIME("00:00:00:100");
 		send_ack = false;
 		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
-		network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(PEREGRINE_IP), port_num);
+		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), port_num);
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
@@ -97,7 +96,7 @@ public:
 		polling_rate = rate;
 		send_ack = ack_required;
 		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
-		network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port_num);
+		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port_num);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
@@ -161,7 +160,7 @@ public:
 			//If the lock is free and there are messages, send the messages.
 			std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 			if (state.has_messages && mutexLock.try_lock()) {
-				for (auto& msg : message) {
+				for (auto msg : message) {
 					message_out.push_back(msg);
 				}
 				message.clear();
@@ -191,7 +190,7 @@ public:
 	// Child thread for receiving UDP packets
 	void receive_packet_thread() {
 		//Open and bind the socket using Boost.
-		socket.open(asio::ip::udp::v4());
+		socket.open(boost::asio::ip::udp::v4());
 		socket.bind(network_endpoint);
 
 		//While the model is not passivated,
@@ -200,7 +199,7 @@ public:
 			//use the handler to add it to the message vector.
 			io_service.reset();
 			socket.async_receive_from(
-				asio::buffer(recv_buffer),
+				boost::asio::buffer(recv_buffer),
 				remote_endpoint,
 				bind(
 				&UDP_Input::receive_packet,
@@ -235,7 +234,7 @@ public:
 			memcpy(ack_data, &ack_message, sizeof(ack_data));
 
 			//Send the ack to the origin of the packet.
-			socket.send_to(asio::buffer(ack_data), remote_endpoint, 0, ack_err);
+			socket.send_to(boost::asio::buffer(ack_data), remote_endpoint, 0, ack_err);
 		}
 	}
 
