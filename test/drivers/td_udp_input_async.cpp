@@ -86,22 +86,22 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		// std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
+		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
 		std::shared_ptr<dynamic::modeling::model> udp_input_async = dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_LP, TIME, bool, const char*, const char*>("udp_input_async", true, std::move("127.0.0.1"), std::move("23000"));
 
 		// Instantiate the input readers.
 		// One for each input
-		// std::shared_ptr<dynamic::modeling::model> ir_message =
-		// 	dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", std::move(input_file_message.c_str()));
+		std::shared_ptr<dynamic::modeling::model> ir_message =
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", std::move(input_file_message.c_str()));
 		std::shared_ptr<dynamic::modeling::model> ir_quit =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", std::move(input_file_quit.c_str()));
 
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
-			// udp_output,
+			udp_output,
 			udp_input_async,
-			// ir_message,
+			ir_message,
             ir_quit
 		};
 
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			// dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output_defs<message_landing_point_t>::i_message>("ir_message", "udp_output"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output_defs<message_landing_point_t>::i_message>("ir_message", "udp_output"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, UDP_Input_Async_defs<message_landing_point_t>::i_quit>("ir_quit", "udp_input_async")
 		};
 

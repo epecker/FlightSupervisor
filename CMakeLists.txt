@@ -81,7 +81,7 @@ target_include_directories(td_shared_memory_output		PUBLIC ${rt_includes_list})
 target_include_directories(td_shared_memory_input		PUBLIC ${rt_includes_list})
 
 target_link_libraries(supervisor			            ${Boost_LIBRARIES})
-target_link_libraries(rt-supervisor			            ${Boost_LIBRARIES})
+target_link_libraries(rt-supervisor			            ${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_handover_control	            ${Boost_LIBRARIES})
 target_link_libraries(td_landing_routine	            ${Boost_LIBRARIES})
 target_link_libraries(td_lp_manager			            ${Boost_LIBRARIES})

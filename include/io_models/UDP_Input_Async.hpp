@@ -40,9 +40,6 @@ using namespace cadmium;
 using namespace std;
 using namespace boost;
 
-// Global mutexes for thread synchronization using unique locks.
-std::mutex input_mutex;
-
 // Input and output port definitions
 template<typename MSG>
 struct UDP_Input_Async_defs {
@@ -65,6 +62,9 @@ private:
 	bool send_ack;
 	char recv_buffer[MAX_SER_BUFFER_CHARS];
 	int notifies;
+	
+	// Mutex for thread synchronization using unique locks.
+	mutable std::mutex input_mutex;
 
 public:
 	// Used to keep track of the states
