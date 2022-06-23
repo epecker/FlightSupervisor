@@ -55,7 +55,7 @@ template<typename T>
 class UDP_Input_Async_LP : public UDP_Input_Async<message_landing_point_t, T> {
 public:
     UDP_Input_Async_LP() = default;
-    UDP_Input_Async_LP(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<message_landing_point_t, T>(sub, ack_required, address, port){}
+    UDP_Input_Async_LP(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<message_landing_point_t, T>(sub, ack_required, port){}
 };
 
 int main(int argc, char* argv[]) {
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 
 		// Instantiate the atomic model to test
 		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
-		std::shared_ptr<dynamic::modeling::model> udp_input_async = dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_LP, TIME, bool, const char*, const char*>("udp_input_async", true, std::move("127.0.0.1"), std::move("23000"));
+		std::shared_ptr<dynamic::modeling::model> udp_input_async = dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_LP, TIME, bool, const char*>("udp_input_async", true, std::move("23000"));
 
 		// Instantiate the input readers.
 		// One for each input
