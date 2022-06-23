@@ -34,7 +34,7 @@ template<typename T>
 class UDP_Input_Async_Aircraft_State : public UDP_Input_Async<message_aircraft_state_t, T> {
 public:
 	UDP_Input_Async_Aircraft_State() = default;
-	UDP_Input_Async_Aircraft_State(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<message_aircraft_state_t, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Aircraft_State(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<message_aircraft_state_t, T>(sub, ack_required, port) {};
 };
 
 // Boolean
@@ -42,7 +42,7 @@ template<typename T>
 class UDP_Input_Async_Boolean : public UDP_Input_Async<bool, T> {
 public:
 	UDP_Input_Async_Boolean() = default;
-	UDP_Input_Async_Boolean(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<bool, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Boolean(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<bool, T>(sub, ack_required, port) {};
 };
 
 // Command ACK
@@ -50,7 +50,7 @@ template<typename T>
 class UDP_Input_Async_Command_Ack : public UDP_Input_Async<message_command_ack_t, T> {
 public:
 	UDP_Input_Async_Command_Ack() = default;
-	UDP_Input_Async_Command_Ack(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<message_command_ack_t, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Command_Ack(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<message_command_ack_t, T>(sub, ack_required, port) {};
 };
 
 // Double
@@ -58,7 +58,7 @@ template<typename T>
 class UDP_Input_Async_Double : public UDP_Input_Async<double, T> {
 public:
 	UDP_Input_Async_Double() = default;
-	UDP_Input_Async_Double(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<double, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Double(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<double, T>(sub, ack_required, port) {};
 };
 
 // FCC Command
@@ -66,7 +66,7 @@ template<typename T>
 class UDP_Input_Async_Fcc_Command : public UDP_Input_Async<message_fcc_command_t, T> {
 public:
 	UDP_Input_Async_Fcc_Command() = default;
-	UDP_Input_Async_Fcc_Command(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<message_fcc_command_t, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Fcc_Command(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<message_fcc_command_t, T>(sub, ack_required, port) {};
 };
 
 // Float
@@ -74,7 +74,7 @@ template<typename T>
 class UDP_Input_Async_Float : public UDP_Input_Async<float, T> {
 public:
 	UDP_Input_Async_Float() = default;
-	UDP_Input_Async_Float(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<float, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Float(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<float, T>(sub, ack_required, port) {};
 };
 
 // Hover Criteria Message
@@ -82,7 +82,7 @@ template<typename T>
 class UDP_Input_Async_Hover_Criteria : public UDP_Input_Async<message_hover_criteria_t, T> {
 public:
 	UDP_Input_Async_Hover_Criteria() = default;
-	UDP_Input_Async_Hover_Criteria(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<message_hover_criteria_t, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Hover_Criteria(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<message_hover_criteria_t, T>(sub, ack_required, port) {};
 };
 
 // Int
@@ -90,7 +90,7 @@ template<typename T>
 class UDP_Input_Async_Int : public UDP_Input_Async<int, T> {
 public:
 	UDP_Input_Async_Int() = default;
-	UDP_Input_Async_Int(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<int, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Int(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<int, T>(sub, ack_required, port) {};
 };
 
 // Landing Point
@@ -98,7 +98,7 @@ template<typename T>
 class UDP_Input_Async_Landing_Point : public UDP_Input_Async<message_landing_point_t, T> {
 public:
 	UDP_Input_Async_Landing_Point() = default;
-	UDP_Input_Async_Landing_Point(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<message_landing_point_t, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_Landing_Point(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<message_landing_point_t, T>(sub, ack_required, port) {};
 };
 
 // String
@@ -106,7 +106,7 @@ template<typename T>
 class UDP_Input_Async_String : public UDP_Input_Async<string, T> {
 public:
 	UDP_Input_Async_String() = default;
-	UDP_Input_Async_String(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) : UDP_Input_Async<string, T>(sub, ack_required, address, port) {};
+	UDP_Input_Async_String(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) : UDP_Input_Async<string, T>(sub, ack_required, port) {};
 };
 
 
@@ -121,7 +121,7 @@ template<typename T>
 class UDP_Input_Aircraft_State : public UDP_Input<message_aircraft_state_t, T> {
 public:
 	UDP_Input_Aircraft_State() = default;
-	UDP_Input_Aircraft_State(T rate, bool ack_required, string address, string port) : UDP_Input<message_aircraft_state_t, T>(rate, ack_required, address, port) {};
+	UDP_Input_Aircraft_State(T rate, bool ack_required, string port) : UDP_Input<message_aircraft_state_t, T>(rate, ack_required, port) {};
 };
 
 // Boolean
@@ -129,7 +129,7 @@ template<typename T>
 class UDP_Input_Boolean : public UDP_Input<bool, T> {
 public:
 	UDP_Input_Boolean() = default;
-	UDP_Input_Boolean(T rate, bool ack_required, string address, string port) : UDP_Input<bool, T>(rate, ack_required, address, port) {};
+	UDP_Input_Boolean(T rate, bool ack_required, string port) : UDP_Input<bool, T>(rate, ack_required, port) {};
 };
 
 // Command ACK
@@ -137,7 +137,7 @@ template<typename T>
 class UDP_Input_Command_Ack : public UDP_Input<message_command_ack_t, T> {
 public:
 	UDP_Input_Command_Ack() = default;
-	UDP_Input_Command_Ack(T rate, bool ack_required, string address, string port) : UDP_Input<message_command_ack_t, T>(rate, ack_required, address, port) {};
+	UDP_Input_Command_Ack(T rate, bool ack_required, string port) : UDP_Input<message_command_ack_t, T>(rate, ack_required, port) {};
 };
 
 // Double
@@ -145,7 +145,7 @@ template<typename T>
 class UDP_Input_Double : public UDP_Input<double, T> {
 public:
 	UDP_Input_Double() = default;
-	UDP_Input_Double(T rate, bool ack_required, string address, string port) : UDP_Input<double, T>(rate, ack_required, address, port) {};
+	UDP_Input_Double(T rate, bool ack_required, string port) : UDP_Input<double, T>(rate, ack_required, port) {};
 };
 
 // FCC Command
@@ -153,7 +153,7 @@ template<typename T>
 class UDP_Input_Fcc_Command : public UDP_Input<message_fcc_command_t, T> {
 public:
 	UDP_Input_Fcc_Command() = default;
-	UDP_Input_Fcc_Command(T rate, bool ack_required, string address, string port) : UDP_Input<message_fcc_command_t, T>(rate, ack_required, address, port) {};
+	UDP_Input_Fcc_Command(T rate, bool ack_required, string port) : UDP_Input<message_fcc_command_t, T>(rate, ack_required, port) {};
 };
 
 // Float
@@ -161,7 +161,7 @@ template<typename T>
 class UDP_Input_Float : public UDP_Input<float, T> {
 public:
 	UDP_Input_Float() = default;
-	UDP_Input_Float(T rate, bool ack_required, string address, string port) : UDP_Input<float, T>(rate, ack_required, address, port) {};
+	UDP_Input_Float(T rate, bool ack_required, string port) : UDP_Input<float, T>(rate, ack_required, port) {};
 };
 
 // Hover Criteria Message
@@ -169,7 +169,7 @@ template<typename T>
 class UDP_Input_Hover_Criteria : public UDP_Input<message_hover_criteria_t, T> {
 public:
 	UDP_Input_Hover_Criteria() = default;
-	UDP_Input_Hover_Criteria(T rate, bool ack_required, string address, string port) : UDP_Input<message_hover_criteria_t, T>(rate, ack_required, address, port) {};
+	UDP_Input_Hover_Criteria(T rate, bool ack_required, string port) : UDP_Input<message_hover_criteria_t, T>(rate, ack_required, port) {};
 };
 
 // Int
@@ -177,7 +177,7 @@ template<typename T>
 class UDP_Input_Int : public UDP_Input<int, T> {
 public:
 	UDP_Input_Int() = default;
-	UDP_Input_Int(T rate, bool ack_required, string address, string port) : UDP_Input<int, T>(rate, ack_required, address, port) {};
+	UDP_Input_Int(T rate, bool ack_required, string port) : UDP_Input<int, T>(rate, ack_required, port) {};
 };
 
 // Landing Point
@@ -185,7 +185,7 @@ template<typename T>
 class UDP_Input_Landing_Point : public UDP_Input<message_landing_point_t, T> {
 public:
 	UDP_Input_Landing_Point() = default;
-	UDP_Input_Landing_Point(T rate, bool ack_required, string address, string port) : UDP_Input<message_landing_point_t, T>(rate, ack_required, address, port) {};
+	UDP_Input_Landing_Point(T rate, bool ack_required, string port) : UDP_Input<message_landing_point_t, T>(rate, ack_required, port) {};
 };
 
 // String
@@ -193,7 +193,7 @@ template<typename T>
 class UDP_Input_String : public UDP_Input<string, T> {
 public:
 	UDP_Input_String() = default;
-	UDP_Input_String(T rate, bool ack_required, string address, string port) : UDP_Input<string, T>(rate, ack_required, address, port) {};
+	UDP_Input_String(T rate, bool ack_required, string port) : UDP_Input<string, T>(rate, ack_required, port) {};
 };
 
 /**

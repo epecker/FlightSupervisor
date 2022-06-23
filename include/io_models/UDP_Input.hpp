@@ -81,13 +81,13 @@ public:
 		polling_rate = TIME("00:00:00:100");
 		send_ack = false;
 		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
-		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), port_num);
+		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
 	// Constructor with polling rate parameter
-	UDP_Input(TIME rate, bool ack_required, string address, string port) {
+	UDP_Input(TIME rate, bool ack_required, string port) {
 		//Initialise the current state
 		state.current_state = States::INPUT;
 		state.has_messages = false;
@@ -96,7 +96,7 @@ public:
 		polling_rate = rate;
 		send_ack = ack_required;
 		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
-		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port_num);
+		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();

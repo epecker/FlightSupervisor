@@ -50,7 +50,7 @@ struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 
 
 int main(int argc, char* argv[]) {
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/rt_supervisor");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/rt_supervisor/0");
 
 	string out_directory = o_base_dir;
 	string out_messages_file = out_directory + string("/output_messages.txt");
@@ -67,13 +67,13 @@ int main(int argc, char* argv[]) {
 	// Instantiate the input readers.
 	// One for each input
 	shared_ptr<dynamic::modeling::model> im_landing_achieved =
-		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Boolean, TIME, TIME, bool, string, string>("im_landing_achieved", std::move(TIME("00:00:00:100")), true, std::move("127.0.0.1"), std::move("23001"));
+		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Boolean, TIME, TIME, bool, string>("im_landing_achieved", std::move(TIME("00:00:00:100")), true, std::move("23001"));
 	shared_ptr<dynamic::modeling::model> im_pilot_takeover =
-		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Boolean, TIME, TIME, bool, string, string>("im_pilot_takeover", std::move(TIME("00:00:00:100")), true, std::move("127.0.0.1"), std::move("23002"));
+		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Boolean, TIME, TIME, bool, string>("im_pilot_takeover", std::move(TIME("00:00:00:100")), true, std::move("23002"));
 	shared_ptr<dynamic::modeling::model> im_lp_recv =
-		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string, string>("im_lp_recv", std::move(TIME("00:00:00:100")), true, std::move("127.0.0.1"), std::move("23003"));
+		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string>("im_lp_recv", std::move(TIME("00:00:00:100")), true, std::move("23003"));
 	shared_ptr<dynamic::modeling::model> im_plp_ach =
-		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string, string>("im_plp_ach", std::move(TIME("00:00:00:100")), true, std::move("127.0.0.1"), std::move("23004"));
+		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string>("im_plp_ach", std::move(TIME("00:00:00:100")), true, std::move("23004"));
 
 	shared_ptr<dynamic::modeling::model> im_aircraft_state =
 		dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Input_Aircraft_State, TIME, TIME, string>("im_aircraft_state", std::move(TIME("00:00:00:100")), std::move(DEFAULT_SHARED_MEMORY_NAME));
@@ -165,6 +165,19 @@ int main(int argc, char* argv[]) {
 
 	auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 	cout << "Simulation took: " << elapsed << " seconds" << endl;
+
+	fflush(NULL);
+	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
+	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
+	if (std::system("python3 --version") == 0) {
+		string command = "python3 " + path_to_script + string(" ") + path_to_simulation_results;
+		std::system(command.c_str());
+	} else if (std::system("python --version") == 0) {
+		string command = "python " + path_to_script + string(" ") + path_to_simulation_results;
+		std::system(command.c_str());
+	} else {
+		cout << "\nPython is not installed!\n";
+	}
 
 	return 0;
 }

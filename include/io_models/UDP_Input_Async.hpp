@@ -84,14 +84,14 @@ public:
 		//Create the network endpoint using a default address and port.
 		send_ack = false;
 		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
-		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), port_num);
+		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input_Async::receive_packet_thread, this).detach();
 	}
 
 	//Constructor with address and port as well as whether acknowledgements are required.
-	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string address, string port) {
+	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) {
 		//Initialise the current state
 		state.current_state = States::INPUT;
 		state.has_messages = !state.message.empty();
@@ -100,7 +100,7 @@ public:
 		//Create the network endpoint using the supplied address and port.
 		send_ack = ack_required;
 		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
-		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port_num);
+		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input_Async::receive_packet_thread, this).detach();
