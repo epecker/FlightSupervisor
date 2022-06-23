@@ -2,7 +2,7 @@
 #define FCC_COMMAND_HPP
 
 #include <stdint.h>
-#include "Constants.hpp"
+#include "../Constants.hpp"
 
 struct message_fcc_command_t {
 	float param1;				/*<  PARAM1, see MAV_CMD enum*/

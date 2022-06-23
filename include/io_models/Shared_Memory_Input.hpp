@@ -36,7 +36,6 @@
 
 using namespace cadmium;
 using namespace std;
-using namespace boost::interprocess;
 
 // Input and output port definitions
 template<typename MSG> struct Shared_Memory_Input_defs {
