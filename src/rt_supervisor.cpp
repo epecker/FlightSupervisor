@@ -23,6 +23,7 @@
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
 #include "input_models.hpp" // Input Model Definitions.
+#include "io_models/ASRA_Shared_Memory_Input.hpp"
 
 //Coupled model headers
 #include "coupled_models/Supervisor.hpp"
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string>("im_plp_ach", std::move(TIME("00:00:00:100")), true, std::move("23004"));
 
 	shared_ptr<dynamic::modeling::model> im_aircraft_state =
-		dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Input_Aircraft_State, TIME, TIME, string>("im_aircraft_state", std::move(TIME("00:00:00:100")), std::move(DEFAULT_SHARED_MEMORY_NAME));
+		dynamic::translate::make_dynamic_atomic_model<ASRA_Shared_Memory_Input, TIME, TIME>("im_aircraft_state", std::move(TIME("00:00:00:100")));
 
 	// The models to be included in this coupled model 
 	// (accepts atomic and coupled models)
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]) {
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
 		dynamic::translate::make_IC<UDP_Input_defs<bool>::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
-		dynamic::translate::make_IC<Shared_Memory_Input_defs<message_aircraft_state_t>::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
+		dynamic::translate::make_IC<ASRA_Shared_Memory_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
 		dynamic::translate::make_IC<UDP_Input_defs<bool>::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
 		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_LP_recv>("im_lp_recv", "supervisor"),
 		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_PLP_ach>("im_plp_ach", "supervisor")

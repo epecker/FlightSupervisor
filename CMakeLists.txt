@@ -43,7 +43,7 @@ set(rt_includes_list ${Boost_INCLUDE_DIRS} ${RT_CADMIUM_INCLUDE_DIR} ${DESTIMES_
 
 # Create all tests
 add_executable(supervisor					"${CMAKE_SOURCE_DIR}/src/main.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
-add_executable(rt-supervisor				"${CMAKE_SOURCE_DIR}/src/rt_supervisor.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
+add_executable(rt-supervisor				"${CMAKE_SOURCE_DIR}/src/rt_supervisor.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp" "${CMAKE_SOURCE_DIR}/include/sharedmemorymodel/SharedMemoryModel.cpp")
 add_executable(td_handover_control			"${CMAKE_SOURCE_DIR}/test/drivers/td_handover_control.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
 add_executable(td_landing_routine			"${CMAKE_SOURCE_DIR}/test/drivers/td_landing_routine.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
 add_executable(td_lp_manager				"${CMAKE_SOURCE_DIR}/test/drivers/td_lp_manager.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
