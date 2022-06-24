@@ -1,0 +1,3 @@
+[submodule "include/sharedmemorymodel"]
+	path = include/sharedmemorymodel
+	url = https://James_WE_Horner@bitbucket.org/frl-student/sharedmemorymodel.git
