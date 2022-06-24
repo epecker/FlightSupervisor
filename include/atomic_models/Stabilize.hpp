@@ -74,6 +74,7 @@ public:
 	// Public members of the class
 	message_hover_criteria_t hover_criteria;
 	message_aircraft_state_t aircraft_state;
+	TIME stabilization_time_prev;
 
 	// Default constructor
 	Stabilize() {
@@ -128,6 +129,7 @@ public:
 					if (get_messages<typename Stabilize_defs::i_stabilize>(mbs).size() >= 1) {
 						state.current_state = States::INIT_HOVER;
 						hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
+						stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					}
 					break;
 				case States::STABILIZING:
@@ -135,6 +137,10 @@ public:
 						aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
 						if (!calculate_hover_criteria_met(aircraft_state)) {
 							state.current_state = States::CRIT_CHECK_FAILED;
+							stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
+						}
+						else {
+							stabilization_time_prev = stabilization_time_prev - e;
 						}
 					}
 					break;
@@ -202,7 +208,7 @@ public:
 				next_internal = TIME(TA_ZERO);
 				break;
 			case States::STABILIZING:
-				next_internal = seconds_to_time<TIME>(hover_criteria.timeTol);
+				next_internal = stabilization_time_prev;
 				break;
 			case States::CRIT_CHECK_FAILED:
 				next_internal = TIME(TA_ZERO);
