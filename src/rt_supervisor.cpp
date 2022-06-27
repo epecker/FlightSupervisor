@@ -76,6 +76,15 @@ int main(int argc, char* argv[]) {
 	shared_ptr<dynamic::modeling::model> im_plp_ach =
 		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string>("im_plp_ach", std::move(TIME("00:00:00:100")), true, std::move("23004"));
 
+	// shared_ptr<dynamic::modeling::model> im_landing_achieved =
+	// 	dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_Boolean, TIME, bool, string>("im_landing_achieved", true, std::move("23001"));
+	// shared_ptr<dynamic::modeling::model> im_pilot_takeover =
+	// 	dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_Boolean, TIME, bool, string>("im_pilot_takeover", true, std::move("23002"));
+	// shared_ptr<dynamic::modeling::model> im_lp_recv =
+	// 	dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_Landing_Point, TIME, bool, string>("im_lp_recv", true, std::move("23003"));
+	// shared_ptr<dynamic::modeling::model> im_plp_ach =
+	// 	dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_Landing_Point, TIME, bool, string>("im_plp_ach", true, std::move("23004"));
+
 	shared_ptr<dynamic::modeling::model> im_aircraft_state =
 		dynamic::translate::make_dynamic_atomic_model<ASRA_Shared_Memory_Input, TIME, TIME>("im_aircraft_state", std::move(TIME("00:00:00:100")));
 
