@@ -231,9 +231,9 @@ public:
 					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
 					aircraft_state = new_aircraft_state[0];
 					if (aircraft_state.alt_AGL > DEFAULT_HOVER_ALTITUDE_AGL) {
-						plp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL) * FEET_TO_M;
+						plp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
 					} else {
-						plp.alt = aircraft_state.alt_MSL * FEET_TO_M;
+						plp.alt = aircraft_state.alt_MSL;
 					}
 					state.current_state = States::HOVER_PLP;
 				}
@@ -245,9 +245,9 @@ public:
 					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
 					message_aircraft_state_t aircraft_state = new_aircraft_state[0];
 					if (aircraft_state.alt_AGL > DEFAULT_HOVER_ALTITUDE_AGL) {
-						lp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL) * FEET_TO_M;
+						lp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
 					} else {
-						lp.alt = aircraft_state.alt_MSL * FEET_TO_M;
+						lp.alt = aircraft_state.alt_MSL;
 					}
 					state.current_state = States::NOTIFY_LP;
 				}

@@ -150,10 +150,10 @@ public:
 			message_aircraft_state_t message = message_aircraft_state_t(
 				model.sharedMemoryStruct->hg1700.lat,
 				model.sharedMemoryStruct->hg1700.lng,
-				model.sharedMemoryStruct->asra_arinc_data.radalt_hi_res,
-				model.sharedMemoryStruct->asra_arinc_data.pressure_alt,
+				model.sharedMemoryStruct->hg1700.mixedhgt,
+				model.sharedMemoryStruct->hg1700.alt,
 				model.sharedMemoryStruct->hg1700.hdg,
-				model.sharedMemoryStruct->asra_arinc_data.ground_speed
+				sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
 			bag_port_message.push_back(message);
 			get_messages<typename ASRA_Shared_Memory_Input_defs::o_message>(bags) = bag_port_message;
