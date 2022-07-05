@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23"));
+		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
 
 		// Instantiate the input readers.
 		// One for each input
