@@ -53,16 +53,22 @@ class UDP_Input_Async {
 private:
 	cadmium::dynamic::modeling::AsyncEventSubject* _sub;
 	
+	// Mutex for thread synchronization using unique locks.
+	mutable std::mutex input_mutex;
+
+	// Networking members
 	boost::asio::ip::udp::endpoint network_endpoint;
 	boost::asio::ip::udp::endpoint remote_endpoint;
 	boost::asio::io_service io_service;
 	boost::asio::ip::udp::socket socket{ io_service };
-	bool send_ack;
 	char recv_buffer[MAX_SER_BUFFER_CHARS];
-	int notifies;
+
+	// Const Members
+	bool send_ack;
+
+	// Global member for thread sync
+	bool stop;
 	
-	// Mutex for thread synchronization using unique locks.
-	mutable std::mutex input_mutex;
 
 public:
 	// Used to keep track of the states
@@ -81,10 +87,16 @@ public:
 		state.current_state = States::INPUT;
 		state.has_messages = !state.message.empty();
 
-		//Create the network endpoint using a default address and port.
 		send_ack = false;
+		stop = false;
+		
+		//Create the network endpoint using a default address and port.
 		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
 		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
+
+		//Set the interupts for the program to stop the child thread.
+		// std::signal(SIGINT, UDP_Input_Async::handle_signal);
+		// std::signal(SIGTERM, UDP_Input_Async::handle_signal);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input_Async::receive_packet_thread, this).detach();
@@ -97,10 +109,16 @@ public:
 		state.has_messages = !state.message.empty();
 		_sub = sub;
 
-		//Create the network endpoint using the supplied address and port.
 		send_ack = ack_required;
+		stop = false;
+
+		//Create the network endpoint using the supplied address and port.
 		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
 		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
+
+		//Set the interupts for the program to stop the child thread.
+		// std::signal(SIGINT, UDP_Input_Async::handle_signal);
+		// std::signal(SIGTERM, UDP_Input_Async::handle_signal);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input_Async::receive_packet_thread, this).detach();
@@ -108,8 +126,21 @@ public:
 
 	// Destructor for the class that stops the packet receipt thread
 	~UDP_Input_Async() {
+		shutdown();
+	}
+
+	// Handler for signals.
+	static void handle_signal(int signal_number) {
+		shutdown();
+	}
+
+	// Member for shutting down the thread and IO services gracefully.
+	void shutdown() {
 		//Before exiting stop the Boost IO service to interupt the receipt handler.
+		stop = true;
 		io_service.stop();
+		if (socket.is_open()) 
+			socket.close();
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -182,7 +213,7 @@ public:
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
 		if (!state.message.empty() && state.current_state == States::INPUT) {
-			return TIME("00:00:00:00");
+			return TIME(TA_ZERO);
 		}
 
 		return std::numeric_limits<TIME>::infinity();
@@ -195,7 +226,7 @@ public:
 		socket.bind(network_endpoint);
 
 		//While the model is not passivated,
-		while (state.current_state != States::IDLE) {
+		while (state.current_state != States::IDLE && !stop) {
 			//Reset the io service then asynchronously receive a packet and 
 			//use the handler to add it to the state.message vector.
 			io_service.reset();
@@ -237,7 +268,6 @@ public:
 			//Send the ack to the origin of the packet.
 			socket.send_to(boost::asio::buffer(ack_data), remote_endpoint, 0, ack_err);
 		}
-		notifies++;
 		_sub->notify();
 	}
 

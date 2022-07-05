@@ -18,6 +18,7 @@
 #include <string>
 #include <chrono>
 #include <sstream>
+#include <csignal>
 
 #include <boost/asio.hpp>
 
@@ -51,17 +52,23 @@ class UDP_Input {
 
 	// Private members for thread management.
 private:
-	mutable std::vector<MSG> message;
-	TIME polling_rate;
-	boost::asio::ip::udp::endpoint network_endpoint;
-	boost::asio::ip::udp::endpoint remote_endpoint;
-	boost::asio::io_service io_service;
-	boost::asio::ip::udp::socket socket{ io_service };
-	bool send_ack;
-	char recv_buffer[MAX_SER_BUFFER_CHARS];
-
 	// Mutex for thread synchronization using unique locks.
 	mutable std::mutex input_mutex;
+	mutable std::vector<MSG> message;
+
+	// Networking members
+	boost::asio::ip::udp::endpoint endpoint_local;
+	boost::asio::ip::udp::endpoint endpoint_remote;
+	boost::asio::io_service io_service;
+	boost::asio::ip::udp::socket socket{ io_service };
+	char recv_buffer[MAX_SER_BUFFER_CHARS];
+
+	// Const Members
+	bool send_ack;
+	TIME polling_rate;
+	
+	// Global member for thread sync
+	bool stop;
 
 public:
 	// Used to keep track of the states
@@ -77,11 +84,18 @@ public:
 		state.current_state = States::INPUT;
 		state.has_messages = false;
 
-		//Create the network endpoint using a default address and port.
 		polling_rate = TIME("00:00:00:100");
 		send_ack = false;
+		stop = false;
+
+		//Create the network endpoint using a default address and port.
 		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
-		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
+		endpoint_local = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
+
+		//Set the interupts for the program to stop the child thread.
+		// std::signal(SIGINT, UDP_Input::handle_signal);
+		// std::signal(SIGTERM, UDP_Input::handle_signal);
+
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
@@ -92,20 +106,39 @@ public:
 		state.current_state = States::INPUT;
 		state.has_messages = false;
 
-		//Create the network endpoint using the supplied address and port.
 		polling_rate = rate;
 		send_ack = ack_required;
+		stop = false;
+
+		//Create the network endpoint using the supplied address and port.
 		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
-		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
+		endpoint_local = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
+
+		//Set the interupts for the program to stop the child thread.
+		// std::signal(SIGINT, UDP_Input::handle_signal);
+		// std::signal(SIGTERM, UDP_Input::handle_signal);
 
 		//Start the user input thread.
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
-	// Destructor for the class that stops the packet receipt thread
+	// Destructor for the class that shuts down gracefully
 	~UDP_Input() {
+		shutdown();
+	}
+
+	// Handler for signals.
+	static void handle_signal(int signal_number) {
+		shutdown();
+	}
+
+	// Member for shutting down the thread and IO services gracefully.
+	void shutdown() {
 		//Before exiting stop the Boost IO service to interupt the receipt handler.
+		stop = true;
 		io_service.stop();
+		if (socket.is_open()) 
+			socket.close();
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -178,12 +211,12 @@ public:
 				return std::numeric_limits<TIME>::infinity();
 			case States::INPUT:
 				if (state.has_messages) {
-					return TIME("00:00:00:000");
+					return TIME(TA_ZERO);
 				} else {
 					return polling_rate;
 				}
 			default:
-				return TIME("00:00:00:000");
+				return TIME(TA_ZERO);
 		}
 	}
 
@@ -191,21 +224,21 @@ public:
 	void receive_packet_thread() {
 		//Open and bind the socket using Boost.
 		socket.open(boost::asio::ip::udp::v4());
-		socket.bind(network_endpoint);
+		socket.bind(endpoint_local);
 
 		//While the model is not passivated,
-		while (state.current_state != States::IDLE) {
+		while (state.current_state != States::IDLE && !stop) {
 			//Reset the io service then asynchronously receive a packet and 
 			//use the handler to add it to the message vector.
-			io_service.reset();
+			io_service.restart();
 			socket.async_receive_from(
 				boost::asio::buffer(recv_buffer),
-				remote_endpoint,
+				endpoint_remote,
 				bind(
-				&UDP_Input::receive_packet,
-				this,
-				boost::asio::placeholders::error,
-				boost::asio::placeholders::bytes_transferred));
+					&UDP_Input::receive_packet,
+					this,
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
 
 			//Receive one packet then loop.
 			io_service.run_one();
@@ -234,7 +267,7 @@ public:
 			memcpy(ack_data, &ack_message, sizeof(ack_data));
 
 			//Send the ack to the origin of the packet.
-			socket.send_to(boost::asio::buffer(ack_data), remote_endpoint, 0, ack_err);
+			socket.send_to(boost::asio::buffer(ack_data), endpoint_remote, 0, ack_err);
 		}
 	}
 
