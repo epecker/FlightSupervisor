@@ -11,7 +11,6 @@
 // System libraries
 #include <iostream>
 #include <assert.h>
-#include <thread>
 #include <mutex>
 #include <string>
 #include <chrono>
@@ -42,9 +41,13 @@ template<typename MSG> struct UDP_Output_defs{
 template<typename MSG, typename TIME>
 class UDP_Output {
 
-// Private members for thread management.
+// Private members.
 private:
     asio::ip::udp::endpoint network_endpoint;
+	asio::io_service io_service;
+	asio::ip::udp::socket socket(io_service);
+	boost::system::error_code err;
+
     MSG message;
     
 public:
@@ -60,6 +63,7 @@ public:
         state.current_state = States::IDLE;
         unsigned short port_num = (unsigned short) MAVLINK_OVER_UDP_PORT;
         network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(PEREGRINE_IP), port_num);
+		socket.open(asio::ip::udp::v4());
     }
 
     // Constructor with polling rate parameter
@@ -67,7 +71,12 @@ public:
         state.current_state = States::IDLE;
         unsigned short port_num = (unsigned short) strtoul(port.c_str(), NULL, 0);
         network_endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string(address), port_num);
+		socket.open(asio::ip::udp::v4());
     }
+
+	~UDP_Output() {
+		socket.close();
+	}
 
 	// This is used to track the state of the atomic model. 
 	// (required for the simulator)
@@ -114,16 +123,11 @@ public:
     // Output function
     typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-        asio::io_service io_service;
-        asio::ip::udp::socket socket(io_service);
-        boost::system::error_code err;
         char data[sizeof(MSG)];
         switch(state.current_state) {
             case States::SENDING:
                 memcpy(data, &message, sizeof(data)); // Convert back to MSG: MSG recv = MSG(); memcpy(recv, data, sizeof(data));
-                socket.open(asio::ip::udp::v4());
                 socket.send_to(asio::buffer(data), network_endpoint, 0, err);
-                socket.close();
                 break;
             default:
                 break;

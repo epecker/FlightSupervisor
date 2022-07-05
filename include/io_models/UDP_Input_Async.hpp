@@ -110,6 +110,9 @@ public:
 	~UDP_Input_Async() {
 		//Before exiting stop the Boost IO service to interupt the receipt handler.
 		io_service.stop();
+		std::terminate(child_thread);
+		if (socket.is_open()) 
+			socket.close();
 	}
 
 	// This is used to track the state of the atomic model. 

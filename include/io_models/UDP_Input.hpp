@@ -63,6 +63,8 @@ private:
 	// Mutex for thread synchronization using unique locks.
 	mutable std::mutex input_mutex;
 
+	std::thread child_thread;
+
 public:
 	// Used to keep track of the states
 	// (not required for the simulator)
@@ -83,7 +85,7 @@ public:
 		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
 		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 		//Start the user input thread.
-		std::thread(&UDP_Input::receive_packet_thread, this).detach();
+		child_thread = std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
 	// Constructor with polling rate parameter
@@ -99,13 +101,16 @@ public:
 		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 
 		//Start the user input thread.
-		std::thread(&UDP_Input::receive_packet_thread, this).detach();
+		child_thread = std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
 	// Destructor for the class that stops the packet receipt thread
 	~UDP_Input() {
 		//Before exiting stop the Boost IO service to interupt the receipt handler.
 		io_service.stop();
+		std::terminate(child_thread);
+		if (socket.is_open()) 
+			socket.close();
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -197,7 +202,7 @@ public:
 		while (state.current_state != States::IDLE) {
 			//Reset the io service then asynchronously receive a packet and 
 			//use the handler to add it to the message vector.
-			io_service.reset();
+			io_service.restart();
 			socket.async_receive_from(
 				boost::asio::buffer(recv_buffer),
 				remote_endpoint,
