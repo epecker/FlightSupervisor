@@ -68,6 +68,7 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
+		string failures;
 	};
 	state_type state;
 
@@ -223,7 +224,7 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Stabilize<TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+		os << (string("State: ") + enumToString(i.current_state) + "-" + i.failures + string("\n"));
 		return os;
 	}
 
@@ -231,17 +232,24 @@ public:
 	bool calculate_hover_criteria_met(message_aircraft_state_t i_state) {
 
 		if (abs(i_state.alt_MSL - hover_criteria.desiredAltMSL) >= hover_criteria.vertDistTolFt) {
+			state.failures = "FAILED-ALT";
 			return false;
 		}
-		if (abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg) {
+		//If the heading is negative wrap back into 0-360
+		while (i_state.hdg_Deg < 0.0) {
+			i_state.hdg_Deg += 360;
+		}
+		if (abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg && !isnan(hover_criteria.desiredHdgDeg)) {
+			state.failures = "FAILED-HDG";
 			return false;
 		}
 		if (abs(i_state.vel_Kts) >= hover_criteria.velTolKts) {
+			state.failures = "FAILED-VEL";
 			return false;
 		}
 
-		//Radius of the earth in meters.
-		const float R = 6371000;
+		//Radius of the earth in meters (WGS-84).
+		const float R = 6378137.0;
 
 		double i_x = R * cos(i_state.lat) * cos(i_state.lon);
 		double i_y = R * cos(i_state.lat) * sin(i_state.lon);
@@ -252,7 +260,8 @@ public:
 		double goal_z = R * sin(hover_criteria.desiredLat);
 
 		double distance_m = sqrt(pow((i_x - goal_x), 2) + pow((i_y - goal_y), 2) + pow((i_z - goal_z), 2));
-		if ((distance_m / 0.3048) >= hover_criteria.horDistTolFt) {
+		if ((distance_m * METERS_TO_FT) >= hover_criteria.horDistTolFt) {
+			state.failures = string("FAILED-DIS-") + std::to_string(distance_m * METERS_TO_FT);
 			return false;
 		}
 
