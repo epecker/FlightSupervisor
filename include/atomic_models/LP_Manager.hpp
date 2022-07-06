@@ -230,7 +230,7 @@ public:
 				if (received_aircraft_state) {
 					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
 					aircraft_state = new_aircraft_state[0];
-					if (aircraft_state.alt_AGL > DEFAULT_HOVER_ALTITUDE_AGL) {
+					if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
 						plp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
 					} else {
 						plp.alt = aircraft_state.alt_MSL;
@@ -244,7 +244,7 @@ public:
 				if (received_aircraft_state) {
 					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
 					message_aircraft_state_t aircraft_state = new_aircraft_state[0];
-					if (aircraft_state.alt_AGL > DEFAULT_HOVER_ALTITUDE_AGL) {
+					if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
 						lp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
 					} else {
 						lp.alt = aircraft_state.alt_MSL;
@@ -301,9 +301,9 @@ public:
 						plp.lon,
 						plp.alt,
 						plp.hdg,
-						DEFAULT_LAND_CRITERIA_HOR_DIST,
-						DEFAULT_LAND_CRITERIA_VERT_DIST,
-						DEFAULT_LAND_CRITERIA_VEL,
+						DEFAULT_ORBIT_RADIUS,
+						DEFAULT_HOVER_ALTITUDE_AGL,
+						DEFAULT_ORBIT_VELOCITY,
 						DEFAULT_LAND_CRITERIA_HDG,
 						DEFAULT_LAND_CRITERIA_TIME,
 						-1,
