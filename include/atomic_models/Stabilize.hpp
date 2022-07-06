@@ -21,6 +21,7 @@
 #include "message_structures/message_aircraft_state_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
 
+#include "mavNRC/geo.h"
 #include "enum_string_conversion.hpp"
 #include "time_conversion.hpp"
 #include "Constants.hpp"
@@ -51,12 +52,12 @@ public:
 		(HOVER)
 	)
 
-	// Create a tuple of input ports (required for the simulator)
-	using input_ports = tuple<
+		// Create a tuple of input ports (required for the simulator)
+		using input_ports = tuple<
 		typename Stabilize_defs::i_aircraft_state,
 		typename Stabilize_defs::i_stabilize,
 		typename Stabilize_defs::i_cancel_hover
-	>;
+		>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
@@ -68,7 +69,9 @@ public:
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
+#ifdef DEBUG_MODELS
 		string failures;
+#endif
 	};
 	state_type state;
 
@@ -139,8 +142,7 @@ public:
 						if (!calculate_hover_criteria_met(aircraft_state)) {
 							state.current_state = States::CRIT_CHECK_FAILED;
 							stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
-						}
-						else {
+						} else {
 							stabilization_time_prev = stabilization_time_prev - e;
 						}
 					}
@@ -183,7 +185,7 @@ public:
 				message_fcc_out.push_back(mfc);
 				get_messages<typename Stabilize_defs::o_fcc_command_hover>(bags) = message_fcc_out;
 			}
-				break;
+			break;
 			case States::STABILIZING:
 				message_out.push_back(true);
 				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
@@ -202,7 +204,7 @@ public:
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
-			case States::IDLE: 
+			case States::IDLE:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::INIT_HOVER:
@@ -224,7 +226,11 @@ public:
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Stabilize<TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + "-" + i.failures + string("\n"));
+#ifdef DEBUG_MODELS
+		os << (string("State: ") + enumToString(i.current_state) + i.failures + string("\n"));
+#else 
+		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+#endif
 		return os;
 	}
 
@@ -232,7 +238,9 @@ public:
 	bool calculate_hover_criteria_met(message_aircraft_state_t i_state) {
 
 		if (abs(i_state.alt_MSL - hover_criteria.desiredAltMSL) >= hover_criteria.vertDistTolFt) {
-			state.failures = "FAILED-ALT";
+#ifdef DEBUG_MODELS
+			state.failures = "-FAILED-ALT";
+#endif
 			return false;
 		}
 		//If the heading is negative wrap back into 0-360
@@ -240,31 +248,47 @@ public:
 			i_state.hdg_Deg += 360;
 		}
 		if (abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg && !isnan(hover_criteria.desiredHdgDeg)) {
-			state.failures = "FAILED-HDG";
+#ifdef DEBUG_MODELS
+			state.failures = "-FAILED-HDG";
+#endif
 			return false;
 		}
 		if (abs(i_state.vel_Kts) >= hover_criteria.velTolKts) {
-			state.failures = "FAILED-VEL";
+#ifdef DEBUG_MODELS
+			state.failures = "-FAILED-VEL";
+#endif
 			return false;
 		}
 
 		//Radius of the earth in meters (WGS-84).
-		const float R = 6378137.0;
+		// const float R = 6378137.0;
 
-		double i_x = R * cos(i_state.lat) * cos(i_state.lon);
-		double i_y = R * cos(i_state.lat) * sin(i_state.lon);
-		double i_z = R * sin(i_state.lat);
+		// double i_x = R * cos(i_state.lat) * cos(i_state.lon);
+		// double i_y = R * cos(i_state.lat) * sin(i_state.lon);
+		// double i_z = R * sin(i_state.lat);
 
-		double goal_x = R * cos(hover_criteria.desiredLat) * cos(hover_criteria.desiredLon);
-		double goal_y = R * cos(hover_criteria.desiredLat) * sin(hover_criteria.desiredLon);
-		double goal_z = R * sin(hover_criteria.desiredLat);
+		// double goal_x = R * cos(hover_criteria.desiredLat) * cos(hover_criteria.desiredLon);
+		// double goal_y = R * cos(hover_criteria.desiredLat) * sin(hover_criteria.desiredLon);
+		// double goal_z = R * sin(hover_criteria.desiredLat);
 
-		double distance_m = sqrt(pow((i_x - goal_x), 2) + pow((i_y - goal_y), 2) + pow((i_z - goal_z), 2));
-		if ((distance_m * METERS_TO_FT) >= hover_criteria.horDistTolFt) {
-			state.failures = string("FAILED-DIS-") + std::to_string(distance_m * METERS_TO_FT);
+		// double distance_m = sqrt(pow((i_x - goal_x), 2) + pow((i_y - goal_y), 2) + pow((i_z - goal_z), 2));
+
+		float dist_xy_m, dist_z_m;
+		get_distance_to_point_global_wgs84(
+			i_state.lat, i_state.lon, i_state.alt_MSL,
+			hover_criteria.desiredLat, hover_criteria.desiredLon, hover_criteria.desiredAltMSL,
+			&dist_xy_m, &dist_z_m);
+
+		if ((dist_xy_m * METERS_TO_FT) >= hover_criteria.horDistTolFt) {
+#ifdef DEBUG_MODELS
+			state.failures = string("-FAILED-DIS-") + std::to_string(dist_xy_m * METERS_TO_FT);
+#endif
 			return false;
 		}
 
+#ifdef DEBUG_MODELS
+		state.failures = string("");
+#endif
 		return true;
 	}
 };
