@@ -42,7 +42,7 @@ ofstream out_state;
 ofstream out_info;
 
 // Define output ports to be used for logging purposes
-struct out : public out_port<message_aircraft_state_t> {};
+struct out : public out_port<message_landing_point_t> {};
 
 template<typename T>
 class UDP_Output_LP : public UDP_Output<message_landing_point_t, T> {
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
 		auto start = hclock::now(); //to measure simulation execution time
 
 		cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, { TIME("00:00:00:000:000") });
-		r.run_until(TIME("00:01:40:000:000"));
+		r.run_until_passivate();
 
 		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 		cout << "\nSimulation took: " << elapsed << " seconds" << endl;
