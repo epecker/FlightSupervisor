@@ -27,7 +27,7 @@
 #include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "io_models/Landing_Achieved_Demand_Input.hpp"
+#include "io_models/Pilot_Takeover_Input.hpp"
 
 using namespace std;
 using namespace cadmium;
@@ -41,17 +41,17 @@ ofstream out_state;
 ofstream out_info;
 
 // Define output ports to be used for logging purposes
+struct out : public out_port<bool> {};
 
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
-	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/landing_achieved_demand_input/");
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/landing_achieved_demand_input/");
+	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/pilot_takeover_input/");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/pilot_takeover_input/");
 
 	do {
 		// Input Files
 		string input_dir = i_base_dir + to_string(test_set_enumeration);
-		string input_file_start = input_dir + string("/start.txt");
 		string input_file_quit = input_dir + string("/quit.txt");
 
 		// Output locations
@@ -60,8 +60,7 @@ int main(int argc, char* argv[]) {
 		string out_state_file = out_directory + string("/output_state.txt");
 		string out_info_file = out_directory + string("/output_info.txt");
 
-		if (!filesystem::exists(input_file_start) ||
-			!filesystem::exists(input_file_quit)) {
+		if (!filesystem::exists(input_file_quit)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
@@ -70,26 +69,25 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> landing_achieved_demand_input = dynamic::translate::make_dynamic_atomic_model<Landing_Achieved_Demand_Input, TIME, TIME, float>("landing_achieved_demand_input", std::move(TIME("00:00:00:100")), DEFAULT_LAND_CRITERIA_VERT_DIST);
+		std::shared_ptr<dynamic::modeling::model> pilot_takeover_input = dynamic::translate::make_dynamic_atomic_model<Pilot_Takeover_Input, TIME, TIME>("pilot_takeover_input", std::move(TIME("00:00:01:000")));
 
 		// Instantiate the input readers.
 		// One for each input
-		std::shared_ptr<dynamic::modeling::model> ir_start =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start", std::move(input_file_start.c_str()));
 		std::shared_ptr<dynamic::modeling::model> ir_quit =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", std::move(input_file_quit.c_str()));
 
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
-			landing_achieved_demand_input,
-            ir_start,
-			ir_quit
+			pilot_takeover_input,
+            ir_quit
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = { };
+		dynamic::modeling::Ports iports_TestDriver = {	};
 
-		dynamic::modeling::Ports oports_TestDriver = { };
+		dynamic::modeling::Ports oports_TestDriver = {
+            typeid(out)
+        };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
@@ -97,10 +95,7 @@ int main(int argc, char* argv[]) {
 		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
-		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_Achieved_Demand_Input_defs::i_start>("ir_start", "landing_achieved_demand_input"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_Achieved_Demand_Input_defs::i_quit>("ir_quit", "landing_achieved_demand_input")
-		};
+		dynamic::modeling::ICs ics_TestDriver = { };
 
 		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
 			"test_driver", submodels_TestDriver, iports_TestDriver, oports_TestDriver, eics_TestDriver, eocs_TestDriver, ics_TestDriver
