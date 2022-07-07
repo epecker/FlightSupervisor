@@ -61,6 +61,7 @@ add_executable(td_shared_memory_output								"${CMAKE_SOURCE_DIR}/test/drivers/
 add_executable(td_shared_memory_input								"${CMAKE_SOURCE_DIR}/test/drivers/td_shared_memory_input.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp")
 add_executable(td_asra_shared_memory_input							"${CMAKE_SOURCE_DIR}/test/drivers/td_asra_shared_memory_input.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp" "${CMAKE_SOURCE_DIR}/include/sharedmemorymodel/SharedMemoryModel.cpp")
 add_executable(td_landing_achieved_demand_input						"${CMAKE_SOURCE_DIR}/test/drivers/td_landing_achieved_demand_input.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp" "${CMAKE_SOURCE_DIR}/include/sharedmemorymodel/SharedMemoryModel.cpp")
+add_executable(td_pilot_takeover_input								"${CMAKE_SOURCE_DIR}/test/drivers/td_pilot_takeover_input.cpp" "${CMAKE_SOURCE_DIR}/src/mavNRC/geo.cpp" "${CMAKE_SOURCE_DIR}/include/sharedmemorymodel/SharedMemoryModel.cpp")
 
 target_include_directories(supervisor				    			PUBLIC ${includes_list})
 target_include_directories(rt-supervisor			    			PUBLIC ${rt_includes_list})
@@ -82,6 +83,7 @@ target_include_directories(td_shared_memory_output					PUBLIC ${rt_includes_list
 target_include_directories(td_shared_memory_input					PUBLIC ${rt_includes_list})
 target_include_directories(td_asra_shared_memory_input				PUBLIC ${rt_includes_list})
 target_include_directories(td_landing_achieved_demand_input			PUBLIC ${rt_includes_list})
+target_include_directories(td_pilot_takeover_input					PUBLIC ${rt_includes_list})
 
 target_link_libraries(supervisor			            			${Boost_LIBRARIES})
 target_link_libraries(rt-supervisor			            			${Boost_LIBRARIES} -lrt)
@@ -103,3 +105,4 @@ target_link_libraries(td_shared_memory_output						${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_shared_memory_input						${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_asra_shared_memory_input					${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_landing_achieved_demand_input				${Boost_LIBRARIES} -lrt)
+target_link_libraries(td_pilot_takeover_input						${Boost_LIBRARIES} -lrt)

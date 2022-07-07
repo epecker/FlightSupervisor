@@ -25,6 +25,7 @@
 #include "input_models.hpp" // Input Model Definitions.
 #include "io_models/ASRA_Shared_Memory_Input.hpp"
 #include "io_models/Landing_Achieved_Demand_Input.hpp"
+#include "io_models/Pilot_Takeover_Input.hpp"
 
 //Coupled model headers
 #include "coupled_models/Supervisor.hpp"
@@ -68,8 +69,6 @@ int main(int argc, char* argv[]) {
 
 	// Instantiate the input readers.
 	// One for each input
-	shared_ptr<dynamic::modeling::model> im_pilot_takeover =
-		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Boolean, TIME, TIME, bool, string>("im_pilot_takeover", std::move(TIME("00:00:00:100")), true, std::move("23002"));
 	shared_ptr<dynamic::modeling::model> im_lp_recv =
 		dynamic::translate::make_dynamic_atomic_model<UDP_Input_Landing_Point, TIME, TIME, bool, string>("im_lp_recv", std::move(TIME("00:00:00:100")), true, std::move("23003"));
 	shared_ptr<dynamic::modeling::model> im_plp_ach =
@@ -89,6 +88,9 @@ int main(int argc, char* argv[]) {
 
 	shared_ptr<dynamic::modeling::model> im_landing_achieved =
 		dynamic::translate::make_dynamic_atomic_model<Landing_Achieved_Demand_Input, TIME, TIME, float>("im_landing_achieved", std::move(TIME("00:00:00:100")), DEFAULT_LAND_CRITERIA_VERT_DIST);
+
+	shared_ptr<dynamic::modeling::model> im_pilot_takeover =
+		dynamic::translate::make_dynamic_atomic_model<Pilot_Takeover_Input, TIME, TIME>("im_pilot_takeover", std::move(TIME("00:00:01:000")));
 
 	// The models to be included in this coupled model 
 	// (accepts atomic and coupled models)
@@ -132,12 +134,13 @@ int main(int argc, char* argv[]) {
 	dynamic::modeling::ICs ics_TestDriver = {
 		dynamic::translate::make_IC<Landing_Achieved_Demand_Input_defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("supervisor", "im_landing_achieved"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input_defs::i_quit>("supervisor", "im_landing_achieved"),
 
 		dynamic::translate::make_IC<ASRA_Shared_Memory_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, ASRA_Shared_Memory_Input_defs::i_quit>("supervisor", "im_aircraft_state"),
 
-		dynamic::translate::make_IC<UDP_Input_defs<bool>::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<bool>::i_quit>("supervisor", "im_pilot_takeover"),
+		dynamic::translate::make_IC<Pilot_Takeover_Input_defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Pilot_Takeover_Input_defs::i_quit>("supervisor", "im_pilot_takeover"),
 
 		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_LP_recv>("im_lp_recv", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("supervisor", "im_lp_recv"),
