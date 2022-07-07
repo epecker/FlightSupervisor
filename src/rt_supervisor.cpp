@@ -132,10 +132,18 @@ int main(int argc, char* argv[]) {
 	dynamic::modeling::ICs ics_TestDriver = {
 		dynamic::translate::make_IC<Landing_Achieved_Demand_Input_defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("supervisor", "im_landing_achieved"),
+
 		dynamic::translate::make_IC<ASRA_Shared_Memory_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, ASRA_Shared_Memory_Input_defs::i_quit>("supervisor", "im_aircraft_state"),
+
 		dynamic::translate::make_IC<UDP_Input_defs<bool>::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<bool>::i_quit>("supervisor", "im_pilot_takeover"),
+
 		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_LP_recv>("im_lp_recv", "supervisor"),
-		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_PLP_ach>("im_plp_ach", "supervisor")
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("supervisor", "im_lp_recv"),
+
+		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_PLP_ach>("im_plp_ach", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("supervisor", "im_plp_ach")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
