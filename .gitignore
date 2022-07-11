@@ -383,9 +383,9 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# JetBrains Rider
+# JetBrains
 .idea/
-*.sln.iml
+cmake-build-*/
 
 #======================================================
 # Ignore C++ items
@@ -398,11 +398,11 @@ FodyWeavers.xsd
 *.slo
 *.lo
 *.o
-*.obj
+# *.obj ignored in the visual studio section
 
 # Precompiled Headers
 *.gch
-*.pch
+# *.pch ignored in the visual studio section
 
 # Compiled Dynamic libraries
 *.so
