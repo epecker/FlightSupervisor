@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_velocity, o_fcc_command_velocity>("supervisor"),
 		dynamic::translate::make_EOC<Supervisor_defs::o_control_yielded, o_control_yielded>("supervisor"),
 		dynamic::translate::make_EOC<Supervisor_defs::o_notify_pilot, o_notify_pilot>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_hover, o_fcc_command_hover>("supervisor")
+		dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_hover, o_fcc_command_hover>("supervisor"),
 		dynamic::translate::make_EOC<Supervisor_defs::o_request_aircraft_state, o_request_aircraft_state>("supervisor")
 	};
 
@@ -139,8 +139,8 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_IC<Supervisor_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("supervisor", "im_landing_achieved"),
 		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input_defs::i_quit>("supervisor", "im_landing_achieved"),
 
-		dynamic::translate::make_IC<Aircraft_State_Input::o_aircraft_state, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, ASRA_Shared_Memory_Input_defs::i_request>("supervisor", "im_aircraft_state"),
+		dynamic::translate::make_IC<Aircraft_State_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("supervisor", "im_aircraft_state"),
 
 		dynamic::translate::make_IC<Pilot_Takeover_Input_defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Pilot_Takeover_Input_defs::i_quit>("supervisor", "im_pilot_takeover"),
