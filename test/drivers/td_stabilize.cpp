@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 
 		dynamic::engine::runner<NDTime, logger_supervisor> r(test_driver, { 0 });
 
-		r.run_until_passivate();
+		r.run_until(TIME("00:02:00:000"));
 		test_set_enumeration++;
 	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 

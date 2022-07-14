@@ -88,6 +88,9 @@ public:
 	// Default constructor
 	Stabilize() {
 		state.current_state = States::IDLE;
+		state.in_tolerance = false;
+		state.time_tolerance_met = false;
+		polling_rate = TIME("00:00:00:100");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -95,6 +98,8 @@ public:
 	// Default constructor
 	Stabilize(TIME polling_rate) : polling_rate(polling_rate) {
 		state.current_state = States::IDLE;
+		state.in_tolerance = false;
+		state.time_tolerance_met = false;
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -102,6 +107,19 @@ public:
 	// Constructor with initial state parameter for debugging or partial execution startup.
 	Stabilize(States initial_state) {
 		state.current_state = initial_state;
+		state.in_tolerance = false;
+		state.time_tolerance_met = false;
+		polling_rate = TIME("00:00:00:100");
+		hover_criteria = message_hover_criteria_t();
+		aircraft_state = message_aircraft_state_t();
+	}
+
+	// Constructor with initial state parameter for debugging or partial execution startup.
+	Stabilize(TIME polling_rate, States initial_state) : polling_rate(polling_rate) {
+		state.current_state = initial_state;
+		state.in_tolerance = false;
+		state.time_tolerance_met = false;
+		polling_rate = TIME("00:00:00:100");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -236,7 +254,7 @@ public:
 				next_internal = polling_rate;
 				break;
 			case States::CHECK_STATE:
-				next_internal = TIME(TA_ZERO);
+				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::HOVER:
 				next_internal = TIME(TA_ZERO);

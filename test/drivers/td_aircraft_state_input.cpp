@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Aircraft_State_Input_defs::i_quit>("ir_request", "aircraft_state_input")
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Aircraft_State_Input_defs::i_request>("ir_request", "aircraft_state_input")
 		};
 
 		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
