@@ -15,6 +15,7 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_start_supervisor_t.hpp"
 
 using namespace cadmium::basic_models::pdevs;
 
@@ -58,6 +59,14 @@ class Input_Reader_Mavlink_Mission_Item : public iestream_input<message_landing_
 public:
 	Input_Reader_Mavlink_Mission_Item() = default;
 	Input_Reader_Mavlink_Mission_Item(const char* file_path) : iestream_input<message_landing_point_t, T>(file_path) {};
+};
+
+// Start Supervisor Item
+template<typename T>
+class Input_Reader_Start_Supervisor : public iestream_input<message_start_supervisor_t, T> {
+public:
+	Input_Reader_Start_Supervisor() = default;
+	Input_Reader_Start_Supervisor(const char* file_path) : iestream_input<message_start_supervisor_t, T>(file_path) {};
 };
 
 #endif // INPUT_READERS_HPP
