@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_control_yielded>("ir_control_yielded", "lp_reposition"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_hover_criteria_met>("ir_hover_criteria_met", "lp_reposition"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_landing_achieved>("ir_landing_achieved", "lp_reposition"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Reposition_defs::i_LP_new>("ir_lp_new", "lp_reposition"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Reposition_defs::i_lp_new>("ir_lp_new", "lp_reposition"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Reposition_defs::i_pilot_takeover>("ir_pilot_takeover", "lp_reposition")
 		};
 

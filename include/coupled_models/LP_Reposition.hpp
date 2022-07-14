@@ -54,21 +54,21 @@ using TIME = NDTime;
 
 /***** Define input port for coupled models *****/
 struct LP_Reposition_defs {
-	struct i_landing_achieved : public in_port<bool> {};
-	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_hover_criteria_met : public in_port<bool> {};
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_control_yielded : public in_port<bool> {};
-	struct i_LP_new : public in_port<message_landing_point_t> {};
-
+	struct i_hover_criteria_met : public in_port<bool> {};
+	struct i_landing_achieved : public in_port<bool> {};
+	struct i_lp_new : public in_port<message_landing_point_t> {};
+	struct i_pilot_takeover : public in_port<bool> {};
 
 	/***** Define output ports for coupled model *****/
-	struct o_mission_complete : public out_port<bool> {};
-	struct o_land_requested : public out_port<bool> {};
-	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_cancel_hover : public out_port<bool> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
+	struct o_land_requested : public out_port<bool> {};
+	struct o_mission_complete : public out_port<bool> {};
 	struct o_pilot_handover : public out_port<message_landing_point_t> {};
+	struct o_request_aircraft_state : public out_port<bool> {};
+	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 };
 
 class LP_Reposition {
@@ -82,22 +82,23 @@ public:
 
 	//Define the inputs to the Landing Point Reposition coupled model.
 	dynamic::modeling::Ports iports = {
-		typeid(LP_Reposition_defs::i_landing_achieved),
-		typeid(LP_Reposition_defs::i_pilot_takeover),
-		typeid(LP_Reposition_defs::i_hover_criteria_met),
 		typeid(LP_Reposition_defs::i_aircraft_state),
 		typeid(LP_Reposition_defs::i_control_yielded),
-		typeid(LP_Reposition_defs::i_LP_new)
+		typeid(LP_Reposition_defs::i_hover_criteria_met),
+		typeid(LP_Reposition_defs::i_landing_achieved),
+		typeid(LP_Reposition_defs::i_lp_new),
+		typeid(LP_Reposition_defs::i_pilot_takeover)
 	};
 
 	//Define the outputs of the Landing Point Reposition coupled model.
 	dynamic::modeling::Ports oports = {
-		typeid(LP_Reposition_defs::o_mission_complete),
-		typeid(LP_Reposition_defs::o_land_requested),
-		typeid(LP_Reposition_defs::o_stabilize),
 		typeid(LP_Reposition_defs::o_cancel_hover),
 		typeid(LP_Reposition_defs::o_fcc_command_velocity),
-		typeid(LP_Reposition_defs::o_pilot_handover)
+		typeid(LP_Reposition_defs::o_mission_complete),
+		typeid(LP_Reposition_defs::o_land_requested),
+		typeid(LP_Reposition_defs::o_pilot_handover),
+		typeid(LP_Reposition_defs::o_request_aircraft_state),
+		typeid(LP_Reposition_defs::o_stabilize)
 	};
 
 	//Define the sub-models that make up the Landing Point Reposition coupled model.
@@ -118,7 +119,7 @@ public:
 
 		dynamic::translate::make_EIC<LP_Reposition_defs::i_pilot_takeover, Reposition_Timer_defs::i_pilot_takeover>("reposition_timer"),
 		dynamic::translate::make_EIC<LP_Reposition_defs::i_control_yielded, Reposition_Timer_defs::i_control_yielded>("reposition_timer"),
-		dynamic::translate::make_EIC<LP_Reposition_defs::i_LP_new, Reposition_Timer_defs::i_lp_new>("reposition_timer")
+		dynamic::translate::make_EIC<LP_Reposition_defs::i_lp_new, Reposition_Timer_defs::i_lp_new>("reposition_timer")
 	};
 
 	//Define the internal to external couplings for the Landing Point Reposition model.
@@ -129,6 +130,7 @@ public:
 		dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize, LP_Reposition_defs::o_stabilize>("command_reposition"),
 		dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize, LP_Reposition_defs::o_stabilize>("command_reposition"),
 		dynamic::translate::make_EOC<Command_Reposition_defs::o_fcc_command_velocity, LP_Reposition_defs::o_fcc_command_velocity>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition_defs::o_request_aircraft_state, LP_Reposition_defs::o_request_aircraft_state>("command_reposition"),
 
 		dynamic::translate::make_EOC<Reposition_Timer_defs::o_pilot_handover, LP_Reposition_defs::o_pilot_handover>("reposition_timer")
 	};

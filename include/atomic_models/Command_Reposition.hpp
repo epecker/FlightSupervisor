@@ -41,8 +41,9 @@ struct Command_Reposition_defs {
 
 	struct o_cancel_hover : public out_port<bool> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_lp_criteria_met : public out_port<message_landing_point_t> {};
+	struct o_request_aircraft_state : public out_port<bool> {};
+	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 };
 
 // Atomic Model
@@ -52,6 +53,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
+		(REQUEST_STATE)
 		(GET_STATE)
 		(COMMAND_VEL)
 		(COMMAND_HOVER)
@@ -76,8 +78,9 @@ public:
 	using output_ports = tuple<
 		typename Command_Reposition_defs::o_cancel_hover,
 		typename Command_Reposition_defs::o_fcc_command_velocity,
-		typename Command_Reposition_defs::o_stabilize,
-		typename Command_Reposition_defs::o_lp_criteria_met
+		typename Command_Reposition_defs::o_lp_criteria_met,
+		typename Command_Reposition_defs::o_request_aircraft_state,
+		typename Command_Reposition_defs::o_stabilize
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -109,6 +112,9 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
+			case States::REQUEST_STATE:
+				state.current_state = States::GET_STATE;
+				break;
 			case States::COMMAND_VEL:
 				state.current_state = States::COMMAND_HOVER;
 				break;
@@ -119,7 +125,7 @@ public:
 				state.current_state = States::LANDING;
 				break;
 			case States::CANCEL_HOVER:
-				state.current_state = States::GET_STATE;
+				state.current_state = States::REQUEST_STATE;
 				break;
 			default:
 				break;
@@ -151,7 +157,7 @@ public:
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
-						state.current_state = States::GET_STATE;
+						state.current_state = States::REQUEST_STATE;
 					}
 					break;
 				case States::GET_STATE:
@@ -169,7 +175,7 @@ public:
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
-						state.current_state = States::GET_STATE;
+						state.current_state = States::REQUEST_STATE;
 					}
 					break;
 				case States::COMMAND_HOVER:
@@ -178,7 +184,7 @@ public:
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
-						state.current_state = States::GET_STATE;
+						state.current_state = States::REQUEST_STATE;
 					}
 					break;
 				case States::STABILIZING:
@@ -225,6 +231,10 @@ public:
 		vector<message_hover_criteria_t> bag_port_hover_out;
 
 		switch (state.current_state) {
+			case States::REQUEST_STATE:
+				bag_port_out.push_back(true);
+				get_messages<typename Command_Reposition_defs::o_request_aircraft_state>(bags) = bag_port_out;
+				break;
 			case States::COMMAND_VEL:
 			{
 				message_fcc_command_t mfc = message_fcc_command_t();
@@ -238,7 +248,7 @@ public:
 				bag_port_fcc_out.push_back(mfc);
 				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
 			}
-			break;
+				break;
 			case States::COMMAND_HOVER:
 			{
 				message_hover_criteria_t mhc = message_hover_criteria_t(
@@ -258,7 +268,7 @@ public:
 				bag_port_hover_out.push_back(mhc);
 				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_hover_out;
 			}
-			break;
+				break;
 			case States::CANCEL_HOVER:
 				bag_port_out.push_back(true);
 				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;
@@ -280,6 +290,9 @@ public:
 		switch (state.current_state) {
 			case States::IDLE:
 				return numeric_limits<TIME>::infinity();
+				break;
+			case States::REQUEST_STATE:
+				return TIME(TA_ZERO);
 				break;
 			case States::GET_STATE:
 				return numeric_limits<TIME>::infinity();

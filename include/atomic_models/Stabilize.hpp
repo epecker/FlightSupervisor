@@ -32,11 +32,12 @@ using namespace std;
 // Input and output port definition
 struct Stabilize_defs {
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_stabilize : public in_port<message_hover_criteria_t> {};
 	struct i_cancel_hover : public in_port<bool> {};
+	struct i_stabilize : public in_port<message_hover_criteria_t> {};
 
 	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 	struct o_hover_criteria_met : public out_port<bool> {};
+	struct o_request_aircraft_state : public out_port<bool> {};
 };
 
 // Atomic Model
@@ -48,27 +49,30 @@ public:
 		(IDLE)
 		(INIT_HOVER)
 		(STABILIZING)
-		(CRIT_CHECK_FAILED)
+		(CHECK_STATE)
 		(HOVER)
 	)
 
 		// Create a tuple of input ports (required for the simulator)
 		using input_ports = tuple<
 		typename Stabilize_defs::i_aircraft_state,
-		typename Stabilize_defs::i_stabilize,
-		typename Stabilize_defs::i_cancel_hover
+		typename Stabilize_defs::i_cancel_hover,
+		typename Stabilize_defs::i_stabilize
 		>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
 		typename Stabilize_defs::o_fcc_command_hover,
-		typename Stabilize_defs::o_hover_criteria_met
+		typename Stabilize_defs::o_hover_criteria_met,
+		typename Stabilize_defs::o_request_aircraft_state
 	>;
 
 	// This is used to track the state of the atomic model. 
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
+		bool in_tolerance;
+		bool time_tolerance_met;
 #ifdef DEBUG_MODELS
 		string failures;
 #endif
@@ -79,9 +83,17 @@ public:
 	message_hover_criteria_t hover_criteria;
 	message_aircraft_state_t aircraft_state;
 	TIME stabilization_time_prev;
+	TIME polling_rate;
 
 	// Default constructor
 	Stabilize() {
+		state.current_state = States::IDLE;
+		hover_criteria = message_hover_criteria_t();
+		aircraft_state = message_aircraft_state_t();
+	}
+
+	// Default constructor
+	Stabilize(TIME polling_rate) : polling_rate(polling_rate) {
 		state.current_state = States::IDLE;
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
@@ -103,11 +115,13 @@ public:
 			case States::INIT_HOVER:
 				state.current_state = States::STABILIZING;
 				break;
-			case States::CRIT_CHECK_FAILED:
-				state.current_state = States::STABILIZING;
-				break;
 			case States::STABILIZING:
-				state.current_state = States::HOVER;
+				if (state.in_tolerance && state.time_tolerance_met) {
+					state.current_state = States::HOVER;
+				}
+				else {
+					state.current_state = States::CHECK_STATE;
+				}
 				break;
 			case States::HOVER:
 				state.current_state = States::IDLE;
@@ -136,14 +150,16 @@ public:
 						stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					}
 					break;
-				case States::STABILIZING:
+				case States::CHECK_STATE:
 					if (get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).size() >= 1) {
+						state.current_state = States::STABILIZING;
 						aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
-						if (!calculate_hover_criteria_met(aircraft_state)) {
-							state.current_state = States::CRIT_CHECK_FAILED;
+						state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
+						if (!state.in_tolerance) {
 							stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 						} else {
 							stabilization_time_prev = stabilization_time_prev - e;
+							state.time_tolerance_met = (stabilization_time_prev <= TIME("00:00:00:000"));
 						}
 					}
 					break;
@@ -187,10 +203,16 @@ public:
 			}
 			break;
 			case States::STABILIZING:
-				message_out.push_back(true);
-				get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
+				if (state.in_tolerance && state.time_tolerance_met) {
+					message_out.push_back(true);
+					get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
+				}
+				else {
+					message_out.push_back(true);
+					get_messages<typename Stabilize_defs::o_request_aircraft_state>(bags) = message_out;
+				}
 				break;
-			case States::CRIT_CHECK_FAILED:
+			case States::CHECK_STATE:
 				break;
 			default:
 				break;
@@ -211,9 +233,9 @@ public:
 				next_internal = TIME(TA_ZERO);
 				break;
 			case States::STABILIZING:
-				next_internal = stabilization_time_prev;
+				next_internal = polling_rate;
 				break;
-			case States::CRIT_CHECK_FAILED:
+			case States::CHECK_STATE:
 				next_internal = TIME(TA_ZERO);
 				break;
 			case States::HOVER:

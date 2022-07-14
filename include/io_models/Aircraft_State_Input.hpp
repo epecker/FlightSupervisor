@@ -5,8 +5,8 @@
  *	\author		James Horner
  */
 
-#ifndef ASRA_SHARED_MEMORY_INPUT_HPP
-#define ASRA_SHARED_MEMORY_INPUT_HPP
+#ifndef AIRCRAFT_STATE_INPUT_HPP
+#define AIRCRAFT_STATE_INPUT_HPP
 
  // System libraries
 #include <iostream>
@@ -35,18 +35,17 @@ using namespace cadmium;
 using namespace std;
 
 // Input and output port definitions
-struct ASRA_Shared_Memory_Input_defs {
+struct Aircraft_State_Input_defs {
 	struct o_message : public out_port<message_aircraft_state_t> { };
-	struct i_quit : public in_port<bool> { };
+	struct i_request : public in_port<bool> { };
 };
 
 // Atomic model
 template<typename TIME>
-class ASRA_Shared_Memory_Input {
+class Aircraft_State_Input {
 
 	// Private members.
 private:
-	TIME polling_rate;
 	SharedMemoryModel model;
 	
 public:
@@ -54,17 +53,13 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(POLL)
 		(SEND)
 	);
 
 	// Default constructor
-	ASRA_Shared_Memory_Input() {
+	Aircraft_State_Input() {
 		//Initialise the current state
-		state.current_state = States::POLL;
-
-		//Set the rate at which the shared memory segement will be polled.
-		polling_rate = TIME("00:00:00:100");
+		state.current_state = States::IDLE;
 		
 		model = SharedMemoryModel();
 		model.connectSharedMem();
@@ -73,23 +68,8 @@ public:
 		}
 	}
 
-	// Constructor with polling rate and name parameters
-	ASRA_Shared_Memory_Input(TIME rate) {
-		//Initialise the current state
-		state.current_state = States::POLL;
-
-		//Set the rate at which the shared memory segement will be polled.
-		polling_rate = rate;
-
-		model = SharedMemoryModel();
-		model.connectSharedMem();
-		if (!model.isConnected()) {
-			throw(std::runtime_error("Could not connect to shared memory."));
-		}
-	}
-
 	// Destructor for disconnecting from shared memory.
-	~ASRA_Shared_Memory_Input() {
+	~Aircraft_State_Input() {
 		model.disconnectSharedMem();
 	}
 
@@ -101,10 +81,10 @@ public:
 	state_type state;
 
 	// Create a tuple of input ports (required for the simulator)
-	using input_ports = std::tuple<typename ASRA_Shared_Memory_Input_defs::i_quit>;
+	using input_ports = std::tuple<typename Aircraft_State_Input_defs::i_request>;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = std::tuple<typename ASRA_Shared_Memory_Input_defs::o_message>;
+	using output_ports = std::tuple<typename Aircraft_State_Input_defs::o_message>;
 
 	// Internal transitions
 	// These are transitions occuring from internal inputs
@@ -112,12 +92,8 @@ public:
 	void internal_transition() {
 		switch (state.current_state)
 		{
-			case States::POLL:
-				state.current_state = States::SEND;
-				break;
-
 			case States::SEND:
-				state.current_state = States::POLL;
+				state.current_state = States::IDLE;
 				break;
 
 			default:
@@ -129,8 +105,8 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename ASRA_Shared_Memory_Input_defs::i_quit>(mbs).size() >= 1) {
-			state.current_state = States::IDLE;
+		if (get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).size() >= 1) {
+			state.current_state = States::SEND;
 		}
 	}
 
@@ -156,7 +132,7 @@ public:
 				sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
 			bag_port_message.push_back(message);
-			get_messages<typename ASRA_Shared_Memory_Input_defs::o_message>(bags) = bag_port_message;
+			get_messages<typename Aircraft_State_Input_defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}
@@ -167,8 +143,6 @@ public:
 		switch (state.current_state) {
 			case States::IDLE:
 				return std::numeric_limits<TIME>::infinity();
-			case States::POLL:
-				return polling_rate;
 			case States::SEND:
 				return TIME(TA_ZERO);
 			default:
@@ -176,11 +150,11 @@ public:
 		}
 	}
 
-	friend std::ostringstream& operator<<(std::ostringstream& os, const typename ASRA_Shared_Memory_Input<TIME>::state_type& i) {
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Aircraft_State_Input<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
 };
 
 #endif /* RT_LINUX */
-#endif /* ASRA_SHARED_MEMORY_INPUT_HPP */
+#endif /* AIRCRAFT_STATE_INPUT_HPP */

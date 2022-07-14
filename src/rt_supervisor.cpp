@@ -23,7 +23,7 @@
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
 #include "input_models.hpp" // Input Model Definitions.
-#include "io_models/ASRA_Shared_Memory_Input.hpp"
+#include "io_models/Aircraft_State_Input.hpp"
 #include "io_models/Landing_Achieved_Demand_Input.hpp"
 #include "io_models/Pilot_Takeover_Input.hpp"
 
@@ -42,14 +42,15 @@ ofstream out_state;
 ofstream out_info;
 
 // Define output ports to be used for logging purposes
-struct o_LP_expired : public out_port<message_landing_point_t> {};
-struct o_start_LZE_scan : public out_port<bool> {};
-struct o_mission_complete : public out_port<bool> {};
-struct o_land_requested : public out_port<bool> {};
-struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 struct o_control_yielded : public out_port<bool> {};
-struct o_notify_pilot : public out_port<bool> {};
 struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
+struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
+struct o_land_requested : public out_port<bool> {};
+struct o_LP_expired : public out_port<message_landing_point_t> {};
+struct o_mission_complete : public out_port<bool> {};
+struct o_notify_pilot : public out_port<bool> {};
+struct o_request_aircraft_state : public out_port<bool> {};
+struct o_start_LZE_scan : public out_port<bool> {};
 
 
 int main(int argc, char* argv[]) {
@@ -84,7 +85,7 @@ int main(int argc, char* argv[]) {
 	// 	dynamic::translate::make_dynamic_asynchronus_atomic_model<UDP_Input_Async_Landing_Point, TIME, bool, string>("im_plp_ach", true, std::move("23004"));
 
 	shared_ptr<dynamic::modeling::model> im_aircraft_state =
-		dynamic::translate::make_dynamic_atomic_model<ASRA_Shared_Memory_Input, TIME, TIME>("im_aircraft_state", std::move(TIME("00:00:00:100")));
+		dynamic::translate::make_dynamic_atomic_model<Aircraft_State_Input, TIME>("im_aircraft_state");
 
 	shared_ptr<dynamic::modeling::model> im_landing_achieved =
 		dynamic::translate::make_dynamic_atomic_model<Landing_Achieved_Demand_Input, TIME, TIME, float>("im_landing_achieved", std::move(TIME("00:00:00:100")), DEFAULT_LAND_CRITERIA_VERT_DIST);
@@ -106,14 +107,15 @@ int main(int argc, char* argv[]) {
 	dynamic::modeling::Ports iports_TestDriver = { };
 
 	dynamic::modeling::Ports oports_TestDriver = {
-		typeid(o_LP_expired),
-		typeid(o_start_LZE_scan),
-		typeid(o_mission_complete),
-		typeid(o_land_requested),
-		typeid(o_fcc_command_velocity),
 		typeid(o_control_yielded),
+		typeid(o_fcc_command_hover),
+		typeid(o_fcc_command_velocity),
+		typeid(o_land_requested),
+		typeid(o_LP_expired),
+		typeid(o_mission_complete),
 		typeid(o_notify_pilot),
-		typeid(o_fcc_command_hover)
+		typeid(o_request_aircraft_state),
+		typeid(o_start_LZE_scan)
 	};
 
 	dynamic::modeling::EICs eics_TestDriver = { };
@@ -128,6 +130,7 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_EOC<Supervisor_defs::o_control_yielded, o_control_yielded>("supervisor"),
 		dynamic::translate::make_EOC<Supervisor_defs::o_notify_pilot, o_notify_pilot>("supervisor"),
 		dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_hover, o_fcc_command_hover>("supervisor")
+		dynamic::translate::make_EOC<Supervisor_defs::o_request_aircraft_state, o_request_aircraft_state>("supervisor")
 	};
 
 	// This will connect our outputs from our input reader to the file
@@ -136,8 +139,8 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_IC<Supervisor_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("supervisor", "im_landing_achieved"),
 		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input_defs::i_quit>("supervisor", "im_landing_achieved"),
 
-		dynamic::translate::make_IC<ASRA_Shared_Memory_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, ASRA_Shared_Memory_Input_defs::i_quit>("supervisor", "im_aircraft_state"),
+		dynamic::translate::make_IC<Aircraft_State_Input::o_aircraft_state, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, ASRA_Shared_Memory_Input_defs::i_request>("supervisor", "im_aircraft_state"),
 
 		dynamic::translate::make_IC<Pilot_Takeover_Input_defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Pilot_Takeover_Input_defs::i_quit>("supervisor", "im_pilot_takeover"),

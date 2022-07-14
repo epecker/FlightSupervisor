@@ -57,22 +57,23 @@ using TIME = NDTime;
 
 /***** Define input port for coupled models *****/
 struct Supervisor_defs {
-	struct i_landing_achieved : public in_port<bool> {};
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_pilot_takeover : public in_port<bool> {};
+	struct i_landing_achieved : public in_port<bool> {};
 	struct i_LP_recv : public in_port<message_landing_point_t> {};
+	struct i_pilot_takeover : public in_port<bool> {};
 	struct i_PLP_ach : public in_port<message_landing_point_t> {};
 
 
 	/***** Define output ports for coupled model *****/
-	struct o_LP_expired : public out_port<message_landing_point_t> {};
-	struct o_start_LZE_scan : public out_port<bool> {};
-	struct o_mission_complete : public out_port<bool> {};
-	struct o_land_requested : public out_port<bool> {};
-	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 	struct o_control_yielded : public out_port<bool> {};
-	struct o_notify_pilot : public out_port<bool> {};
 	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
+	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
+	struct o_land_requested : public out_port<bool> {};
+	struct o_LP_expired : public out_port<message_landing_point_t> {};
+	struct o_mission_complete : public out_port<bool> {};
+	struct o_notify_pilot : public out_port<bool> {};
+	struct o_request_aircraft_state : public out_port<bool> {};
+	struct o_start_LZE_scan : public out_port<bool> {};
 };
 
 
@@ -90,23 +91,24 @@ public:
 
 	//Define the inputs to the Supervisor coupled model.
 	dynamic::modeling::Ports iports = {
-		typeid(Supervisor_defs::i_landing_achieved),
 		typeid(Supervisor_defs::i_aircraft_state),
-		typeid(Supervisor_defs::i_pilot_takeover),
+		typeid(Supervisor_defs::i_landing_achieved),
 		typeid(Supervisor_defs::i_LP_recv),
+		typeid(Supervisor_defs::i_pilot_takeover),
 		typeid(Supervisor_defs::i_PLP_ach)
 	};
 
 	//Define the outputs of the Supervisor coupled model.
 	dynamic::modeling::Ports oports = {
-		typeid(Supervisor_defs::o_LP_expired),
-		typeid(Supervisor_defs::o_start_LZE_scan),
-		typeid(Supervisor_defs::o_mission_complete),
-		typeid(Supervisor_defs::o_land_requested),
-		typeid(Supervisor_defs::o_fcc_command_velocity),
 		typeid(Supervisor_defs::o_control_yielded),
+		typeid(Supervisor_defs::o_fcc_command_hover),
+		typeid(Supervisor_defs::o_fcc_command_velocity),
+		typeid(Supervisor_defs::o_land_requested),
+		typeid(Supervisor_defs::o_LP_expired),
+		typeid(Supervisor_defs::o_mission_complete),
 		typeid(Supervisor_defs::o_notify_pilot),
-		typeid(Supervisor_defs::o_fcc_command_hover)
+		typeid(Supervisor_defs::o_request_aircraft_state),
+		typeid(Supervisor_defs::o_start_LZE_scan)
 	};
 
 	//Define the sub-models that make up the Supervisor coupled model.
@@ -142,24 +144,27 @@ public:
 		// lp_manager
 		dynamic::translate::make_EOC<LP_Manager_defs::o_lp_expired, Supervisor_defs::o_LP_expired>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager_defs::o_start_lze_scan, Supervisor_defs::o_start_LZE_scan>("lp_manager"),
+		dynamic::translate::make_EOC<LP_Manager_defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("lp_manager"),
 
 		// lp_reposition
 		dynamic::translate::make_EOC<LP_Reposition_defs::o_mission_complete, Supervisor_defs::o_mission_complete>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition_defs::o_land_requested, Supervisor_defs::o_land_requested>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition_defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition_defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("lp_reposition"),
 
 		// handover_control
 		dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded, Supervisor_defs::o_control_yielded>("handover_control"),
 		dynamic::translate::make_EOC<Handover_Control_defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("handover_control"),
 
 		//stabilize
-		dynamic::translate::make_EOC<Stabilize_defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("stabilize")
+		dynamic::translate::make_EOC<Stabilize_defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("stabilize"),
+		dynamic::translate::make_EOC<Stabilize_defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("stabilize")
 	};
 
 	//Define the internal to internal couplings for the Supervisor.
 	dynamic::modeling::ICs ics = {
 		// lp_manager
-		dynamic::translate::make_IC<LP_Manager_defs::o_lp_new, LP_Reposition_defs::i_LP_new>("lp_manager","lp_reposition"),
+		dynamic::translate::make_IC<LP_Manager_defs::o_lp_new, LP_Reposition_defs::i_lp_new>("lp_manager","lp_reposition"),
 		dynamic::translate::make_IC<LP_Manager_defs::o_pilot_handover, Handover_Control_defs::i_pilot_handover>("lp_manager","handover_control"),
 		dynamic::translate::make_IC<LP_Manager_defs::o_stabilize, Stabilize_defs::i_stabilize>("lp_manager","stabilize"),
 

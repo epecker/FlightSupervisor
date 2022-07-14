@@ -37,6 +37,7 @@ struct LP_Manager_defs {
 	struct o_lp_new : public out_port<message_landing_point_t> {};
 	struct o_lp_expired : public out_port<message_landing_point_t> {};
 	struct o_pilot_handover : public out_port<message_landing_point_t> {};
+	struct o_request_aircraft_state : public out_port<bool> {};
 	struct o_stabilize : public out_port<message_hover_criteria_t> {};
 	struct o_start_lze_scan : public out_port<bool> {};
 };
@@ -47,7 +48,9 @@ public:
 	// Enum of the automata-like states of the atomic model.
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(WAYPOINT_MET)
+		(REQUEST_STATE_PLP)
 		(GET_STATE_PLP)
+		(REQUEST_STATE_LP)
 		(GET_STATE_LP)
 		(HOVER_PLP)
 		(STABILIZING)
@@ -74,6 +77,7 @@ public:
 		typename LP_Manager_defs::o_lp_new,
 		typename LP_Manager_defs::o_lp_expired,
 		typename LP_Manager_defs::o_pilot_handover,
+		typename LP_Manager_defs::o_request_aircraft_state,
 		typename LP_Manager_defs::o_stabilize,
 		typename LP_Manager_defs::o_start_lze_scan
 	>;
@@ -128,6 +132,12 @@ public:
 		switch (state.current_state) {
 			case States::HOVER_PLP:
 				state.current_state = States::STABILIZING;
+				break;
+			case States::REQUEST_STATE_LP:
+				state.current_state = States::GET_STATE_LP;
+				break;
+			case States::REQUEST_STATE_PLP:
+				state.current_state = States::GET_STATE_PLP;
 				break;
 			case States::START_LZE_SCAN:
 				state.current_state = States::LZE_SCAN;
@@ -194,18 +204,18 @@ public:
 					case States::WAYPOINT_MET: 
 						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state.
-							state.current_state = States::GET_STATE_LP;
+							state.current_state = States::REQUEST_STATE_LP;
 						}
 					case States::LZE_SCAN:
 						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state.
-							state.current_state = States::GET_STATE_LP;
+							state.current_state = States::REQUEST_STATE_LP;
 						}
 						break;
 					case States::LP_APPROACH:
 						if (valid_lp_recv) {
 							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
-							state.current_state = States::GET_STATE_LP;
+							state.current_state = States::REQUEST_STATE_LP;
 						}
 						break;
 					default:
@@ -220,7 +230,7 @@ public:
 			//If we are in a state that can receive a planned landing point acheived input,
 			case States::WAYPOINT_MET:
 				if (get_messages<typename LP_Manager_defs::i_plp_ach>(mbs).size() >= 1) {
-					state.current_state = States::GET_STATE_PLP;
+					state.current_state = States::REQUEST_STATE_PLP;
 					plp = get_messages<typename LP_Manager_defs::i_plp_ach>(mbs)[0];
 				}
 				break;
@@ -334,6 +344,12 @@ public:
 				message_out.push_back(lp);
 				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = message_out;
 				break;
+
+			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
+				bool_out.push_back(true);
+				get_messages<typename LP_Manager_defs::o_request_aircraft_state>(bags) = bool_out;
+				break;
+
 			default:
 				assert(false && "Unhandled output after internal transition.");
 				break;
@@ -351,7 +367,7 @@ public:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 
-			case States::HOVER_PLP: case States::START_LZE_SCAN: case States::NOTIFY_LP:
+			case States::HOVER_PLP: case States::START_LZE_SCAN: case States::NOTIFY_LP: case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
 				next_internal = TIME(TA_ZERO);
 				break;
 
