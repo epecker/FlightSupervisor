@@ -7,14 +7,14 @@
     case data::elem : return BOOST_PP_STRINGIZE(elem);
 
 #define X_DEFINE_STRING_TO_ENUM_CONVERSIONS(r, data, elem)                    \
-    if (s.compare(BOOST_PP_STRINGIZE(elem)) == 0) return data::elem;
+    if (s == BOOST_PP_STRINGIZE(elem)) return data::elem;
 
 #define DEFINE_ENUM_WITH_STRING_CONVERSIONS(name, enumerators)                \
     enum class name {                                                         \
         BOOST_PP_SEQ_ENUM(enumerators)                                        \
     };                                                                        \
                                                                               \
-    inline const static char* enumToString(name v)                            \
+    const static char* enumToString(name v)                            		  \
     {                                                                         \
         switch (v)                                                            \
         {                                                                     \
@@ -27,7 +27,7 @@
         }                                                                     \
     }                                                                         \
                                                                               \
-    inline const static name stringToEnum(string s)                           \
+    static name stringToEnum(const string& s)                           	  \
     {                                                                         \
             BOOST_PP_SEQ_FOR_EACH(                                            \
                 X_DEFINE_STRING_TO_ENUM_CONVERSIONS,                          \
