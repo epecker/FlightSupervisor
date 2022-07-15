@@ -28,7 +28,7 @@
 #include "io_models/Pilot_Takeover_Input.hpp"
 
 //Coupled model headers
-#include "coupled_models/Supervisor.hpp"
+#include "coupled_models/Landing.hpp"
 
 using namespace std;
 using namespace cadmium;
@@ -65,8 +65,8 @@ int main(int argc, char* argv[]) {
 	filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 	// Instantiate the coupled model to test
-	Supervisor supervisor_object = Supervisor();
-	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supervisor_object.submodels, supervisor_object.iports, supervisor_object.oports, supervisor_object.eics, supervisor_object.eocs, supervisor_object.ics);
+	Landing landing = Landing();
+	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("landing", landing.submodels, landing.iports, landing.oports, landing.eics, landing.eocs, landing.ics);
 
 	// Instantiate the input readers.
 	// One for each input
@@ -122,34 +122,34 @@ int main(int argc, char* argv[]) {
 
 	// The output ports will be used to export in logging
 	dynamic::modeling::EOCs eocs_TestDriver = {
-		dynamic::translate::make_EOC<Supervisor_defs::o_LP_expired, o_LP_expired>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_start_LZE_scan, o_start_LZE_scan>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_mission_complete, o_mission_complete>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_land_requested, o_land_requested>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_velocity, o_fcc_command_velocity>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_control_yielded, o_control_yielded>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_notify_pilot, o_notify_pilot>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_hover, o_fcc_command_hover>("supervisor"),
-		dynamic::translate::make_EOC<Supervisor_defs::o_request_aircraft_state, o_request_aircraft_state>("supervisor")
+		dynamic::translate::make_EOC<Landing_defs::o_LP_expired, o_LP_expired>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_start_LZE_scan, o_start_LZE_scan>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_mission_complete, o_mission_complete>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_land_requested, o_land_requested>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_fcc_command_velocity, o_fcc_command_velocity>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_control_yielded, o_control_yielded>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_notify_pilot, o_notify_pilot>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_fcc_command_hover, o_fcc_command_hover>("landing"),
+		dynamic::translate::make_EOC<Landing_defs::o_request_aircraft_state, o_request_aircraft_state>("landing")
 	};
 
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<Landing_Achieved_Demand_Input_defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("supervisor", "im_landing_achieved"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input_defs::i_quit>("supervisor", "im_landing_achieved"),
+		dynamic::translate::make_IC<Landing_Achieved_Demand_Input_defs::o_message, Landing_defs::i_landing_achieved>("im_landing_achieved", "landing"),
+		dynamic::translate::make_IC<Landing_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("landing", "im_landing_achieved"),
+		dynamic::translate::make_IC<Landing_defs::o_mission_complete, Landing_Achieved_Demand_Input_defs::i_quit>("landing", "im_landing_achieved"),
 
-		dynamic::translate::make_IC<Aircraft_State_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("supervisor", "im_aircraft_state"),
+		dynamic::translate::make_IC<Aircraft_State_Input_defs::o_message, Landing_defs::i_aircraft_state>("im_aircraft_state", "landing"),
+		dynamic::translate::make_IC<Landing_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("landing", "im_aircraft_state"),
 
-		dynamic::translate::make_IC<Pilot_Takeover_Input_defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Pilot_Takeover_Input_defs::i_quit>("supervisor", "im_pilot_takeover"),
+		dynamic::translate::make_IC<Pilot_Takeover_Input_defs::o_message, Landing_defs::i_pilot_takeover>("im_pilot_takeover", "landing"),
+		dynamic::translate::make_IC<Landing_defs::o_mission_complete, Pilot_Takeover_Input_defs::i_quit>("landing", "im_pilot_takeover"),
 
-		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_LP_recv>("im_lp_recv", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("supervisor", "im_lp_recv"),
+		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Landing_defs::i_LP_recv>("im_lp_recv", "landing"),
+		dynamic::translate::make_IC<Landing_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("landing", "im_lp_recv"),
 
-		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Supervisor_defs::i_PLP_ach>("im_plp_ach", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("supervisor", "im_plp_ach")
+		dynamic::translate::make_IC<UDP_Input_defs<message_landing_point_t>::o_message, Landing_defs::i_PLP_ach>("im_plp_ach", "landing"),
+		dynamic::translate::make_IC<Landing_defs::o_mission_complete, UDP_Input_defs<message_landing_point_t>::i_quit>("landing", "im_plp_ach")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
