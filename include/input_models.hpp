@@ -13,6 +13,7 @@
 #include "io_models/UDP_Input.hpp"
 #include "io_models/UDP_Input_Async.hpp"
 #include "io_models/Shared_Memory_Input.hpp"
+#include "io_models/Cache_Input.hpp"
 
 // Messages structures
 #include "message_structures/message_aircraft_state_t.hpp"
@@ -280,6 +281,92 @@ class Shared_Memory_Input_String : public Shared_Memory_Input<string, T> {
 public:
 	Shared_Memory_Input_String() = default;
 	Shared_Memory_Input_String(T rate, string name) : Shared_Memory_Input<string, T>(rate, name) {};
+};
+
+/**
+* ==========================================================
+* CACHE INPUT MODELS
+* ==========================================================
+*/
+
+// Aircraft State
+template<typename T>
+class Cache_Input_Aircraft_State : public Cache_Input<message_aircraft_state_t, T> {
+public:
+	Cache_Input_Aircraft_State() = default;
+	Cache_Input_Aircraft_State(message_aircraft_state_t initial_cached_input) : Cache_Input<message_aircraft_state_t, T>(initial_cached_input) {};
+};
+
+// Boolean
+template<typename T>
+class Cache_Input_Boolean : public Cache_Input<bool, T> {
+public:
+	Cache_Input_Boolean() = default;
+	Cache_Input_Boolean(bool initial_cached_input) : Cache_Input<bool, T>(initial_cached_input) {};
+};
+
+// Command ACK
+template<typename T>
+class Cache_Input_Command_Ack : public Cache_Input<message_command_ack_t, T> {
+public:
+	Cache_Input_Command_Ack() = default;
+	Cache_Input_Command_Ack(message_command_ack_t initial_cached_input) : Cache_Input<message_command_ack_t, T>(initial_cached_input) {};
+};
+
+// Double
+template<typename T>
+class Cache_Input_Double : public Cache_Input<double, T> {
+public:
+	Cache_Input_Double() = default;
+	Cache_Input_Double(double initial_cached_input) : Cache_Input<double, T>(initial_cached_input) {};
+};
+
+// FCC Command
+template<typename T>
+class Cache_Input_Fcc_Command : public Cache_Input<message_fcc_command_t, T> {
+public:
+	Cache_Input_Fcc_Command() = default;
+	Cache_Input_Fcc_Command(message_fcc_command_t initial_cached_input) : Cache_Input<message_fcc_command_t, T>(initial_cached_input) {};
+};
+
+// Float
+template<typename T>
+class Cache_Input_Float : public Cache_Input<float, T> {
+public:
+	Cache_Input_Float() = default;
+	Cache_Input_Float(float initial_cached_input) : Cache_Input<float, T>(initial_cached_input) {};
+};
+
+// Hover Criteria Message
+template<typename T>
+class Cache_Input_Hover_Criteria : public Cache_Input<message_hover_criteria_t, T> {
+public:
+	Cache_Input_Hover_Criteria() = default;
+	Cache_Input_Hover_Criteria(message_hover_criteria_t initial_cached_input) : Cache_Input<message_hover_criteria_t, T>(initial_cached_input) {};
+};
+
+// Int
+template<typename T>
+class Cache_Input_Int : public Cache_Input<int, T> {
+public:
+	Cache_Input_Int() = default;
+	Cache_Input_Int(int initial_cached_input) : Cache_Input<int, T>(initial_cached_input) {};
+};
+
+// Landing Point
+template<typename T>
+class Cache_Input_Landing_Point : public Cache_Input<message_landing_point_t, T> {
+public:
+	Cache_Input_Landing_Point() = default;
+	Cache_Input_Landing_Point(message_landing_point_t initial_cached_input) : Cache_Input<message_landing_point_t, T>(initial_cached_input) {};
+};
+
+// String
+template<typename T>
+class Cache_Input_String : public Cache_Input<string, T> {
+public:
+	Cache_Input_String() = default;
+	Cache_Input_String(string initial_cached_input) : Cache_Input<string, T>(initial_cached_input) {};
 };
 
 #endif // INPUT_MODELS_HPP
