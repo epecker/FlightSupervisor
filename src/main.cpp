@@ -16,7 +16,7 @@
 #include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
 
 //Coupled model headers
-#include "coupled_models/Supervisor.hpp"
+#include "coupled_models/Landing.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
@@ -70,9 +70,9 @@ int main(int argc, char* argv[]) {
 	 * ==========================================================
 	 */
 
-	//Instantiate the Supervisor with the ports, models, and couplings previsouly defined.
-	Supervisor supr = Supervisor();
-	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supr.submodels, supr.iports, supr.oports, supr.eics, supr.eocs, supr.ics);
+	//Instantiate the Landing with the ports, models, and couplings previsouly defined.
+	Landing landing = Landing();
+	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("landing", landing.submodels, landing.iports, landing.oports, landing.eics, landing.eocs, landing.ics);
 
 
 	/*
@@ -93,9 +93,9 @@ int main(int argc, char* argv[]) {
 	dynamic::modeling::EICs eics_TestDriver = {	};
 	dynamic::modeling::EOCs eocs_TestDriver = {	};
 
-	//Define the one coupling from the input reader to the landing point receipt port on the Supervisor.
+	//Define the one coupling from the input reader to the landing point receipt port on the Landing.
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_LP_recv>("input_reader", "supervisor")
+		dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing_defs::i_LP_recv>("input_reader", "landing")
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver;

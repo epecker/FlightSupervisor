@@ -18,7 +18,7 @@
 #define PLP_HANDOVER_CODE 0
 #define LP_TIME_EXPIRED_CODE 0
 
-// Supervisor timers
+// Landing timers
 #define REPO_TIMER 60.0 //sec, timer to do reposition to new LP
 #define ORBIT_TIMER 120.0 //sec, timer for orbiting
 #define LP_ACCEPT_TIMER 120.0 //sec, timer to accept new LPs

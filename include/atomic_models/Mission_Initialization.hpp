@@ -153,6 +153,8 @@ public:
 					state.current_state = States::OUTPUT_TAKEOFF_POSITION;
 				}
 				break;
+			default:
+				break;
 		}
 	}
 
@@ -200,6 +202,8 @@ public:
 				bool_port_out.push_back(true);
 				get_messages<typename Mission_Initialization_defs::o_start_monitoring>(bags) = bool_port_out;
 				break;
+			default:
+				break;
 		}
 
 		return bags;
@@ -225,7 +229,8 @@ public:
 				next_internal = TIME(TA_ZERO);
 				break;
 			default:
-				return TIME(TA_ZERO);
+				assert(false && "Unhandled time advance");
+				break;
 		}
 		return next_internal;
 	}

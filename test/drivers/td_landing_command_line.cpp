@@ -24,8 +24,8 @@
 //#include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "coupled_models/Supervisor.hpp"
-#include "io_models/Supervisor_Command_Line_Input.hpp"
+#include "coupled_models/Landing.hpp"
+#include "io_models/Landing_Command_Line_Input.hpp"
 
 using namespace std;
 using namespace cadmium;
@@ -56,8 +56,8 @@ struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
-	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/supervisor_command_line/");
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/supervisor_command_line/");
+	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/landing_command_line/");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/landing_command_line/");
 
 	do {
 		// Input Files
@@ -73,17 +73,17 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the coupled model to test
-		Supervisor supr = Supervisor();
-		shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supr.submodels, supr.iports, supr.oports, supr.eics, supr.eocs, supr.ics);
+		Landing landing = Landing();
+		shared_ptr<dynamic::modeling::coupled<TIME>> ldg = make_shared<dynamic::modeling::coupled<TIME>>("landing", landing.submodels, landing.iports, landing.oports, landing.eics, landing.eocs, landing.ics);
 
 		// Instantiate the atomic model that will drive the coupled model
-		shared_ptr<dynamic::modeling::model> supervisor_command_line_input = dynamic::translate::make_dynamic_atomic_model<Supervisor_Command_Line_Input, TIME, TIME>("supervisor_command_line_input", move(TIME("00:00:00:100")));
+		shared_ptr<dynamic::modeling::model> landing_command_line_input = dynamic::translate::make_dynamic_atomic_model<Landing_Command_Line_Input, TIME, TIME>("landing_command_line_input", move(TIME("00:00:00:100")));
 
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
-			supervisor,
-            supervisor_command_line_input
+				ldg,
+				landing_command_line_input
 		};
 
 		dynamic::modeling::Ports iports_TestDriver = {	};
@@ -103,23 +103,23 @@ int main(int argc, char* argv[]) {
 
 		// The output ports will be used to export in logging
 		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Supervisor_defs::o_LP_expired, o_LP_expired>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_start_LZE_scan, o_start_LZE_scan>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_mission_complete, o_mission_complete>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_land_requested, o_land_requested>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_velocity, o_fcc_command_velocity>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_control_yielded, o_control_yielded>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_notify_pilot, o_notify_pilot>("supervisor"),
-			dynamic::translate::make_EOC<Supervisor_defs::o_fcc_command_hover, o_fcc_command_hover>("supervisor")
+			dynamic::translate::make_EOC<Landing_defs::o_LP_expired, o_LP_expired>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_start_LZE_scan, o_start_LZE_scan>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_mission_complete, o_mission_complete>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_land_requested, o_land_requested>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_fcc_command_velocity, o_fcc_command_velocity>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_control_yielded, o_control_yielded>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_notify_pilot, o_notify_pilot>("landing"),
+			dynamic::translate::make_EOC<Landing_defs::o_fcc_command_hover, o_fcc_command_hover>("landing")
 		};
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<Supervisor_Command_Line_Input_defs::o_landing_achieved, Supervisor_defs::i_landing_achieved>("supervisor_command_line_input", "supervisor"),
-			dynamic::translate::make_IC<Supervisor_Command_Line_Input_defs::o_aircraft_state, Supervisor_defs::i_aircraft_state>("supervisor_command_line_input", "supervisor"),
-			dynamic::translate::make_IC<Supervisor_Command_Line_Input_defs::o_pilot_takeover, Supervisor_defs::i_pilot_takeover>("supervisor_command_line_input", "supervisor"),
-			dynamic::translate::make_IC<Supervisor_Command_Line_Input_defs::o_LP_recv, Supervisor_defs::i_LP_recv>("supervisor_command_line_input", "supervisor"),
-			dynamic::translate::make_IC<Supervisor_Command_Line_Input_defs::o_PLP_ach, Supervisor_defs::i_PLP_ach>("supervisor_command_line_input", "supervisor")
+			dynamic::translate::make_IC<landing_Command_Line_Input_defs::o_landing_achieved, Landing_defs::i_landing_achieved>("landing_command_line_input", "landing"),
+			dynamic::translate::make_IC<landing_Command_Line_Input_defs::o_aircraft_state, Landing_defs::i_aircraft_state>("landing_command_line_input", "landing"),
+			dynamic::translate::make_IC<landing_Command_Line_Input_defs::o_pilot_takeover, Landing_defs::i_pilot_takeover>("landing_command_line_input", "landing"),
+			dynamic::translate::make_IC<landing_Command_Line_Input_defs::o_LP_recv, Landing_defs::i_LP_recv>("landing_command_line_input", "landing"),
+			dynamic::translate::make_IC<landing_Command_Line_Input_defs::o_PLP_ach, Landing_defs::i_PLP_ach>("landing_command_line_input", "landing")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

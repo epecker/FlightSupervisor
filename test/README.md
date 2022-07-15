@@ -5,7 +5,7 @@ This README has details on how testing of the Supervisor can be conducted using 
 
 * [Testing in Faster than Real-Time](#testing-in-faster-than-real-time)
 * [Testing in Real-Time](#testing-in-real-time)
-* [The Command Line Supervisor Test Driver](#the-command-line-supervisor-test-driver)
+* [The Command Line Landing Test Driver](#the-command-line-landing-test-driver)
 * [Preparing the Test Outputs for Review](#preparing-the-test-outputs-for-review)
   * [Prerequisites](#prerequisites)
   * [Perform the Tests](#perform-the-tests)
@@ -19,7 +19,7 @@ The following test drivers can be used to test the DEVS models using batches of 
 - td_lp_reposition
 - td_reposition_timer
 - td_stabilize
-- td_supervisor
+- td_landing
 
 To add tests to the test set for each driver:
 1. Open the test/input_data/<Test Driver Name> directory
@@ -32,12 +32,12 @@ To add tests to the test set for each driver:
 The following test drivers can be run in real-time on UNIX platforms:
 - td_blocking_input
 - td_command_line_input
-- td_supervisor_command_line
+- td_landing_command_line
 
 To use these drivers simply run the .EXE and follow the instructions on the console.
 
-## The Command Line Supervisor Test Driver
-The command line Supervisor test driver (td_supervisor_command_line.exe) is a user driven method of testing the Supervisor in real-time. The driver works by receiving port value pairs from the user on the command line and forwarding them as event messsages to the Supervisors input ports. The user will continually be prompted for input until 'q' is entered. To send a message to a certain port on the Supervisor, akin to how it will receive messages via a network, the user specifies which port the message should be sent to:
+## The Command Line Landing Test Driver
+The command line Landing test driver (td_landing_command_line.exe) is a user driven method of testing the Landing phase in real-time. The driver works by receiving port value pairs from the user on the command line and forwarding them as event messages to the Landing Model's input ports. The user will continually be prompted for input until 'q' is entered. To send a message to a certain port on the Landing model, akin to how it will receive messages via a network, the user specifies which port the message should be sent to:
 	
 	0. The landing achieved port which takes a single boolean (0/1) value.
 	1. The aircraft state port which takes an aircraft state structure as a value.
@@ -46,7 +46,7 @@ The command line Supervisor test driver (td_supervisor_command_line.exe) is a us
 	4. The planned landing point achieved port which takes a mavlink mission item structure input.
 
 The description of each of the ports can be found in the port description document. The members of each of the structures can be found in either the source code or on the terminal during test execution.
-Example test cases can be found here [Command Line Supervisor Test Driver Example Test Cases](input_data/supervisor_command_line/README.md)
+Example test cases can be found here [Command Line Landing Test Driver Example Test Cases](input_data/landing_command_line/README.md)
 	
 ## Preparing the test outputs for review
 

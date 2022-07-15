@@ -39,7 +39,7 @@ using namespace std;
 void get_input(mutex *lock, string *input);
 
 // Input and output port definitions
-struct Supervisor_Command_Line_Input_defs{
+struct landing_Command_Line_Input_defs{
 	struct o_landing_achieved : public out_port<bool> {};
 	struct o_aircraft_state : public out_port<message_aircraft_state_t> {};
 	struct o_pilot_takeover : public out_port<bool> {};
@@ -49,7 +49,7 @@ struct Supervisor_Command_Line_Input_defs{
 
 // Atomic model
 template<typename TIME>
-class Supervisor_Command_Line_Input {
+class Landing_Command_Line_Input {
 
 // Private members for thread management.
 private:
@@ -65,13 +65,13 @@ public:
 	);
 
     // Default constructor
-    Supervisor_Command_Line_Input() {
+    Landing_Command_Line_Input() {
         //Just use the other constructor with 100ms polling
-        Supervisor_Command_Line_Input(TIME("00:00:00:100"));
+        Landing_Command_Line_Input(TIME("00:00:00:100"));
     }
 
     // Constructor with polling rate parameter
-    Supervisor_Command_Line_Input(TIME rate) {
+    Landing_Command_Line_Input(TIME rate) {
         //Initialise the current state
         state.current_state = States::INPUT;
 
@@ -97,11 +97,11 @@ public:
  
     // Create a tuple of output ports (required for the simulator)
     using output_ports=std::tuple<
-        typename Supervisor_Command_Line_Input_defs::o_landing_achieved,
-        typename Supervisor_Command_Line_Input_defs::o_aircraft_state,
-        typename Supervisor_Command_Line_Input_defs::o_pilot_takeover,
-        typename Supervisor_Command_Line_Input_defs::o_LP_recv,
-        typename Supervisor_Command_Line_Input_defs::o_PLP_ach
+        typename landing_Command_Line_Input_defs::o_landing_achieved,
+        typename landing_Command_Line_Input_defs::o_aircraft_state,
+        typename landing_Command_Line_Input_defs::o_pilot_takeover,
+        typename landing_Command_Line_Input_defs::o_LP_recv,
+        typename landing_Command_Line_Input_defs::o_PLP_ach
     >;
 
 	// Internal transitions
@@ -151,27 +151,27 @@ public:
                         if (port == 0) {
                             bool value;
                             ss >> value;
-                            get_messages<typename Supervisor_Command_Line_Input_defs::o_landing_achieved>(bags).push_back(value);
+                            get_messages<typename landing_Command_Line_Input_defs::o_landing_achieved>(bags).push_back(value);
                         }
                         else if (port == 1) {
                             message_aircraft_state_t value;
                             ss >> value;
-                            get_messages<typename Supervisor_Command_Line_Input_defs::o_aircraft_state>(bags).push_back(value);
+                            get_messages<typename landing_Command_Line_Input_defs::o_aircraft_state>(bags).push_back(value);
                         }
                         else if (port == 2) {
                             bool value;
                             ss >> value;
-                            get_messages<typename Supervisor_Command_Line_Input_defs::o_pilot_takeover>(bags).push_back(value);
+                            get_messages<typename landing_Command_Line_Input_defs::o_pilot_takeover>(bags).push_back(value);
                         }
                         else if (port == 3) {
                             message_landing_point_t value;
                             ss >> value;
-                            get_messages<typename Supervisor_Command_Line_Input_defs::o_LP_recv>(bags).push_back(value);
+                            get_messages<typename landing_Command_Line_Input_defs::o_LP_recv>(bags).push_back(value);
                         }
                         else if (port == 4) {
                             message_landing_point_t value;
                             ss >> value;
-                            get_messages<typename Supervisor_Command_Line_Input_defs::o_PLP_ach>(bags).push_back(value);
+                            get_messages<typename landing_Command_Line_Input_defs::o_PLP_ach>(bags).push_back(value);
                         }
                         else {
                             cout << "Invalid port number: " << port << endl;
@@ -200,7 +200,7 @@ public:
         }
     }
 
-    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Supervisor_Command_Line_Input<TIME>::state_type& i) {
+    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Landing_Command_Line_Input<TIME>::state_type& i) {
         bool is_unlocked = i.input_mutex->try_lock();
         if (is_unlocked) {
             i.input_mutex->unlock();
