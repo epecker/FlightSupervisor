@@ -20,6 +20,7 @@ add_executable(td_landing_achieved_demand_input "td_landing_achieved_demand_inpu
 add_executable(td_pilot_takeover_input			"td_pilot_takeover_input.cpp" 			"${MavNRC_GEO}" "${SHARED_MEM}")
 add_executable(td_aircraft_state_input			"td_aircraft_state_input.cpp" 			"${MavNRC_GEO}" "${SHARED_MEM}")
 add_executable(td_cache_input					"td_cache_input.cpp" 					"${MavNRC_GEO}")
+add_executable(td_takeoff						"td_takeoff.cpp" 						"${MavNRC_GEO}")
 
 target_include_directories(td_handover_control 				PUBLIC ${includes_list})
 target_include_directories(td_landing_routine 				PUBLIC ${includes_list})
@@ -44,6 +45,7 @@ target_include_directories(td_landing_achieved_demand_input PUBLIC ${includes_li
 target_include_directories(td_pilot_takeover_input          PUBLIC ${includes_list})
 target_include_directories(td_aircraft_state_input          PUBLIC ${includes_list})
 target_include_directories(td_cache_input		          	PUBLIC ${includes_list})
+target_include_directories(td_takeoff			          	PUBLIC ${includes_list})
 
 target_compile_definitions(td_blocking_input 				PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_command_line_input 			PUBLIC RT_LINUX RT_DEVS)
@@ -80,3 +82,4 @@ target_link_libraries(td_landing_achieved_demand_input 	${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_pilot_takeover_input 			${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_aircraft_state_input 			${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_cache_input		 			${Boost_LIBRARIES})
+target_link_libraries(td_takeoff			 			${Boost_LIBRARIES})
