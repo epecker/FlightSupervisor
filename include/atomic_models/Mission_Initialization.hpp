@@ -1,3 +1,12 @@
+/**
+ *	\brief		An atomic model representing the Mission_Initialization model.
+ *	\details	This header file defines the Mission_Initialization model as
+				an atomic model for use in the Cadmium DEVS. It handles
+				the startup behaviour of the aircraft.
+				simulation software.
+ *	\author		Tanner Trautrim
+ */
+
 #ifndef  MISSION_INITIALIZATION_HPP
 #define  MISSION_INITIALIZATION_HPP
 
