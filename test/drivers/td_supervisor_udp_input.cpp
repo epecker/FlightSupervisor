@@ -71,7 +71,8 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> supervisor_udp_input = dynamic::translate::make_dynamic_atomic_model<Supervisor_UDP_Input, TIME, TIME, int>("supervisor_udp_input", std::move(TIME("00:00:00:100")), 23000);
+  		unsigned short port = 23000;
+		std::shared_ptr<dynamic::modeling::model> supervisor_udp_input = dynamic::translate::make_dynamic_atomic_model<Supervisor_UDP_Input, TIME, TIME, unsigned short>("supervisor_udp_input", std::move(TIME("00:00:00:100")), std::move(port));
 
 		// Instantiate the input readers.
 		// One for each input

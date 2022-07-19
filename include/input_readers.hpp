@@ -16,6 +16,7 @@
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
+#include "message_structures/message_fcc_command_waypoint_t.hpp"
 
 using namespace cadmium::basic_models::pdevs;
 
@@ -43,6 +44,14 @@ class Input_Reader_Fcc_Command : public iestream_input<message_fcc_command_t, T>
 public:
 	Input_Reader_Fcc_Command() = default;
 	Input_Reader_Fcc_Command(const char* file_path) : iestream_input<message_fcc_command_t, T>(file_path) {};
+};
+
+// Fcc Command
+template<typename T>
+class Input_Reader_Fcc_Command_Waypoint : public iestream_input<message_fcc_command_waypoint_t, T> {
+public:
+	Input_Reader_Fcc_Command_Waypoint() = default;
+	Input_Reader_Fcc_Command_Waypoint(const char* file_path) : iestream_input<message_fcc_command_waypoint_t, T>(file_path) {};
 };
 
 // Hover Criteria Message

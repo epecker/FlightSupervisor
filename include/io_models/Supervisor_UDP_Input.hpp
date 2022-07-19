@@ -11,15 +11,15 @@
 #define SUPERVISOR_UDP_INPUT_HPP
 
  // System libraries
-#include <iostream>
 #include <assert.h>
-#include <thread>
+#include <chrono>
+#include <csignal>
+#include <iostream>
 #include <mutex>
 #include <string>
 #include <string.h>
-#include <chrono>
 #include <sstream>
-#include <csignal>
+#include <thread>
 
 // RT-Cadmium
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
@@ -39,7 +39,6 @@
 #include "Constants.hpp"
 #include "component_macros.h"
 
-#define RT_LINUX
 #ifdef RT_LINUX
 
 using namespace cadmium;
@@ -56,7 +55,7 @@ struct Supervisor_UDP_Input_defs {
 };
 
 // Atomic model
-template<typename MSG, typename TIME>
+template<typename TIME>
 class Supervisor_UDP_Input {
 
 	// Private members for thread management.
@@ -71,10 +70,10 @@ private:
 
 	// Networking members
 	rudp::Connection * connection;
+	int connection_number;
 	char recv_buffer[MAX_SER_BUFFER_CHARS];
 
 	// Const Members
-	bool send_ack;
 	TIME polling_rate;
 	
 	// Global member for thread sync
@@ -95,11 +94,10 @@ public:
 		state.has_messages = false;
 
 		polling_rate = TIME("00:00:00:100");
-		send_ack = false;
 		stop = false;
 
 		//Create the network endpoint using a default address and port.
-		int connection_number = rudp::ConnectionController::getInstance()->addConnection(DEFAULT_TIMEOUT_MS);
+		connection_number = rudp::ConnectionController::getInstance()->addConnection(DEFAULT_TIMEOUT_MS);
 		connection = rudp::ConnectionController::getInstance()->getConnection(connection_number);
 		connection->setEndpointLocal(2300);
 
@@ -118,7 +116,6 @@ public:
 		state.has_messages = false;
 
 		polling_rate = rate;
-		send_ack = ack_required;
 		stop = false;
 
 		//Create the network endpoint using the supplied address and port.
@@ -136,21 +133,8 @@ public:
 
 	// Destructor for the class that shuts down gracefully
 	~Supervisor_UDP_Input() {
-		shutdown();
-	}
-
-	// Handler for signals.
-	static void handle_signal(int signal_number) {
-		shutdown();
-	}
-
-	// Member for shutting down the thread and IO services gracefully.
-	void shutdown() {
-		//Before exiting stop the Boost IO service to interupt the receipt handler.
 		stop = true;
-		io_service.stop();
-		if (socket.is_open()) 
-			socket.close();
+		rudp::ConnectionController::getInstance()->removeConnection(connection_number);
 	}
 
 	// This is used to track the state of the atomic model. 
@@ -162,10 +146,16 @@ public:
 	state_type state;
 
 	// Create a tuple of input ports (required for the simulator)
-	using input_ports = tuple<typename Supervisor_UDP_Input_defs<MSG>::i_quit>;
+	using input_ports = tuple<typename Supervisor_UDP_Input_defs::i_quit>;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = tuple<typename Supervisor_UDP_Input_defs<MSG>::o_message>;
+	using output_ports = tuple<
+		typename Supervisor_UDP_Input_defs::o_start_supervisor,
+		typename Supervisor_UDP_Input_defs::o_perception_status,
+		typename Supervisor_UDP_Input_defs::o_waypoint,
+		typename Supervisor_UDP_Input_defs::o_lp_recv,
+		typename Supervisor_UDP_Input_defs::o_plp_ach
+	>;
 
 	// Internal transitions
 	// These are transitions occuring from internal inputs
@@ -175,7 +165,13 @@ public:
 			unique_lock<mutex> mutexLock(input_mutex, defer_lock);
 			//If the thread has finished receiving input, change state if there are messages.
 			if (mutexLock.try_lock()) {
-				state.has_messages = !message.empty();
+				state.has_messages = (
+					!message_start_supervisor.empty() ||
+					!message_perception_status.empty() ||
+					!message_waypoint.empty() ||
+					!message_lp_recv.empty() ||
+					!message_plp_ach.empty()
+				);
 			}
 		}
 	}
@@ -184,7 +180,7 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename Supervisor_UDP_Input_defs<MSG>::i_quit>(mbs).size() >= 1) {
+		if (get_messages<typename Supervisor_UDP_Input_defs::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
 	}
@@ -213,31 +209,31 @@ public:
 					start_supervisor_out.push_back(msg);
 				}
 				message_start_supervisor.clear();
-				get_messages<typename Supervisor_UDP_Input_defs<MSG>::o_message>(bags) = start_supervisor_out;
+				get_messages<typename Supervisor_UDP_Input_defs::o_start_supervisor>(bags) = start_supervisor_out;
 
 				for (auto msg : message_perception_status) {
 					perception_status_out.push_back(msg);
 				}
 				message_perception_status.clear();
-				get_messages<typename Supervisor_UDP_Input_defs<MSG>::o_message>(bags) = perception_status_out;
+				get_messages<typename Supervisor_UDP_Input_defs::o_perception_status>(bags) = perception_status_out;
 				
 				for (auto msg : message_waypoint) {
 					waypoint_out.push_back(msg);
 				}
 				message_waypoint.clear();
-				get_messages<typename Supervisor_UDP_Input_defs<MSG>::o_message>(bags) = waypoint_out;
+				get_messages<typename Supervisor_UDP_Input_defs::o_waypoint>(bags) = waypoint_out;
 
 				for (auto msg : message_lp_recv) {
 					lp_recv_out.push_back(msg);
 				}
 				message_lp_recv.clear();
-				get_messages<typename Supervisor_UDP_Input_defs<MSG>::o_message>(bags) = lp_recv_out;
+				get_messages<typename Supervisor_UDP_Input_defs::o_lp_recv>(bags) = lp_recv_out;
 								
 				for (auto msg : message_plp_ach) {
 					plp_ach_out.push_back(msg);
 				}
 				message_plp_ach.clear();
-				get_messages<typename Supervisor_UDP_Input_defs<MSG>::o_message>(bags) = plp_ach_out;
+				get_messages<typename Supervisor_UDP_Input_defs::o_plp_ach>(bags) = plp_ach_out;
 			}
 		}
 		return bags;
@@ -264,9 +260,9 @@ public:
 	void receive_packet_thread() {
 		//While the model is not passivated,
 		while (state.current_state != States::IDLE && !stop) {
-			string sender_address;
+			char* sender_address = new char[IPV4_ADDRESS_LENGTH_BYTES];
 			int sender_port;
-			int bytes_received = connection->receive(recv_buffer, MAX_SER_BUFFER_CHARS, &sender_address, &sender_port);
+			int bytes_received = connection->receive(recv_buffer, MAX_SER_BUFFER_CHARS, sender_address, &sender_port);
 			 
 			bool error_occured = false;
 			uint8_t sysid;
@@ -284,9 +280,9 @@ public:
 					char_cache[i] = recv_buffer[i + offset];
 				}
 				offset += sizeof(sysid);
-				if (memcpy_s(&sysid, sizeof(sysid), char_cache.data(), sizeof(sysid)))
-				{
-					string error_message = "[Supervisor UDP Input] Error copying system ID from " + sender_address + ":" + to_string(sender_port) + "\n";
+				try { sysid = dynamic_cast<uint8_t>(char_cache.data()); } 
+				catch (bad_cast cast_error) {
+					string error_message = string("[Supervisor UDP Input] Error copying system ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
 				}
@@ -300,9 +296,9 @@ public:
 					char_cache[i] = recv_buffer[i + offset];
 				}
 				offset += sizeof(compid);
-				if (memcpy_s(&compid, sizeof(compid), char_cache.data(), sizeof(compid)))
-				{
-					string error_message = "[Supervisor UDP Input] Error copying component ID from " + sender_address + ":" + to_string(sender_port) + "\n";
+				try { compid = dynamic_cast<uint8_t>(char_cache.data()); } 
+				catch (bad_cast cast_error) {
+					string error_message = string("[Supervisor UDP Input] Error copying component ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
 				}
@@ -316,9 +312,9 @@ public:
 					char_cache[i] = recv_buffer[i + offset];
 				}
 				offset += sizeof(sigid);
-				if (memcpy_s(&sigid, sizeof(sigid), char_cache.data(), sizeof(sigid)))
-				{
-					string error_message = "[Supervisor UDP Input] Error copying signal ID from " + sender_address + ":" + to_string(sender_port) + "\n";
+				try { sigid = dynamic_cast<uint8_t>(char_cache.data()); } 
+				catch (bad_cast cast_error) {
+					string error_message = string("[Supervisor UDP Input] Error copying signal ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
 				}
@@ -337,36 +333,43 @@ public:
 				bool temp_bool;
 				message_landing_point_t temp_landing_point;
 				unique_lock<mutex> mutexLock(input_mutex);
-				if (sysid == SUPERVISOR_SIG_ID_PLP_ACHIEVED && compid == COMP_ID_MISSION_MANAGER) {
-					memcpy_s(&temp_landing_point, sizeof(temp_landing_point), char_cache.data(), data_length);
-					message_plp_ach.push_back(temp_landing_point);
-					state.has_messages = true;
+				try { 
+					if (sysid == SUPERVISOR_SIG_ID_PLP_ACHIEVED && compid == COMP_ID_MISSION_MANAGER) {
+						temp_landing_point = dynamic_cast<message_landing_point_t>(char_cache.data()); 
+						message_plp_ach.push_back(temp_landing_point);
+						state.has_messages = true;
+					}
+					if (sysid == SUPERVISOR_SIG_ID_WAYPOINT && compid == COMP_ID_MISSION_MANAGER) {
+						temp_landing_point = dynamic_cast<message_landing_point_t>(char_cache.data()); 
+						message_waypoint.push_back(temp_landing_point);
+						state.has_messages = true;
+					}
+					if (sysid ==  SUPERVISOR_SIG_ID_START_SUPERVISOR && compid == COMP_ID_MISSION_MANAGER) {
+						temp_start_supervisor = dynamic_cast<message_start_supervisor_t>(char_cache.data()); 
+						message_start_supervisor.push_back(temp_start_supervisor);
+						state.has_messages = true;
+					}
+					if (sysid == SUPERVISOR_SIG_ID_PERCEPTION_STATUS && compid == COMP_ID_PERCEPTION_SYSTEM) {
+						temp_bool = dynamic_cast<bool>(char_cache.data()); 
+						message_perception_status.push_back(temp_bool);
+						state.has_messages = true;
+					}
+					if (sysid == SUPERVISOR_SIG_ID_LP_RECEIVE && compid == COMP_ID_PERCEPTION_SYSTEM) {
+						temp_landing_point = dynamic_cast<message_landing_point_t>(char_cache.data()); 
+						message_lp_recv.push_back(temp_landing_point);
+						state.has_messages = true;
+					}
 				}
-				if (sysid == SUPERVISOR_SIG_ID_WAYPOINT && compid == COMP_ID_MISSION_MANAGER) {
-					memcpy_s(&temp_landing_point, sizeof(temp_landing_point), char_cache.data(), data_length);
-					message_waypoint.push_back(temp_landing_point);
-					state.has_messages = true;
-				}
-				if (sysid ==  SUPERVISOR_SIG_ID_START_SUPERVISOR && compid == COMP_ID_MISSION_MANAGER) {
-					memcpy_s(&temp_start_supervisor, sizeof(temp_start_supervisor), char_cache.data(), data_length);
-					message_start_supervisor.push_back(temp_start_supervisor);
-					state.has_messages = true;
-				}
-				if (sysid == SUPERVISOR_SIG_ID_PERCEPTION_STATUS && compid == COMP_ID_PERCEPTION_SYSTEM) {
-					memcpy_s(&temp_bool, sizeof(temp_bool), char_cache.data(), data_length);
-					message_perception_status.push_back(temp_bool);
-					state.has_messages = true;
-				}
-				if (sysid == SUPERVISOR_SIG_ID_LP_RECEIVE && compid == COMP_ID_PERCEPTION_SYSTEM) {
-					memcpy_s(&temp_landing_point, sizeof(temp_landing_point), char_cache.data(), data_length);
-					message_lp_recv.push_back(temp_landing_point);
-					state.has_messages = true;
+				catch (bad_cast cast_error) {
+					string error_message = string("[Supervisor UDP Input] Error copying payload from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
+					cout << error_message;
+					error_occured = true;
 				}
 			}
 		}
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Supervisor_UDP_Input<MSG, TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename Supervisor_UDP_Input<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state) << "-" << (i.has_messages ? "MESSAGES" : "NO_MESSAGES");
 		return os;
 	}
