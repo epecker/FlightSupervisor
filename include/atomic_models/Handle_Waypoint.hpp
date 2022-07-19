@@ -16,8 +16,7 @@
 #include <limits>
 #include <string>
 
-#include "message_structures/message_fcc_command_waypoint_t.hpp"
-#include "message_structures/message_fcc_command_waypoint_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -26,10 +25,11 @@ using namespace cadmium;
 
 // Input and output port definitions
 struct Handle_Waypoint_defs {
+	struct i_pilot_takeover : public out_port<bool> {};
 	struct i_start_mission : public out_port<bool> {};
-	struct i_waypoint : public out_port<message_fcc_command_waypoint_t> {};
+	struct i_waypoint : public out_port<message_fcc_command_t> {};
 
-	struct o_fcc_waypoint_update : public out_port<message_fcc_command_waypoint_t> {};
+	struct o_fcc_waypoint_update : public out_port<message_fcc_command_t> {};
 };
 
 template<typename TIME>
@@ -38,11 +38,13 @@ public:
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_FOR_WAYPOINT)
+		(PILOT_TAKEOVER)
 		(UPDATE_FCC)
 	);
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
+			typename Handle_Waypoint_defs::i_pilot_takeover,
 			typename Handle_Waypoint_defs::i_start_mission,
 			typename Handle_Waypoint_defs::i_waypoint
 	>;
@@ -55,19 +57,18 @@ public:
 	// Tracks the state of the model
 	struct state_type {
 		States current_state;
-	};
-	state_type state;
+	} state;
 
-	message_fcc_command_waypoint_t next_waypoint;
+
 
 	Handle_Waypoint() {
 		state.current_state = States::IDLE;
-		next_waypoint = message_fcc_command_waypoint_t();
+		next_waypoint = message_fcc_command_t();
 	}
 
 	explicit Handle_Waypoint(States initial_state) {
 		state.current_state = initial_state;
-		next_waypoint = message_fcc_command_waypoint_t();
+		next_waypoint = message_fcc_command_t();
 	}
 
 	// Internal transitions (required for the simulator)
@@ -83,8 +84,15 @@ public:
 
 	// External transitions (required for the simulator)
 	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+		bool received_pilot_takeover;
 		bool received_start_mission;
 		bool received_waypoint;
+
+		received_pilot_takeover = !get_messages<typename Handle_Waypoint_defs::i_pilot_takeover>(mbs).empty();
+		if (received_pilot_takeover) {
+			state.current_state = States::PILOT_TAKEOVER;
+			return;
+		}
 
 		switch (state.current_state) {
 			case States::IDLE:
@@ -96,7 +104,7 @@ public:
 			case States::WAIT_FOR_WAYPOINT:
 				received_waypoint = !get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs).empty();
 				if (received_waypoint) {
-					vector<message_fcc_command_waypoint_t> new_waypoint = get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs);
+					vector<message_fcc_command_t> new_waypoint = get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs);
 					next_waypoint = new_waypoint[0];
 					state.current_state = States::UPDATE_FCC;
 				}
@@ -118,12 +126,11 @@ public:
 	[[nodiscard]]
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<message_fcc_command_waypoint_t> waypoint_out_port;
 
 		if (state.current_state == States::UPDATE_FCC) {
-			message_fcc_command_waypoint_t waypoint = next_waypoint;
-			waypoint.set_supervisor_status(MAV_COMMAND);
-
+			vector<message_fcc_command_t> waypoint_out_port;
+			message_fcc_command_t waypoint = next_waypoint;
+			waypoint.set_supervisor_status(Control_Mode_E::MAV_COMMAND);
 			waypoint_out_port.push_back(next_waypoint);
 			get_messages<typename Handle_Waypoint_defs::o_fcc_waypoint_update>(bags) = waypoint_out_port;
 		}
@@ -137,6 +144,7 @@ public:
 		switch (state.current_state) {
 			case States::IDLE:
 			case States::WAIT_FOR_WAYPOINT:
+			case States::PILOT_TAKEOVER:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::UPDATE_FCC:
@@ -154,6 +162,9 @@ public:
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
+
+private:
+	message_fcc_command_t next_waypoint;
 };
 
 #endif // HANDLE_WAYPOINT_HPP

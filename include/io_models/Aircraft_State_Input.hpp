@@ -5,31 +5,30 @@
  *	\author		James Horner
  */
 
+#ifdef RT_LINUX
 #ifndef AIRCRAFT_STATE_INPUT_HPP
 #define AIRCRAFT_STATE_INPUT_HPP
-
- // System libraries
+// System libraries
 #include <iostream>
-#include <assert.h>
-#include <string>
+#include <cassert>
 
+#include <string>
 // RT-Cadmium
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
+
 #include <cadmium/modeling/dynamic_model.hpp>
-
 // Shared Memory Model
+
 #include "sharedmemorymodel/SharedMemoryModel.h"
-
 // Message Structures
-#include "message_structures/message_aircraft_state_t.hpp"
 
+#include "message_structures/message_aircraft_state_t.hpp"
 // Includes
 #include "enum_string_conversion.hpp"
-#include "Constants.hpp"
 
-#ifdef RT_LINUX
+#include "Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -87,7 +86,7 @@ public:
 	using output_ports = std::tuple<typename Aircraft_State_Input_defs::o_message>;
 
 	// Internal transitions
-	// These are transitions occuring from internal inputs
+	// These are transitions occurring from internal inputs
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state)
@@ -102,34 +101,36 @@ public:
 	}
 
 	// External transitions
-	// These are transitions occuring from external inputs
+	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).size() >= 1) {
+	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+		bool received_request = !get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).empty();
+		if (received_request) {
 			state.current_state = States::SEND;
 		}
 	}
 
 	// Confluence transition
 	// Used to call set call precedence
-	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
 	// Output function
-	typename make_message_bags<output_ports>::type output() const {
+	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<message_aircraft_state_t> bag_port_message;
 
 		if (state.current_state == States::SEND) {
 			message_aircraft_state_t message = message_aircraft_state_t(
-				model.sharedMemoryStruct->hg1700.lat,
-				model.sharedMemoryStruct->hg1700.lng,
-				model.sharedMemoryStruct->hg1700.mixedhgt,
-				model.sharedMemoryStruct->hg1700.alt,
-				model.sharedMemoryStruct->hg1700.hdg,
-				sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
+					model.sharedMemoryStruct->hg1700.time,
+					model.sharedMemoryStruct->hg1700.lat,
+					model.sharedMemoryStruct->hg1700.lng,
+					model.sharedMemoryStruct->hg1700.mixedhgt,
+					model.sharedMemoryStruct->hg1700.alt,
+					model.sharedMemoryStruct->hg1700.hdg,
+					sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
 			bag_port_message.push_back(message);
 			get_messages<typename Aircraft_State_Input_defs::o_message>(bags) = bag_port_message;
@@ -146,7 +147,7 @@ public:
 			case States::SEND:
 				return TIME(TA_ZERO);
 			default:
-				return TIME(TA_ZERO);
+				assert(false && "Unhandled state time advance.");
 		}
 	}
 
@@ -156,5 +157,5 @@ public:
 	}
 };
 
-#endif /* RT_LINUX */
 #endif /* AIRCRAFT_STATE_INPUT_HPP */
+#endif /* RT_LINUX */

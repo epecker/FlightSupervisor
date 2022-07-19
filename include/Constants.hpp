@@ -19,7 +19,7 @@
 #define LP_TIME_EXPIRED_CODE 0
 
 // Landing timers
-#define REPO_TIMER 60.0 //sec, timer to do reposition to new LP
+#define REPO_TIMER 60.0f //sec, timer to do reposition to new LP
 #define ORBIT_TIMER 120.0 //sec, timer for orbiting
 #define LP_ACCEPT_TIMER 120.0 //sec, timer to accept new LPs
 
@@ -38,7 +38,6 @@
 #define MAX_REPO_VEL 10.0 //knots, max velocity to do reposition, used to command to the FCC
 
 // Used in Command_Reposition. This is temporary remove when intergrating.
-#define MAV_CMD_DO_CHANGE_SPEED 178 // Code for fcc commands
 #define MAX_REPO_VEL 10.0 // Max speed in knots to reposition at
 #define KTS_TO_MPS 0.514444 // Convert knots to m/s
 #define METERS_TO_FT 3.281
@@ -47,7 +46,6 @@
 #define DEFAULT_LAND_CRITERIA_VEL 3.0
 #define DEFAULT_LAND_CRITERIA_HDG 15.0
 #define DEFAULT_LAND_CRITERIA_TIME 3.0
-#define MAV_CMD_DO_REPOSITION 192
 
 #define FEET_TO_M 0.3048
 

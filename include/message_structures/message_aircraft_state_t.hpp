@@ -9,6 +9,7 @@ using namespace std;
 /**************** Message_t ****************/
 /*******************************************/
 struct message_aircraft_state_t {
+	double  gps_time;
 	double  lat;		            // Decimal degrees
 	double  lon;		            // Decimal degrees
 	float	alt_AGL;				// Ft
@@ -17,6 +18,7 @@ struct message_aircraft_state_t {
 	double  vel_Kts;			        // Kts, tolerance for velocity  - horizontal
 
 	message_aircraft_state_t() :
+		gps_time(0.0),
 		lat(0.0),
 		lon(0.0),
 		alt_AGL(0.0),
@@ -26,19 +28,21 @@ struct message_aircraft_state_t {
 	{}
 
 	message_aircraft_state_t(
-		double  i_lat,
-		double  i_lon,
-		float   i_alt_AGL,
-		float   i_alt_MSL,
-		float   i_hdg_Deg,
-		double  i_vel_Kts
+		double  gps_time,
+		double  lat,
+		double  lon,
+		float   alt_AGL,
+		float   alt_MSL,
+		float   hdg_Deg,
+		double  vel_Kts
 	)
-		: lat(i_lat),
-		lon(i_lon),
-		alt_AGL(i_alt_AGL),
-		alt_MSL(i_alt_MSL),
-		hdg_Deg(i_hdg_Deg),
-		vel_Kts(i_vel_Kts) {}
+		: gps_time(gps_time),
+		lat(lat),
+		lon(lon),
+		alt_AGL(alt_AGL),
+		alt_MSL(alt_MSL),
+		hdg_Deg(hdg_Deg),
+		vel_Kts(vel_Kts) {}
 };
 
 /***************************************************/
@@ -46,7 +50,8 @@ struct message_aircraft_state_t {
 /***************************************************/
 
 ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
-	os << msg.lat << " "
+	os << msg.gps_time << " "
+		<< msg.lat << " "
 		<< msg.lon << " "
 		<< msg.alt_AGL << " "
 		<< msg.alt_MSL << " "
@@ -60,6 +65,7 @@ ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
 /***************************************************/
 
 istream& operator>> (istream& is, message_aircraft_state_t& msg) {
+	is >> msg.gps_time;
 	is >> msg.lat;
 	is >> msg.lon;
 	is >> msg.alt_AGL;
