@@ -22,7 +22,8 @@ add_executable(td_pilot_takeover_input			"td_pilot_takeover_input.cpp" 			"${Mav
 add_executable(td_aircraft_state_input			"td_aircraft_state_input.cpp" 			"${MavNRC_GEO}" "${SHARED_MEM}")
 add_executable(td_cache_input					"td_cache_input.cpp" 					"${MavNRC_GEO}")
 add_executable(td_takeoff						"td_takeoff.cpp" 						"${MavNRC_GEO}")
-add_executable(td_handle_waypoint					"td_handle_waypoint.cpp" 				"${MavNRC_GEO}")
+add_executable(td_supervisor_udp_input			"td_supervisor_udp_input.cpp"			"${MavNRC_GEO}" "${RUDP}")
+add_executable(td_handle_waypoint				"td_handle_waypoint.cpp" 				"${MavNRC_GEO}")
 
 target_include_directories(td_handover_control 				PUBLIC ${includes_list})
 target_include_directories(td_landing_routine 				PUBLIC ${includes_list})
@@ -50,6 +51,7 @@ target_include_directories(td_pilot_takeover_input          PUBLIC ${includes_li
 target_include_directories(td_aircraft_state_input          PUBLIC ${includes_list})
 target_include_directories(td_cache_input		          	PUBLIC ${includes_list})
 target_include_directories(td_takeoff			          	PUBLIC ${includes_list})
+target_include_directories(td_supervisor_udp_input         	PUBLIC ${includes_list})
 
 target_compile_definitions(td_blocking_input 				PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_command_line_input 			PUBLIC RT_LINUX RT_DEVS)
@@ -63,6 +65,7 @@ target_compile_definitions(td_asra_shared_memory_input      PUBLIC RT_LINUX RT_D
 target_compile_definitions(td_landing_achieved_demand_input PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_pilot_takeover_input          PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_aircraft_state_input          PUBLIC RT_LINUX RT_DEVS)
+target_compile_definitions(td_supervisor_udp_input          PUBLIC RT_LINUX RT_DEVS)
 
 target_link_libraries(td_handover_control 				${Boost_LIBRARIES})
 target_link_libraries(td_landing_routine 				${Boost_LIBRARIES})
@@ -88,4 +91,5 @@ target_link_libraries(td_pilot_takeover_input 			${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_aircraft_state_input 			${Boost_LIBRARIES} -lrt)
 target_link_libraries(td_cache_input		 			${Boost_LIBRARIES})
 target_link_libraries(td_takeoff			 			${Boost_LIBRARIES})
+target_link_libraries(td_supervisor_udp_input 			${Boost_LIBRARIES})
 target_link_libraries(td_handle_waypoint	 			${Boost_LIBRARIES})

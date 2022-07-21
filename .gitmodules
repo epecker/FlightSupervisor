@@ -1,3 +1,6 @@
 [submodule "deps/sharedmemorymodel"]
 	path = deps/sharedmemorymodel
 	url = https://bitbucket.org/frl-student/sharedmemorymodel.git
+[submodule "deps/RUDP"]
+	path = deps/RUDP
+	url = https://github.com/jwehorner/RUDP.git
