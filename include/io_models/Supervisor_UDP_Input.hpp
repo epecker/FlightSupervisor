@@ -268,20 +268,19 @@ public:
 			uint8_t sysid;
 			uint8_t compid;
 			uint8_t sigid;
-			vector<char>char_cache;
+			vector<byte>byte_cache;
 			int offset = 0;
 			int data_length = bytes_received - 3 * sizeof(uint8_t);
 
 			if (!error_occured) {
 				// Parse the bytes of the received system ID.
-				char_cache = vector<char>(sizeof(sysid));
+				byte_cache = vector<byte>(sizeof(sysid));
 				for (int i = 0; i < sizeof(sysid); i++)
 				{
-					char_cache[i] = recv_buffer[i + offset];
+					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(sysid);
-				try { sysid = dynamic_cast<uint8_t>(char_cache.data()); } 
-				catch (bad_cast cast_error) {
+				if (std::memcpy(&sysid, byte_cache.data(), sizeof(sysid))) {
 					string error_message = string("[Supervisor UDP Input] Error copying system ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
@@ -290,14 +289,13 @@ public:
 
 			if (!error_occured) {
 				// Parse the bytes of the received component ID.
-				char_cache = vector<char>(sizeof(compid));
+				byte_cache = vector<byte>(sizeof(compid));
 				for (int i = 0; i < sizeof(compid); i++)
 				{
-					char_cache[i] = recv_buffer[i + offset];
+					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(compid);
-				try { compid = dynamic_cast<uint8_t>(char_cache.data()); } 
-				catch (bad_cast cast_error) {
+				if (std::memcpy(&compid, byte_cache.data(), sizeof(compid))) {
 					string error_message = string("[Supervisor UDP Input] Error copying component ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
@@ -306,14 +304,13 @@ public:
 
 			if (!error_occured) {
 				// Parse the bytes of the received signal ID.
-				char_cache = vector<char>(sizeof(sigid));
+				byte_cache = vector<byte>(sizeof(sigid));
 				for (int i = 0; i < sizeof(sigid); i++)
 				{
-					char_cache[i] = recv_buffer[i + offset];
+					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(sigid);
-				try { sigid = dynamic_cast<uint8_t>(char_cache.data()); } 
-				catch (bad_cast cast_error) {
+				if (std::memcpy(&sigid, byte_cache.data(), sizeof(sigid))) {
 					string error_message = string("[Supervisor UDP Input] Error copying signal ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
@@ -322,10 +319,10 @@ public:
 
 			if (!error_occured) {
 				// Parse the bytes of the payload.
-				char_cache = vector<char>(data_length);
+				byte_cache = vector<byte>(data_length);
 				for (int i = 0; i < data_length; i++)
 				{
-					char_cache[i] = recv_buffer[i + offset];
+					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(sigid);
 
@@ -335,27 +332,27 @@ public:
 				unique_lock<mutex> mutexLock(input_mutex);
 				try { 
 					if (sysid == SUPERVISOR_SIG_ID_PLP_ACHIEVED && compid == COMP_ID_MISSION_MANAGER) {
-						temp_landing_point = dynamic_cast<message_landing_point_t>(char_cache.data()); 
+						if (std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
 						message_plp_ach.push_back(temp_landing_point);
 						state.has_messages = true;
 					}
 					if (sysid == SUPERVISOR_SIG_ID_WAYPOINT && compid == COMP_ID_MISSION_MANAGER) {
-						temp_landing_point = dynamic_cast<message_landing_point_t>(char_cache.data()); 
+						if (std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
 						message_waypoint.push_back(temp_landing_point);
 						state.has_messages = true;
 					}
 					if (sysid ==  SUPERVISOR_SIG_ID_START_SUPERVISOR && compid == COMP_ID_MISSION_MANAGER) {
-						temp_start_supervisor = dynamic_cast<message_start_supervisor_t>(char_cache.data()); 
+						if (std::memcpy(&temp_start_supervisor, byte_cache.data(), sizeof(temp_start_supervisor))) throw bad_cast();
 						message_start_supervisor.push_back(temp_start_supervisor);
 						state.has_messages = true;
 					}
 					if (sysid == SUPERVISOR_SIG_ID_PERCEPTION_STATUS && compid == COMP_ID_PERCEPTION_SYSTEM) {
-						temp_bool = dynamic_cast<bool>(char_cache.data()); 
+						if (std::memcpy(&temp_bool, byte_cache.data(), sizeof(temp_bool))) throw bad_cast();
 						message_perception_status.push_back(temp_bool);
 						state.has_messages = true;
 					}
 					if (sysid == SUPERVISOR_SIG_ID_LP_RECEIVE && compid == COMP_ID_PERCEPTION_SYSTEM) {
-						temp_landing_point = dynamic_cast<message_landing_point_t>(char_cache.data()); 
+						if (std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
 						message_lp_recv.push_back(temp_landing_point);
 						state.has_messages = true;
 					}

@@ -41,7 +41,6 @@ ofstream out_state;
 ofstream out_info;
 
 // Define output ports to be used for logging purposes
-struct out : public out_port<message_landing_point_t> {};
 
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
@@ -52,7 +51,6 @@ int main(int argc, char* argv[]) {
 	do {
 		// Input Files
 		string input_dir = i_base_dir + to_string(test_set_enumeration);
-		string input_file_message = input_dir + string("/message.txt");
 		string input_file_quit = input_dir + string("/quit.txt");
 
 		// Output locations
@@ -61,8 +59,7 @@ int main(int argc, char* argv[]) {
 		string out_state_file = out_directory + string("/output_state.txt");
 		string out_info_file = out_directory + string("/output_info.txt");
 
-		if (!filesystem::exists(input_file_message) ||
-			!filesystem::exists(input_file_quit)) {
+		if (!filesystem::exists(input_file_quit)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
@@ -86,17 +83,14 @@ int main(int argc, char* argv[]) {
             ir_quit
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-            typeid(out)
-        };
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-        };
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
