@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<dynamic::modeling::model> ir_aircraft_state = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", move(input_aircraft_state.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_perception_status = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_perception_status", move(input_perception_status.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_start_supervisor = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Start_Supervisor, TIME, const char* >("ir_start_supervisor", move(input_start_supervisor.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_waypoint = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command_Waypoint, TIME, const char* >("ir_waypoint", move(input_waypoint.c_str()));
+		shared_ptr<dynamic::modeling::model> ir_waypoint = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", move(input_waypoint.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_landing_achieved = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", move(input_landing_achieved.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_LP_recv = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_LP_recv", move(input_LP_recv.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_pilot_takeover.c_str()));
@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Supervisor_defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_perception_status>("ir_perception_status", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<message_start_supervisor_t>::out, Supervisor_defs::i_start_supervisor>("ir_start_supervisor", "supervisor"),
-			dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_waypoint_t>::out, Supervisor_defs::i_waypoint>("ir_waypoint", "supervisor"),
+			dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out, Supervisor_defs::i_waypoint>("ir_waypoint", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_LP_recv>("ir_LP_recv", "supervisor"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Supervisor_defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),

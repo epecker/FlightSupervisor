@@ -14,7 +14,7 @@
 #include <cadmium/modeling/message_bag.hpp>
 
 #include <limits> // Used to set the time advance to infinity
-#include <assert.h> // Used to check values and stop the simulation
+#include <cassert> // Used to check values and stop the simulation
 #include <string>
 
  // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
@@ -90,25 +90,22 @@ public:
 	};
 	state_type state;
 
-	// Public members of the class
-	message_landing_point_t landing_point;
-	message_aircraft_state_t aircraft_state;
-
 	// Default constructor
 	Command_Reposition() {
 		state.current_state = States::IDLE;
+		aircraft_state = message_aircraft_state_t();
 		landing_point = message_landing_point_t();
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
-	Command_Reposition(States initial_state) {
+	explicit Command_Reposition(States initial_state) {
 		state.current_state = initial_state;
-		landing_point = message_landing_point_t();
 		aircraft_state = message_aircraft_state_t();
+		landing_point = message_landing_point_t();
 	}
 
 	// Internal transitions
-	// These are transitions occuring from internal inputs
+	// These are transitions occurring from internal inputs
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
@@ -133,17 +130,17 @@ public:
 	}
 
 	// External transitions
-	// These are transitions occuring from external inputs
+	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		bool received_aircraft_state;
 		bool received_hover_criteria_met;
 		bool received_pilot_handover;
 		bool received_pilot_takeover;
 		bool received_request_reposition;
 
-		received_pilot_handover = get_messages<typename Command_Reposition_defs::i_pilot_handover>(mbs).size() >= 1;
-		received_pilot_takeover = get_messages<typename Command_Reposition_defs::i_pilot_takeover>(mbs).size() >= 1;
+		received_pilot_handover = !get_messages<typename Command_Reposition_defs::i_pilot_handover>(mbs).empty();
+		received_pilot_takeover = !get_messages<typename Command_Reposition_defs::i_pilot_takeover>(mbs).empty();
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
@@ -152,7 +149,7 @@ public:
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
-					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
+					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
@@ -161,7 +158,7 @@ public:
 					}
 					break;
 				case States::GET_STATE:
-					received_aircraft_state = get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs).size() >= 1;
+					received_aircraft_state = !get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs).empty();
 
 					if (received_aircraft_state) {
 						vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs);
@@ -170,7 +167,7 @@ public:
 					}
 					break;
 				case States::COMMAND_VEL:
-					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
+					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
@@ -179,7 +176,7 @@ public:
 					}
 					break;
 				case States::COMMAND_HOVER:
-					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
+					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
@@ -188,8 +185,8 @@ public:
 					}
 					break;
 				case States::STABILIZING:
-					received_hover_criteria_met = get_messages<typename Command_Reposition_defs::i_hover_criteria_met>(mbs).size() >= 1;
-					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
+					received_hover_criteria_met = !get_messages<typename Command_Reposition_defs::i_hover_criteria_met>(mbs).empty();
+					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
@@ -200,7 +197,7 @@ public:
 					}
 					break;
 				case States::LP_CRITERIA_MET:
-					received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
+					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
@@ -215,15 +212,13 @@ public:
 	}
 
 	// confluence transition
-	// Used to call set call precedence
-	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_request_reposition = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).size() >= 1;
-
+	// Used to call set call order
+	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		external_transition(TIME(), move(mbs));
 	}
 
 	// output function
-	typename make_message_bags<output_ports>::type output() const {
+	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
 		vector<message_landing_point_t> bag_port_LP_out;
@@ -240,11 +235,11 @@ public:
 				message_fcc_command_t mfc = message_fcc_command_t();
 				float distance, altitude;
 				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon, aircraft_state.alt_MSL, landing_point.lat, landing_point.lon, landing_point.alt * METERS_TO_FT, &distance, &altitude);
-				float velocity = distance / (REPO_TIMER - 2.0);
+				float velocity = distance / (REPO_TIMER - 2.0f);
 				if (velocity > MAX_REPO_VEL * KTS_TO_MPS) {
 					velocity = MAX_REPO_VEL * KTS_TO_MPS;
 				}
-				mfc.change_velocity(velocity);
+				mfc.change_velocity(velocity, aircraft_state.gps_time);
 				bag_port_fcc_out.push_back(mfc);
 				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
 			}
@@ -274,7 +269,7 @@ public:
 				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;
 				break;
 			case States::LP_CRITERIA_MET:
-				bag_port_LP_out.push_back(message_landing_point_t());
+				bag_port_LP_out.emplace_back(message_landing_point_t());
 				get_messages<typename Command_Reposition_defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
 				break;
 			default:
@@ -287,51 +282,37 @@ public:
 	// Time advance
 	// Used to set the internal time of the current state
 	TIME time_advance() const {
+		TIME next_internal;
 		switch (state.current_state) {
 			case States::IDLE:
-				return numeric_limits<TIME>::infinity();
+			case States::GET_STATE:
+			case States::STABILIZING:
+			case States::LANDING:
+			case States::TIMER_EXPIRED:
+			case States::PILOT_CONTROL:
+				next_internal = numeric_limits<TIME>::infinity();
 				break;
 			case States::REQUEST_STATE:
-				return TIME(TA_ZERO);
-				break;
-			case States::GET_STATE:
-				return numeric_limits<TIME>::infinity();
-				break;
 			case States::COMMAND_VEL:
-				return TIME(TA_ZERO);
-				break;
 			case States::COMMAND_HOVER:
-				return TIME(TA_ZERO);
-				break;
-			case States::STABILIZING:
-				return numeric_limits<TIME>::infinity();
-				break;
 			case States::LP_CRITERIA_MET:
-				return TIME(TA_ZERO);
-				break;
-			case States::LANDING:
-				return numeric_limits<TIME>::infinity();
-				break;
 			case States::CANCEL_HOVER:
-				return TIME(TA_ZERO);
-				break;
-			case States::TIMER_EXPIRED:
-				return numeric_limits<TIME>::infinity();
-				break;
-			case States::PILOT_CONTROL:
-				return numeric_limits<TIME>::infinity();
+				next_internal = TIME(TA_ZERO);
 				break;
 			default:
 				assert(false && "Unhandled state time advance.");
-				return numeric_limits<TIME>::infinity(); // Used to stop unhandled path warning will not be called because of assert
-				break;
 		}
+		return next_internal;
 	}
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Command_Reposition<TIME>::state_type& i) {
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
+
+private:
+	message_landing_point_t landing_point;
+	message_aircraft_state_t aircraft_state;
 };
 
-#endif // LP_REPOSITION_HPP
+#endif // COMMAND_REPOSITION_HPP

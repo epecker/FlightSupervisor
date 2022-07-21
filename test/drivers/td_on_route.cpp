@@ -17,12 +17,9 @@
 
 using TIME = NDTime;
 
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
-
 // Model output ports
-struct o_fcc_waypoint_update : public out_port<message_fcc_command_waypoint_t> {};
+struct o_fcc_waypoint_update : public out_port<message_fcc_command_t> {};
+struct o_request_gps_time : public out_port<bool> {};
 
 int main() {
 	int test_set_enumeration = 0;
@@ -33,6 +30,7 @@ int main() {
 	do {
 		// Input locations
 		string input_dir						= i_base_dir + to_string(test_set_enumeration);
+		string input_file_pilot_takeover		= input_dir + std::string("/pilot_takeover.txt");
 		string input_file_start_mission			= input_dir + std::string("/start_mission.txt");
 		string input_file_waypoint				= input_dir + std::string("/waypoint.txt");
 
@@ -55,14 +53,17 @@ int main() {
 		shared_ptr<dynamic::modeling::coupled<TIME>> on_route = make_shared<dynamic::modeling::coupled<TIME>>("on_route", onr.submodels, onr.iports, onr.oports, onr.eics, onr.eocs, onr.ics);
 
 		// Instantiate the input readers.
+		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
+				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
 		shared_ptr<dynamic::modeling::model> ir_start_mission =
 				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 		shared_ptr<dynamic::modeling::model> ir_waypoint =
-				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command_Waypoint, TIME, const char* >("ir_waypoint", input_file_waypoint.c_str());
+				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", input_file_waypoint.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
+				ir_pilot_takeover,
 				ir_start_mission,
 				ir_waypoint,
 				on_route
@@ -71,7 +72,8 @@ int main() {
 		dynamic::modeling::Ports iports_TestDriver = { };
 
 		dynamic::modeling::Ports oports_TestDriver = {
-				typeid(o_fcc_waypoint_update)
+				typeid(o_fcc_waypoint_update),
+				typeid(o_request_gps_time)
 		};
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
@@ -83,8 +85,9 @@ int main() {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
+				dynamic::translate::make_IC<iestream_input_defs<bool>::out,On_Route_defs::i_pilot_takeover>("ir_pilot_takeover", "on_route"),
 				dynamic::translate::make_IC<iestream_input_defs<bool>::out,On_Route_defs::i_start_mission>("ir_start_mission", "on_route"),
-				dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_waypoint_t>::out,On_Route_defs::i_waypoint>("ir_waypoint", "on_route")
+				dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out,On_Route_defs::i_waypoint>("ir_waypoint", "on_route")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -92,6 +95,9 @@ int main() {
 		);
 
 		/*************** Loggers *******************/
+		static ofstream out_messages;
+		static ofstream out_state;
+
 		out_messages = ofstream(out_messages_file);
 		struct oss_sink_messages {
 			static ostream& sink() {

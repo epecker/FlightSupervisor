@@ -148,12 +148,13 @@ public:
 
 		if (state.current_state == States::SEND) {
 			message_aircraft_state_t message = message_aircraft_state_t(
-				model.sharedMemoryStruct->hg1700.lat,
-				model.sharedMemoryStruct->hg1700.lng,
-				model.sharedMemoryStruct->hg1700.mixedhgt,
-				model.sharedMemoryStruct->hg1700.alt,
-				model.sharedMemoryStruct->hg1700.hdg,
-				sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
+					model.sharedMemoryStruct->hg1700.time,
+					model.sharedMemoryStruct->hg1700.lat,
+					model.sharedMemoryStruct->hg1700.lng,
+					model.sharedMemoryStruct->hg1700.mixedhgt,
+					model.sharedMemoryStruct->hg1700.alt,
+					model.sharedMemoryStruct->hg1700.hdg,
+					sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
 			bag_port_message.push_back(message);
 			get_messages<typename ASRA_Shared_Memory_Input_defs::o_message>(bags) = bag_port_message;

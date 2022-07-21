@@ -59,7 +59,7 @@ struct Supervisor_defs {
 	struct i_start_supervisor : public in_port<message_start_supervisor_t> {};
 
 	/* On Route Inputs *********************************************************/
-	struct i_waypoint : public in_port<message_fcc_command_waypoint_t> {};
+	struct i_waypoint : public in_port<message_fcc_command_t> {};
 
 	/* Landing Inputs **********************************************************/
 	struct i_landing_achieved : public in_port<bool> {};
@@ -74,7 +74,7 @@ struct Supervisor_defs {
 	struct o_update_gcs : public out_port<std::string> {};
 
 	/* On Route Outputs ********************************************************/
-	struct o_fcc_waypoint_update : public out_port<message_fcc_command_waypoint_t> {};
+	struct o_fcc_waypoint_update : public out_port<message_fcc_command_t> {};
 
 	/* Landing Outputs ********************************************************/
 	struct o_control_yielded : public out_port<bool> {};
