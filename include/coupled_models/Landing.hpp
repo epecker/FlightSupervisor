@@ -7,8 +7,8 @@
  *	\author		James Horner
  */
 
-#ifndef SUPERVISOR_HPP
-#define SUPERVISOR_HPP
+#ifndef LANDING_HPP
+#define LANDING_HPP
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/ports.hpp>
@@ -185,4 +185,4 @@ public:
 	};
 };
 
-#endif // SUPERVISOR_HPP
+#endif // LANDING_HPP
