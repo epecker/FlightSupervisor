@@ -34,7 +34,7 @@
 #include "atomic_models/Mission_Initialization.hpp"
 
 //IO model headers
-#include "io_models/Cache_Input.hpp"
+#include "input_models.hpp"
 
 //Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
@@ -50,14 +50,6 @@ using namespace std;
 using namespace cadmium;
 
 using TIME = NDTime;
-
-/***** Define Cache Input model for the perception system status *****/
-template<typename T>
-class Cache_Input_Boolean : public Cache_Input<bool, T> {
-public:
-	Cache_Input_Boolean() = default;
-	Cache_Input_Boolean(bool initial_cached_input) : Cache_Input<bool, T>(initial_cached_input) {};
-};
 
 /***** Define input port for coupled models *****/
 struct Takeoff_defs {

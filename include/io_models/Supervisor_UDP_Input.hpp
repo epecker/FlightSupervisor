@@ -32,6 +32,7 @@
 
 // Message Structures
 #include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_fcc_command_waypoint_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
 
 // Includes
@@ -48,7 +49,7 @@ using namespace std;
 struct Supervisor_UDP_Input_defs {
 	struct o_start_supervisor 	: public out_port<message_start_supervisor_t> { };
 	struct o_perception_status	: public out_port<bool> { };
-	struct o_waypoint 			: public out_port<message_landing_point_t> { };
+	struct o_waypoint 			: public out_port<message_fcc_command_waypoint_t> { };
 	struct o_lp_recv			: public out_port<message_landing_point_t> { };
 	struct o_plp_ach 			: public out_port<message_landing_point_t> { };
 	struct i_quit 				: public in_port<bool> { };
@@ -64,7 +65,7 @@ private:
 	mutable mutex input_mutex;
 	mutable vector<message_start_supervisor_t> message_start_supervisor;
 	mutable vector<bool> message_perception_status;
-	mutable vector<message_landing_point_t> message_waypoint;
+	mutable vector<message_fcc_command_waypoint_t> message_waypoint;
 	mutable vector<message_landing_point_t> message_lp_recv;
 	mutable vector<message_landing_point_t> message_plp_ach;
 
@@ -197,7 +198,7 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 		vector<message_start_supervisor_t> start_supervisor_out;
 		vector<bool> perception_status_out;
-		vector<message_landing_point_t> waypoint_out;
+		vector<message_fcc_command_waypoint_t> waypoint_out;
 		vector<message_landing_point_t> lp_recv_out;
 		vector<message_landing_point_t> plp_ach_out;
 
@@ -329,6 +330,7 @@ public:
 				message_start_supervisor_t temp_start_supervisor;
 				bool temp_bool;
 				message_landing_point_t temp_landing_point;
+				message_fcc_command_waypoint_t temp_fcc_command_waypoint;
 				unique_lock<mutex> mutexLock(input_mutex);
 				try { 
 					if (sysid == SUPERVISOR_SIG_ID_PLP_ACHIEVED && compid == COMP_ID_MISSION_MANAGER) {
@@ -337,8 +339,8 @@ public:
 						state.has_messages = true;
 					}
 					if (sysid == SUPERVISOR_SIG_ID_WAYPOINT && compid == COMP_ID_MISSION_MANAGER) {
-						if (std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
-						message_waypoint.push_back(temp_landing_point);
+						if (std::memcpy(&temp_fcc_command_waypoint, byte_cache.data(), sizeof(temp_fcc_command_waypoint))) throw bad_cast();
+						message_waypoint.push_back(temp_fcc_command_waypoint);
 						state.has_messages = true;
 					}
 					if (sysid ==  SUPERVISOR_SIG_ID_START_SUPERVISOR && compid == COMP_ID_MISSION_MANAGER) {
