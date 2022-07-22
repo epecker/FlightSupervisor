@@ -30,6 +30,8 @@ using namespace cadmium::basic_models::pdevs;
 * ==========================================================
 */
 
+#ifdef RT_LINUX
+
 // Aircraft State
 template<typename T>
 class UDP_Input_Async_Aircraft_State : public UDP_Input_Async<message_aircraft_state_t, T> {
@@ -282,6 +284,8 @@ public:
 	Shared_Memory_Input_String() = default;
 	Shared_Memory_Input_String(T rate, string name) : Shared_Memory_Input<string, T>(rate, name) {};
 };
+
+#endif
 
 /**
 * ==========================================================
