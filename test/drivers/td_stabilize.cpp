@@ -30,7 +30,6 @@ using TIME = NDTime;
 struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 struct o_hover_criteria_met : public out_port<bool> {};
 struct o_request_aircraft_state : public out_port<bool> {};
-struct o_request_gps_time : public out_port<bool> {};
 
 /**
 * ==========================================================
@@ -49,7 +48,6 @@ int main() {
 		string input_file_initial_state = input_dir + string("/initial_state.txt");
 		string input_file_aircraft_state = input_dir + string("/aircraft_state.txt");
 		string input_file_cancel_hover = input_dir + string("/cancel_hover.txt");
-		string input_file_gps_time = input_dir + string("/gps_time.txt");
 		string input_file_stabilize = input_dir + string("/stabilize.txt");
 
 		// Output locations
@@ -60,7 +58,6 @@ int main() {
 		if (!filesystem::exists(input_file_initial_state) ||
 			!filesystem::exists(input_file_aircraft_state) ||
 			!filesystem::exists(input_file_cancel_hover) ||
-			!filesystem::exists(input_file_gps_time) ||
 			!filesystem::exists(input_file_stabilize)
 			) {
 			printf("One of the input files do not exist\n");
@@ -92,8 +89,6 @@ int main() {
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", input_file_aircraft_state.c_str());
 		shared_ptr<dynamic::modeling::model> ir_cancel_hover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_cancel_hover", input_file_cancel_hover.c_str());
-		shared_ptr<dynamic::modeling::model> ir_gps_time =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Double, TIME, const char* >("ir_gps_time", input_file_gps_time.c_str());
 		shared_ptr<dynamic::modeling::model> ir_stabilize =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Hover_Criteria, TIME, const char* >("ir_stabilize", input_file_stabilize.c_str());
 
@@ -102,7 +97,6 @@ int main() {
 		dynamic::modeling::Models submodels_TestDriver = {
 			ir_aircraft_state,
 			ir_cancel_hover,
-			ir_gps_time,
 			ir_stabilize,
 			stabilize
 		};
@@ -113,7 +107,6 @@ int main() {
 				typeid(o_fcc_command_hover),
 				typeid(o_hover_criteria_met),
 				typeid(o_request_aircraft_state),
-				typeid(o_request_gps_time)
 		};
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
@@ -123,14 +116,12 @@ int main() {
 			dynamic::translate::make_EOC<Stabilize_defs::o_fcc_command_hover,o_fcc_command_hover>("stabilize"),
 			dynamic::translate::make_EOC<Stabilize_defs::o_hover_criteria_met,o_hover_criteria_met>("stabilize"),
 			dynamic::translate::make_EOC<Stabilize_defs::o_request_aircraft_state,o_request_aircraft_state>("stabilize"),
-			dynamic::translate::make_EOC<Stabilize_defs::o_request_gps_time,o_request_gps_time>("stabilize")
 		};
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Stabilize_defs::i_aircraft_state>("ir_aircraft_state", "stabilize"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize_defs::i_cancel_hover>("ir_cancel_hover", "stabilize"),
-			dynamic::translate::make_IC<iestream_input_defs<double>::out,Stabilize_defs::i_gps_time>("ir_gps_time", "stabilize"),
 			dynamic::translate::make_IC<iestream_input_defs<message_hover_criteria_t>::out,Stabilize_defs::i_stabilize>("ir_stabilize", "stabilize")
 		};
 
