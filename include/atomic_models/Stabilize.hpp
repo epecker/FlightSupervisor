@@ -33,13 +33,11 @@ using namespace std;
 struct Stabilize_defs {
 	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 	struct i_cancel_hover : public in_port<bool> {};
-	struct i_gps_time : public in_port<double> {};
 	struct i_stabilize : public in_port<message_hover_criteria_t> {};
 
 	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 	struct o_hover_criteria_met : public out_port<bool> {};
 	struct o_request_aircraft_state : public out_port<bool> {};
-	struct o_request_gps_time : public out_port<bool> {};
 };
 
 // Atomic Model
@@ -49,8 +47,8 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(REQUEST_GPS_TIME)
-		(GET_GPS_TIME)
+		(REQUEST_AIRCRAFT_STATE)
+		(GET_AIRCRAFT_STATE)
 		(INIT_HOVER)
 		(STABILIZING)
 		(CHECK_STATE)
@@ -61,7 +59,6 @@ public:
 		using input_ports = tuple<
 		typename Stabilize_defs::i_aircraft_state,
 		typename Stabilize_defs::i_cancel_hover,
-		typename Stabilize_defs::i_gps_time,
 		typename Stabilize_defs::i_stabilize
 		>;
 
@@ -69,8 +66,7 @@ public:
 	using output_ports = tuple<
 		typename Stabilize_defs::o_fcc_command_hover,
 		typename Stabilize_defs::o_hover_criteria_met,
-		typename Stabilize_defs::o_request_aircraft_state,
-		typename Stabilize_defs::o_request_gps_time
+		typename Stabilize_defs::o_request_aircraft_state
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -90,17 +86,18 @@ public:
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		polling_rate = TIME("00:00:00:100");
-		gps_time = 0.0;
+		stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
 
 	// Default constructor
-	explicit Stabilize(TIME polling_rate) : polling_rate(polling_rate) {
+	explicit Stabilize(TIME polling_rate) {
 		state.current_state = States::IDLE;
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
-		gps_time = 0.0;
+		this->polling_rate = polling_rate;
+		stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -111,17 +108,18 @@ public:
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		polling_rate = TIME("00:00:00:100");
-		gps_time = 0.0;
+		stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
-	Stabilize(TIME polling_rate, States initial_state) : polling_rate(polling_rate) {
+	Stabilize(TIME polling_rate, States initial_state) {
 		state.current_state = initial_state;
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
-		gps_time = 0.0;
+		this->polling_rate = polling_rate;
+		stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -132,14 +130,14 @@ public:
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
-			case States::REQUEST_GPS_TIME:
-				state.current_state = States::GET_GPS_TIME;
+			case States::REQUEST_AIRCRAFT_STATE:
+				state.current_state = States::GET_AIRCRAFT_STATE;
 				break;
 			case States::INIT_HOVER:
 				state.current_state = States::STABILIZING;
 				break;
 			case States::STABILIZING:
-				if (state.in_tolerance && state.time_tolerance_met) {
+				if (state.time_tolerance_met && state.in_tolerance) {
 					state.current_state = States::HOVER;
 				}
 				else {
@@ -158,49 +156,51 @@ public:
 	// These are transitions occurring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_gps_time;
-		bool received_cancel_hover = !get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).empty();
+		bool received_aircraft_state;
+		bool received_stabilize;
 
+		bool received_cancel_hover = !get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).empty();
 		if (received_cancel_hover) {
-			state.current_state = States::IDLE;
-			aircraft_state = message_aircraft_state_t();
-			hover_criteria = message_hover_criteria_t();
-		} else {
-			switch (state.current_state) {
-				case States::IDLE:
-					if (!get_messages<typename Stabilize_defs::i_stabilize>(mbs).empty()) {
-						state.current_state = States::REQUEST_GPS_TIME;
-						hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
+			reset_state();
+			return;
+		}
+
+		switch (state.current_state) {
+			case States::IDLE:
+				received_stabilize = !get_messages<typename Stabilize_defs::i_stabilize>(mbs).empty();
+				if (received_stabilize) {
+					hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
+					stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
+					state.current_state = States::REQUEST_AIRCRAFT_STATE;
+				}
+				break;
+			case States::GET_AIRCRAFT_STATE:
+				received_aircraft_state = !get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).empty();
+				if (received_aircraft_state) {
+					aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+					state.current_state = States::INIT_HOVER;
+				}
+				break;
+			case States::CHECK_STATE:
+				received_aircraft_state = !get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).empty();
+				if (received_aircraft_state) {
+					aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+					state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
+					if (!state.in_tolerance) {
 						stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
+					} else {
+						stabilization_time_prev = stabilization_time_prev - e;
+						state.time_tolerance_met = (stabilization_time_prev <= TIME("00:00:00:000"));
 					}
-					break;
-				case States::GET_GPS_TIME:
-					received_gps_time = !get_messages<typename Stabilize_defs::i_gps_time>(mbs).empty();
-					if (received_gps_time) {
-						gps_time = get_messages<typename Stabilize_defs::i_gps_time>(mbs)[0];
-						state.current_state = States::INIT_HOVER;
-					}
-					break;
-				case States::CHECK_STATE:
-					if (!get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).empty()) {
-						state.current_state = States::STABILIZING;
-						aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
-						state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
-						if (!state.in_tolerance) {
-							stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
-						} else {
-							stabilization_time_prev = stabilization_time_prev - e;
-							state.time_tolerance_met = (stabilization_time_prev <= TIME("00:00:00:000"));
-						}
-					}
-					break;
-				default:
-					break;
-			}
+					state.current_state = States::STABILIZING;
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
-	// confluence transition
+	// confluence transition;
 	// Used to call set call order
 	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		bool received_cancel_hover = !get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).empty();
@@ -220,14 +220,15 @@ public:
 		vector<message_fcc_command_t> message_fcc_out;
 
 		switch (state.current_state) {
-			case States::REQUEST_GPS_TIME:
+			case States::REQUEST_AIRCRAFT_STATE:
 				message_out.push_back(true);
-				get_messages<typename Stabilize_defs::o_request_gps_time>(bags) = message_out;
+				get_messages<typename Stabilize_defs::o_request_aircraft_state>(bags) = message_out;
+				break;
 			case States::INIT_HOVER:
 			{
 				message_fcc_command_t mfc = message_fcc_command_t();
 				mfc.reposition(
-						gps_time,
+						aircraft_state.gps_time,
 						hover_criteria.desiredLat * (1E7),
 						hover_criteria.desiredLon * (1E7),
 						hover_criteria.desiredAltMSL
@@ -237,12 +238,12 @@ public:
 			}
 			break;
 			case States::STABILIZING:
-				if (state.in_tolerance && state.time_tolerance_met) {
+				if (state.time_tolerance_met && state.in_tolerance) {
 					message_out.push_back(true);
 					get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
 				}
 				else {
-					message_out.push_back(false);
+					message_out.push_back(true);
 					get_messages<typename Stabilize_defs::o_request_aircraft_state>(bags) = message_out;
 				}
 				break;
@@ -259,11 +260,11 @@ public:
 		TIME next_internal;
 		switch (state.current_state) {
 			case States::IDLE:
-			case States::GET_GPS_TIME:
+			case States::GET_AIRCRAFT_STATE:
 			case States::CHECK_STATE:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
-			case States::REQUEST_GPS_TIME:
+			case States::REQUEST_AIRCRAFT_STATE:
 			case States::INIT_HOVER:
 			case States::HOVER:
 				next_internal = TIME(TA_ZERO);
@@ -299,7 +300,7 @@ public:
 		while (i_state.hdg_Deg < 0.0) {
 			i_state.hdg_Deg += 360;
 		}
-		if (abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg && !isnan(hover_criteria.desiredHdgDeg)) {
+		if (!isnan(hover_criteria.desiredHdgDeg) && abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg) {
 #ifdef DEBUG_MODELS
 			state.failures = "-FAILED-HDG";
 #endif
@@ -347,9 +348,17 @@ public:
 private:
 	message_hover_criteria_t hover_criteria;
 	message_aircraft_state_t aircraft_state;
-	double gps_time;
 	TIME stabilization_time_prev;
 	TIME polling_rate;
+
+	void reset_state() {
+		hover_criteria = message_hover_criteria_t();
+		aircraft_state = message_aircraft_state_t();
+		stabilization_time_prev = TIME("00:00:000");
+		state.in_tolerance = false;
+		state.time_tolerance_met = false;
+		state.current_state = States::IDLE;
+	}
 };
 
 #endif // STABILIZE_HPP
