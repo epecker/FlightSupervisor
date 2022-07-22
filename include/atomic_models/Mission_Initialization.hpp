@@ -211,6 +211,10 @@ public:
 				bool_port_out.push_back(true);
 				get_messages<typename Mission_Initialization_defs::o_start_monitoring>(bags) = bool_port_out;
 				break;
+			case States::START_MISSION:
+				bool_port_out.push_back(true);
+				get_messages<typename Mission_Initialization_defs::o_start_mission>(bags) = bool_port_out;
+				break;
 			default:
 				break;
 		}
