@@ -280,6 +280,9 @@ public:
 				break;
 		}
 		lp_accept_time_prev = lp_accept_time_prev - e;
+		if (lp_accept_time_prev <= TIME(TA_ZERO)) {
+			lp_accept_time_prev = TIME(TA_ZERO);
+		}
 	}
 
 	// confluence transition

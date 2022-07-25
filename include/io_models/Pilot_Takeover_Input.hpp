@@ -129,11 +129,11 @@ public:
 	// Output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<bool> bag_port_message;
-		if (state.current_state == States::POLL && !(model.sharedMemoryStruct->hmu_safety.safety_status & ((1 << 0) | (1 << 1)))) {
-			bag_port_message.push_back(true);
-			get_messages<typename Pilot_Takeover_Input_defs::o_message>(bags) = bag_port_message;
-		}
+		// vector<bool> bag_port_message;
+		// if (state.current_state == States::POLL && !(model.sharedMemoryStruct->hmu_safety.safety_status & ((1 << 0) | (1 << 1)))) {
+		// 	bag_port_message.push_back(true);
+			// get_messages<typename Pilot_Takeover_Input_defs::o_message>(bags) = bag_port_message;
+		// }
 		return bags;
 	}
 

@@ -281,7 +281,7 @@ public:
 					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(sysid);
-				if (std::memcpy(&sysid, byte_cache.data(), sizeof(sysid))) {
+				if (!std::memcpy(&sysid, byte_cache.data(), sizeof(sysid))) {
 					string error_message = string("[Supervisor UDP Input] Error copying system ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
@@ -296,7 +296,7 @@ public:
 					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(compid);
-				if (std::memcpy(&compid, byte_cache.data(), sizeof(compid))) {
+				if (!std::memcpy(&compid, byte_cache.data(), sizeof(compid))) {
 					string error_message = string("[Supervisor UDP Input] Error copying component ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
@@ -311,7 +311,7 @@ public:
 					byte_cache[i] = (byte)recv_buffer[i + offset];
 				}
 				offset += sizeof(sigid);
-				if (std::memcpy(&sigid, byte_cache.data(), sizeof(sigid))) {
+				if (!std::memcpy(&sigid, byte_cache.data(), sizeof(sigid))) {
 					string error_message = string("[Supervisor UDP Input] Error copying signal ID from ") + string(sender_address) + string(":") + to_string(sender_port) + string("\n");
 					cout << error_message;
 					error_occured = true;
@@ -333,28 +333,29 @@ public:
 				message_fcc_command_t temp_fcc_command_waypoint;
 				unique_lock<mutex> mutexLock(input_mutex);
 				try { 
-					if (sysid == SUPERVISOR_SIG_ID_PLP_ACHIEVED && compid == COMP_ID_MISSION_MANAGER) {
-						if (std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
+					// std::cout << "SYS: " << sysid << "\tCOMP: " << compid << "\tSIG: " << sigid << std::endl;
+					if (sigid == SUPERVISOR_SIG_ID_PLP_ACHIEVED && compid == COMP_ID_MISSION_MANAGER) {
+						if (!std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
 						message_plp_ach.push_back(temp_landing_point);
 						state.has_messages = true;
 					}
-					if (sysid == SUPERVISOR_SIG_ID_WAYPOINT && compid == COMP_ID_MISSION_MANAGER) {
-						if (std::memcpy(&temp_fcc_command_waypoint, byte_cache.data(), sizeof(temp_fcc_command_waypoint))) throw bad_cast();
+					if (sigid == SUPERVISOR_SIG_ID_WAYPOINT && compid == COMP_ID_MISSION_MANAGER) {
+						if (!std::memcpy(&temp_fcc_command_waypoint, byte_cache.data(), sizeof(temp_fcc_command_waypoint))) throw bad_cast();
 						message_waypoint.push_back(temp_fcc_command_waypoint);
 						state.has_messages = true;
 					}
-					if (sysid ==  SUPERVISOR_SIG_ID_START_SUPERVISOR && compid == COMP_ID_MISSION_MANAGER) {
-						if (std::memcpy(&temp_start_supervisor, byte_cache.data(), sizeof(temp_start_supervisor))) throw bad_cast();
+					if (sigid ==  SUPERVISOR_SIG_ID_START_SUPERVISOR && compid == COMP_ID_MISSION_MANAGER) {
+						if (!std::memcpy(&temp_start_supervisor, byte_cache.data(), sizeof(temp_start_supervisor))) throw bad_cast();
 						message_start_supervisor.push_back(temp_start_supervisor);
 						state.has_messages = true;
 					}
-					if (sysid == SUPERVISOR_SIG_ID_PERCEPTION_STATUS && compid == COMP_ID_PERCEPTION_SYSTEM) {
-						if (std::memcpy(&temp_bool, byte_cache.data(), sizeof(temp_bool))) throw bad_cast();
+					if (sigid == SUPERVISOR_SIG_ID_PERCEPTION_STATUS && compid == COMP_ID_PERCEPTION_SYSTEM) {
+						if (!std::memcpy(&temp_bool, byte_cache.data(), sizeof(temp_bool))) throw bad_cast();
 						message_perception_status.push_back(temp_bool);
 						state.has_messages = true;
 					}
-					if (sysid == SUPERVISOR_SIG_ID_LP_RECEIVE && compid == COMP_ID_PERCEPTION_SYSTEM) {
-						if (std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
+					if (sigid == SUPERVISOR_SIG_ID_LP_RECEIVE && compid == COMP_ID_PERCEPTION_SYSTEM) {
+						if (!std::memcpy(&temp_landing_point, byte_cache.data(), sizeof(temp_landing_point))) throw bad_cast();
 						message_lp_recv.push_back(temp_landing_point);
 						state.has_messages = true;
 					}

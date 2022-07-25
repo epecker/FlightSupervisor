@@ -146,6 +146,8 @@ public:
 				break;
 			case States::HOVER:
 				state.current_state = States::IDLE;
+				state.in_tolerance = false;
+				state.time_tolerance_met = false;
 				break;
 			default:
 				break;
