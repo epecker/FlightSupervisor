@@ -279,9 +279,16 @@ public:
 			default:
 				break;
 		}
-		lp_accept_time_prev = lp_accept_time_prev - e;
-		if (lp_accept_time_prev <= TIME(TA_ZERO)) {
-			lp_accept_time_prev = TIME(TA_ZERO);
+		if (
+			state.current_state == States::REQUEST_STATE_LP ||
+			state.current_state == States::GET_STATE_LP ||
+			state.current_state == States::NOTIFY_LP ||
+			state.current_state == States::LP_APPROACH
+		) {
+			lp_accept_time_prev = lp_accept_time_prev - e;
+			if (lp_accept_time_prev <= TIME(TA_ZERO)) {
+				lp_accept_time_prev = TIME(TA_ZERO);
+			}
 		}
 	}
 
