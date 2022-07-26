@@ -1,12 +1,9 @@
 Test Cases
 =============================================================================================================================================================
-Folder	| Target Output			| Input Sequence
---------| ---------------------	| --------------------------------------------------------------------------------------------------------------------------------
-0	    | LP_expired			| lp_recv(00:00:10)
-1	    | start_LZE_scan		| plp_ach(00:00:10)
-2	    | mission_complete		| lp_recv(00:00:10)->aircraft_state(00:00:15)->landing_achieved(00:00:20)
-3	    | land_requested		| lp_recv(00:00:10)->aircraft_state(00:00:15)
-4	    | fcc_command_velocity	| lp_recv(00:00:10)->aircraft_state(00:00:15)
-5	    | control_yielded		| lp_recv(00:00:10)->pilot_takeover(00:02:13)
-6	    | notify_pilot			| lp_recv(00:00:10)
-7		| fcc_command_hover		| lp_recv(00:00:10)
+
+| Folder | Target Output    | Input Sequence                                                                                                                                                                                                                                         |
+|--------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0      | LP_expired       | lp_recv(00:00:10)                                                                                                                                                                                                                                      |
+| 1      | control_yielded  | plp_ach(00:00:10)->aircraft_state(00:00:15)->aircraft_state(00:00:16)->aircraft_state(00:00:20)->aircraft_state(00:02:21)->aircraft_state(00:02:22)->aircraft_state(00:02:22)->aircraft_state(00:02:26)->pilot_takeover(00:02:27)                      |
+| 2      | mission_complete | plp_ach(00:00:10)->aircraft_state(00:00:15))->aircraft_state(00:00:16))->aircraft_state(00:00:20)->lp_recv(00:00:25)->aircraft_state(00:00:26)->aircraft_state(00:00:27)->aircraft_state(00:00:28)->aircraft_state(00:00:29)->aircraft_state(00:00:34) |
+| 3      | land_requested   | lp_recv(00:00:10)->aircraft_state(00:00:15)->aircraft_state(00:00:16)->aircraft_state(00:00:17)->aircraft_state(00:00:18)->aircraft_state(00:00:22)->landing_achieved(00:00:28)                                                                        |                                                                                                      |
