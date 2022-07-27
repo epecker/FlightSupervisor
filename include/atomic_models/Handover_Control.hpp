@@ -186,12 +186,11 @@ public:
 
 		switch (state.current_state) {
 			case States::HOVER:
-				// Need to add a heading member to the mavlink mission item struct.
 				hover_criteria = message_hover_criteria_t(
 					hover_location.lat,
 					hover_location.lon,
 					hover_location.alt,
-					DEFAULT_LAND_CRITERIA_HDG,
+					nanf(""),
 					DEFAULT_LAND_CRITERIA_HOR_DIST,
 					DEFAULT_LAND_CRITERIA_VERT_DIST,
 					DEFAULT_LAND_CRITERIA_VEL,
