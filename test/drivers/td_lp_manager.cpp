@@ -33,13 +33,6 @@ using TIME = NDTime;
 ofstream out_messages;
 ofstream out_state;
 
-// Define output ports to be used for logging purposes
-struct o_lp_new : public out_port<message_landing_point_t> {};
-struct o_lp_expired : public out_port<message_landing_point_t> {};
-struct o_pilot_handover : public out_port<message_landing_point_t> {};
-struct o_stabilize : public out_port<message_hover_criteria_t> {};
-struct o_start_lze_scan : public out_port<bool> {};
-
 /**
 * ==========================================================
 * MAIN METHOD
@@ -127,26 +120,14 @@ int main(int argc, char* argv[]) {
 			lp_manager
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(o_lp_new),
-			typeid(o_lp_expired),
-			typeid(o_pilot_handover),
-			typeid(o_stabilize),
-			typeid(o_start_lze_scan)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<LP_Manager_defs::o_lp_new,o_lp_new>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_lp_expired,o_lp_expired>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_pilot_handover,o_pilot_handover>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_stabilize,o_stabilize>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_start_lze_scan,o_start_lze_scan>("lp_manager")
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {

@@ -16,6 +16,7 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -39,7 +40,8 @@ struct LP_Manager_defs {
 	struct o_pilot_handover : public out_port<message_landing_point_t> {};
 	struct o_request_aircraft_state : public out_port<bool> {};
 	struct o_stabilize : public out_port<message_hover_criteria_t> {};
-	struct o_start_lze_scan : public out_port<bool> {};
+	struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+	struct o_update_gcs : public out_port<string> {};
 };
 
 template<typename TIME>
@@ -79,7 +81,8 @@ public:
 		typename LP_Manager_defs::o_pilot_handover,
 		typename LP_Manager_defs::o_request_aircraft_state,
 		typename LP_Manager_defs::o_stabilize,
-		typename LP_Manager_defs::o_start_lze_scan
+		typename LP_Manager_defs::o_update_boss,
+		typename LP_Manager_defs::o_update_gcs
 	>;
 
 	// state definition
@@ -308,10 +311,12 @@ public:
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<message_landing_point_t> message_out;
-		message_landing_point_t temp_lp;
-		vector<bool> bool_out;
+		vector<message_landing_point_t> lp_messages;
+		vector<message_landing_point_t> plp_messages;
+		vector<bool> bool_messages;
 		vector<message_hover_criteria_t> stabilize_messages;
+		vector<message_boss_mission_update_t> boss_messages;
+		vector<string> gcs_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
@@ -336,28 +341,35 @@ public:
 				break;
 
 			case States::START_LZE_SCAN:
-				bool_out.push_back(true);
-				get_messages<typename LP_Manager_defs::o_start_lze_scan>(bags) = bool_out;
+				{
+					string temp_string = "Starting an orbit to scan LZ";
+					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
+					strcpy(temp_boss.description, "LZ scan");
+					boss_messages.push_back(temp_boss);
+					gcs_messages.push_back(temp_string);
+					get_messages<typename LP_Manager_defs::o_update_boss>(bags) = boss_messages;
+					get_messages<typename LP_Manager_defs::o_update_gcs>(bags) = gcs_messages;
+				}
 				break;
 
 			case States::LZE_SCAN:
-				message_out.push_back(plp);
-				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = message_out;
+				plp_messages.push_back(plp);
+				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = plp_messages;
 				break;
 
 			case States::NOTIFY_LP:
-				message_out.push_back(lp);
-				get_messages<typename LP_Manager_defs::o_lp_new>(bags) = message_out;
+				lp_messages.push_back(lp);
+				get_messages<typename LP_Manager_defs::o_lp_new>(bags) = lp_messages;
 				break;
 
 			case States::LP_APPROACH:
-				message_out.push_back(lp);
-				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = message_out;
+				lp_messages.push_back(lp);
+				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = lp_messages;
 				break;
 
 			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
-				bool_out.push_back(true);
-				get_messages<typename LP_Manager_defs::o_request_aircraft_state>(bags) = bool_out;
+				bool_messages.push_back(true);
+				get_messages<typename LP_Manager_defs::o_request_aircraft_state>(bags) = bool_messages;
 				break;
 
 			default:
