@@ -10,9 +10,11 @@
 #define INPUT_MODELS_HPP
 
 // Basic models for receiving inputs.
+#ifdef RT_LINUX
 #include "io_models/UDP_Input.hpp"
 #include "io_models/UDP_Input_Async.hpp"
 #include "io_models/Shared_Memory_Input.hpp"
+#endif
 #include "io_models/Cache_Input.hpp"
 
 // Messages structures

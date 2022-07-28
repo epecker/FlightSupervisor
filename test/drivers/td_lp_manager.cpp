@@ -33,13 +33,6 @@ using TIME = NDTime;
 ofstream out_messages;
 ofstream out_state;
 
-// Define output ports to be used for logging purposes
-struct o_lp_new : public out_port<message_landing_point_t> {};
-struct o_lp_expired : public out_port<message_landing_point_t> {};
-struct o_pilot_handover : public out_port<message_landing_point_t> {};
-struct o_stabilize : public out_port<message_hover_criteria_t> {};
-struct o_start_lze_scan : public out_port<bool> {};
-
 /**
 * ==========================================================
 * MAIN METHOD
@@ -127,35 +120,23 @@ int main(int argc, char* argv[]) {
 			lp_manager
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(o_lp_new),
-			typeid(o_lp_expired),
-			typeid(o_pilot_handover),
-			typeid(o_stabilize),
-			typeid(o_start_lze_scan)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<LP_Manager_defs::o_lp_new,o_lp_new>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_lp_expired,o_lp_expired>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_pilot_handover,o_pilot_handover>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_stabilize,o_stabilize>("lp_manager"),
-			dynamic::translate::make_EOC<LP_Manager_defs::o_start_lze_scan,o_start_lze_scan>("lp_manager")
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,LP_Manager_defs::i_aircraft_state>("ir_aircraft_state", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager_defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager_defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager_defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager_defs::i_hover_criteria_met>("ir_hover_criteria_met", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager_defs::i_control_yielded>("ir_control_yielded", "lp_manager")
+			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,LP_Manager<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "lp_manager"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_hover_criteria_met>("ir_hover_criteria_met", "lp_manager"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_control_yielded>("ir_control_yielded", "lp_manager")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

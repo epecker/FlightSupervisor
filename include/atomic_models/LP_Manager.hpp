@@ -16,6 +16,7 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_aircraft_state_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -24,23 +25,6 @@
 
 using namespace cadmium;
 using namespace std;
-
-//Port definition
-struct LP_Manager_defs {
-	struct i_lp_recv : public in_port<message_landing_point_t> {};
-	struct i_plp_ach : public in_port<message_landing_point_t> {};
-	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_control_yielded : public in_port<bool> {};
-
-	struct o_lp_new : public out_port<message_landing_point_t> {};
-	struct o_lp_expired : public out_port<message_landing_point_t> {};
-	struct o_pilot_handover : public out_port<message_landing_point_t> {};
-	struct o_request_aircraft_state : public out_port<bool> {};
-	struct o_stabilize : public out_port<message_hover_criteria_t> {};
-	struct o_start_lze_scan : public out_port<bool> {};
-};
 
 template<typename TIME>
 class LP_Manager {
@@ -63,23 +47,42 @@ public:
 		(LP_ACCEPT_EXP)
 	);
 
+	//Port definition
+	struct defs {
+		struct i_lp_recv : public in_port<message_landing_point_t> {};
+		struct i_plp_ach : public in_port<message_landing_point_t> {};
+		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
+		struct i_pilot_takeover : public in_port<bool> {};
+		struct i_hover_criteria_met : public in_port<bool> {};
+		struct i_control_yielded : public in_port<bool> {};
+
+		struct o_lp_new : public out_port<message_landing_point_t> {};
+		struct o_lp_expired : public out_port<message_landing_point_t> {};
+		struct o_pilot_handover : public out_port<message_landing_point_t> {};
+		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_stabilize : public out_port<message_hover_criteria_t> {};
+		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public out_port<string> {};
+	};
+
 	// ports definition
 	using input_ports = tuple<
-		typename LP_Manager_defs::i_lp_recv,
-		typename LP_Manager_defs::i_plp_ach,
-		typename LP_Manager_defs::i_aircraft_state,
-		typename LP_Manager_defs::i_pilot_takeover,
-		typename LP_Manager_defs::i_hover_criteria_met,
-		typename LP_Manager_defs::i_control_yielded
+		typename LP_Manager<TIME>::defs::i_lp_recv,
+		typename LP_Manager<TIME>::defs::i_plp_ach,
+		typename LP_Manager<TIME>::defs::i_aircraft_state,
+		typename LP_Manager<TIME>::defs::i_pilot_takeover,
+		typename LP_Manager<TIME>::defs::i_hover_criteria_met,
+		typename LP_Manager<TIME>::defs::i_control_yielded
 	>;
 
 	using output_ports = tuple<
-		typename LP_Manager_defs::o_lp_new,
-		typename LP_Manager_defs::o_lp_expired,
-		typename LP_Manager_defs::o_pilot_handover,
-		typename LP_Manager_defs::o_request_aircraft_state,
-		typename LP_Manager_defs::o_stabilize,
-		typename LP_Manager_defs::o_start_lze_scan
+		typename LP_Manager<TIME>::defs::o_lp_new,
+		typename LP_Manager<TIME>::defs::o_lp_expired,
+		typename LP_Manager<TIME>::defs::o_pilot_handover,
+		typename LP_Manager<TIME>::defs::o_request_aircraft_state,
+		typename LP_Manager<TIME>::defs::o_stabilize,
+		typename LP_Manager<TIME>::defs::o_update_boss,
+		typename LP_Manager<TIME>::defs::o_update_gcs
 	>;
 
 	// state definition
@@ -159,15 +162,15 @@ public:
 	// external transition
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		//If we get any messages on the pilot takeover port in any state (apart from HANDOVER_CONTROL), immediately transition into the pilot in control state.
-		if (get_messages<typename LP_Manager_defs::i_pilot_takeover>(mbs).size() >= 1 && state.current_state != States::HANDOVER_CONTROL)
+		if (get_messages<typename LP_Manager<TIME>::defs::i_pilot_takeover>(mbs).size() >= 1 && state.current_state != States::HANDOVER_CONTROL)
 			state.current_state = States::PILOT_CONTROL;
 
 		//If we are in a state that can receive a landing point input,
 		if (state.current_state == States::WAYPOINT_MET || state.current_state == States::LZE_SCAN || state.current_state == States::LP_APPROACH) {
 			//If there are landing points that have been received,
-			if (get_messages<typename LP_Manager_defs::i_lp_recv>(mbs).size() >= 1) {
+			if (get_messages<typename LP_Manager<TIME>::defs::i_lp_recv>(mbs).size() >= 1) {
 				//Store the landing points in a vector.
-				vector<message_landing_point_t> landing_points = get_messages<typename LP_Manager_defs::i_lp_recv>(mbs);
+				vector<message_landing_point_t> landing_points = get_messages<typename LP_Manager<TIME>::defs::i_lp_recv>(mbs);
 
 				//Create a flag for if one of them is a valid landing point to be transitioned to.
 				bool valid_lp_recv = false;
@@ -229,16 +232,16 @@ public:
 		switch (state.current_state) {
 			//If we are in a state that can receive a planned landing point acheived input,
 			case States::WAYPOINT_MET:
-				if (get_messages<typename LP_Manager_defs::i_plp_ach>(mbs).size() >= 1) {
+				if (get_messages<typename LP_Manager<TIME>::defs::i_plp_ach>(mbs).size() >= 1) {
 					state.current_state = States::REQUEST_STATE_PLP;
-					plp = get_messages<typename LP_Manager_defs::i_plp_ach>(mbs)[0];
+					plp = get_messages<typename LP_Manager<TIME>::defs::i_plp_ach>(mbs)[0];
 				}
 				break;
 			case States::GET_STATE_PLP:
-				received_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs).size() >= 1;
+				received_aircraft_state = get_messages<typename LP_Manager<TIME>::defs::i_aircraft_state>(mbs).size() >= 1;
 
 				if (received_aircraft_state) {
-					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
+					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager<TIME>::defs::i_aircraft_state>(mbs);
 					aircraft_state = new_aircraft_state[0];
 					if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
 						plp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
@@ -249,10 +252,10 @@ public:
 				}
 				break;
 			case States::GET_STATE_LP:
-				received_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs).size() >= 1;
+				received_aircraft_state = get_messages<typename LP_Manager<TIME>::defs::i_aircraft_state>(mbs).size() >= 1;
 
 				if (received_aircraft_state) {
-					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager_defs::i_aircraft_state>(mbs);
+					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager<TIME>::defs::i_aircraft_state>(mbs);
 					message_aircraft_state_t aircraft_state = new_aircraft_state[0];
 					if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
 						lp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
@@ -264,14 +267,14 @@ public:
 				break;
 			//If we are in a state that can receive a hover criteria met input,
 			case States::STABILIZING:
-				if (get_messages<typename LP_Manager_defs::i_hover_criteria_met>(mbs).size() >= 1) {
+				if (get_messages<typename LP_Manager<TIME>::defs::i_hover_criteria_met>(mbs).size() >= 1) {
 					state.current_state = States::START_LZE_SCAN;
 				}
 				break;
 
 				//If we are in a state that can receive a control yielded input,
 			case States::HANDOVER_CONTROL:
-				if (get_messages<typename LP_Manager_defs::i_control_yielded>(mbs).size() >= 1) {
+				if (get_messages<typename LP_Manager<TIME>::defs::i_control_yielded>(mbs).size() >= 1) {
 					state.current_state = States::PILOT_CONTROL;
 				}
 				break;
@@ -295,7 +298,7 @@ public:
 	// confluence transition
 	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		//If the external input is a pilot takeover messasge,
-		if (get_messages<typename LP_Manager_defs::i_pilot_takeover>(mbs).size() >= 1) {
+		if (get_messages<typename LP_Manager<TIME>::defs::i_pilot_takeover>(mbs).size() >= 1) {
 			//Execute the external transition first, then the internal.
 			external_transition(TIME(), move(mbs));
 			internal_transition();
@@ -308,10 +311,12 @@ public:
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<message_landing_point_t> message_out;
-		message_landing_point_t temp_lp;
-		vector<bool> bool_out;
+		vector<message_landing_point_t> lp_messages;
+		vector<message_landing_point_t> plp_messages;
+		vector<bool> bool_messages;
 		vector<message_hover_criteria_t> stabilize_messages;
+		vector<message_boss_mission_update_t> boss_messages;
+		vector<string> gcs_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
@@ -331,33 +336,40 @@ public:
 						0
 					);
 					stabilize_messages.push_back(mhc);
-					get_messages<typename LP_Manager_defs::o_stabilize>(bags) = stabilize_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_stabilize>(bags) = stabilize_messages;
 				}
 				break;
 
 			case States::START_LZE_SCAN:
-				bool_out.push_back(true);
-				get_messages<typename LP_Manager_defs::o_start_lze_scan>(bags) = bool_out;
+				{
+					string temp_string = "Starting an orbit to scan LZ";
+					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
+					strcpy(temp_boss.description, "LZ scan");
+					boss_messages.push_back(temp_boss);
+					gcs_messages.push_back(temp_string);
+					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+				}
 				break;
 
 			case States::LZE_SCAN:
-				message_out.push_back(plp);
-				get_messages<typename LP_Manager_defs::o_pilot_handover>(bags) = message_out;
+				plp_messages.push_back(plp);
+				get_messages<typename LP_Manager<TIME>::defs::o_pilot_handover>(bags) = plp_messages;
 				break;
 
 			case States::NOTIFY_LP:
-				message_out.push_back(lp);
-				get_messages<typename LP_Manager_defs::o_lp_new>(bags) = message_out;
+				lp_messages.push_back(lp);
+				get_messages<typename LP_Manager<TIME>::defs::o_lp_new>(bags) = lp_messages;
 				break;
 
 			case States::LP_APPROACH:
-				message_out.push_back(lp);
-				get_messages<typename LP_Manager_defs::o_lp_expired>(bags) = message_out;
+				lp_messages.push_back(lp);
+				get_messages<typename LP_Manager<TIME>::defs::o_lp_expired>(bags) = lp_messages;
 				break;
 
 			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
-				bool_out.push_back(true);
-				get_messages<typename LP_Manager_defs::o_request_aircraft_state>(bags) = bool_out;
+				bool_messages.push_back(true);
+				get_messages<typename LP_Manager<TIME>::defs::o_request_aircraft_state>(bags) = bool_messages;
 				break;
 
 			default:

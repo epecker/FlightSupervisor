@@ -68,4 +68,6 @@
 // Shared memory
 #define DEFAULT_SHARED_MEMORY_NAME "asraSharedMem"
 
+#define WPT_PREVIEW_LENGTH 3
+
 #endif /* CONSTANTS_HPP */
