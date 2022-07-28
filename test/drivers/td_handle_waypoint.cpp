@@ -55,6 +55,7 @@ int main() {
 			printf("Failed to open initial_state file\n");
 			return 1;
 		}
+		getline(f, initial_state_string);
 		f.close();
 
 		Handle_Waypoint<TIME>::States initial_state = Handle_Waypoint<TIME>::stringToEnum(initial_state_string);

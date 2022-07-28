@@ -63,6 +63,8 @@ int main() {
 		if (f.is_open()) {
 			getline(f, initial_state_string);
 		}
+		getline(f, initial_state_string);
+		f.close();
 
 		Mission_Initialization<TIME>::States initial_state = Mission_Initialization<TIME>::stringToEnum(initial_state_string);
 
