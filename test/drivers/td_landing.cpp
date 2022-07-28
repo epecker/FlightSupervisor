@@ -36,16 +36,6 @@ using TIME = NDTime;
 ofstream out_messages;
 ofstream out_state;
 
-// Define output ports to be used for logging purposes
-struct o_LP_expired : public out_port<message_landing_point_t> {};
-struct o_start_LZE_scan : public out_port<bool> {};
-struct o_mission_complete : public out_port<bool> {};
-struct o_land_requested : public out_port<bool> {};
-struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-struct o_control_yielded : public out_port<bool> {};
-struct o_notify_pilot : public out_port<bool> {};
-struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
-
 /**
 * ==========================================================
 * MAIN METHOD
@@ -111,40 +101,22 @@ int main(int argc, char* argv[]) {
 				ir_plp_ach
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(o_LP_expired),
-			typeid(o_start_LZE_scan),
-			typeid(o_mission_complete),
-			typeid(o_land_requested),
-			typeid(o_fcc_command_velocity),
-			typeid(o_control_yielded),
-			typeid(o_notify_pilot),
-			typeid(o_fcc_command_hover)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Landing_defs::o_LP_expired, o_LP_expired>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_start_LZE_scan, o_start_LZE_scan>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_mission_complete, o_mission_complete>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_land_requested, o_land_requested>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_fcc_command_velocity, o_fcc_command_velocity>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_control_yielded, o_control_yielded>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_notify_pilot, o_notify_pilot>("landing"),
-			dynamic::translate::make_EOC<Landing_defs::o_fcc_command_hover, o_fcc_command_hover>("landing")
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_defs::i_landing_achieved>("ir_landing_achieved", "landing"),
-			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Landing_defs::i_aircraft_state>("ir_aircraft_state", "landing"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_defs::i_pilot_takeover>("ir_pilot_takeover", "landing"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing_defs::i_LP_recv>("ir_lp_recv", "landing"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing_defs::i_PLP_ach>("ir_plp_ach", "landing")
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing::defs::i_landing_achieved>("ir_landing_achieved", "landing"),
+			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Landing::defs::i_aircraft_state>("ir_aircraft_state", "landing"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing::defs::i_pilot_takeover>("ir_pilot_takeover", "landing"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing::defs::i_LP_recv>("ir_lp_recv", "landing"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing::defs::i_PLP_ach>("ir_plp_ach", "landing")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

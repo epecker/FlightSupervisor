@@ -29,6 +29,7 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
 
 //Atomic model headers
 #include "coupled_models/Takeoff.hpp"
@@ -84,7 +85,7 @@ struct Supervisor_defs {
 	struct o_LP_expired : public out_port<message_landing_point_t> {};
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
-	struct o_start_LZE_scan : public out_port<bool> {};
+	struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 };
 
 class Supervisor {
@@ -128,7 +129,7 @@ public:
 		typeid(Supervisor_defs::o_LP_expired),
 		typeid(Supervisor_defs::o_mission_complete),
 		typeid(Supervisor_defs::o_notify_pilot),
-		typeid(Supervisor_defs::o_start_LZE_scan)
+		typeid(Supervisor_defs::o_update_boss)
 	};
 
 	//Define the sub-models that make up the Landing Point Reposition coupled model.
@@ -149,11 +150,11 @@ public:
 		dynamic::translate::make_EIC<Supervisor_defs::i_waypoint, On_Route_defs::i_waypoint>("on_route"),
 
 		/* Landing Inputs **********************************************************/
-		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Landing_defs::i_aircraft_state>("landing"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_landing_achieved, Landing_defs::i_landing_achieved>("landing"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_LP_recv, Landing_defs::i_LP_recv>("landing"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, Landing_defs::i_pilot_takeover>("landing"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_PLP_ach, Landing_defs::i_PLP_ach>("landing")
+		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Landing::defs::i_aircraft_state>("landing"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_landing_achieved, Landing::defs::i_landing_achieved>("landing"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_LP_recv, Landing::defs::i_LP_recv>("landing"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, Landing::defs::i_pilot_takeover>("landing"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_PLP_ach, Landing::defs::i_PLP_ach>("landing")
 	};
 
 	//Define the internal takeoff_instance external couplings.
@@ -167,15 +168,16 @@ public:
 		dynamic::translate::make_EOC<On_Route_defs::o_fcc_waypoint_update, Supervisor_defs::o_fcc_waypoint_update>("on_route"),
 
 		/* Landing Outputs *********************************************************/
-		dynamic::translate::make_EOC<Landing_defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_control_yielded, Supervisor_defs::o_control_yielded>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_land_requested, Supervisor_defs::o_land_requested>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_LP_expired, Supervisor_defs::o_LP_expired>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_mission_complete, Supervisor_defs::o_mission_complete>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),
-		dynamic::translate::make_EOC<Landing_defs::o_start_LZE_scan, Supervisor_defs::o_start_LZE_scan>("landing")
+		dynamic::translate::make_EOC<Landing::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_control_yielded, Supervisor_defs::o_control_yielded>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_land_requested, Supervisor_defs::o_land_requested>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_LP_expired, Supervisor_defs::o_LP_expired>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_mission_complete, Supervisor_defs::o_mission_complete>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_update_boss, Supervisor_defs::o_update_boss>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("landing")
 	};
 
 	//Define the internal takeoff_instance internal couplings.
