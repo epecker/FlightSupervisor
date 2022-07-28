@@ -26,11 +26,6 @@ using namespace std;
 ofstream out_messages;
 ofstream out_state;
 
-// Model output ports
-struct o_land_requested : public out_port<bool> {};
-struct o_mission_complete : public out_port<bool> {};
-struct o_stabilize : public out_port<message_hover_criteria_t> {};
-
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
@@ -95,27 +90,20 @@ int main(int argc, char* argv[]) {
 			landing_routine
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(o_land_requested),
-			typeid(o_mission_complete),
-			typeid(o_stabilize)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Landing_Routine_defs::o_land_requested,o_land_requested>("landing_routine"),
-			dynamic::translate::make_EOC<Landing_Routine_defs::o_mission_complete,o_mission_complete>("landing_routine"),
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_landing_achieved>("ir_landing_achieved", "landing_routine"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_pilot_takeover>("ir_pilot_takeover", "landing_routine"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine_defs::i_land>("ir_land", "landing_routine")
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_landing_achieved>("ir_landing_achieved", "landing_routine"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "landing_routine"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_land>("ir_land", "landing_routine")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(

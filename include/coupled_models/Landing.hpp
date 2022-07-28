@@ -71,8 +71,8 @@ public:
 		/***** Define output ports for coupled model *****/
 		struct o_control_yielded : public out_port<bool> {};
 		struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
+		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-		struct o_land_requested : public out_port<bool> {};
 		struct o_LP_expired : public out_port<message_landing_point_t> {};
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_notify_pilot : public out_port<bool> {};
@@ -104,8 +104,8 @@ public:
 	dynamic::modeling::Ports oports = {
 		typeid(Landing::defs::o_control_yielded),
 		typeid(Landing::defs::o_fcc_command_hover),
+		typeid(Landing::defs::o_fcc_command_land),
 		typeid(Landing::defs::o_fcc_command_velocity),
-		typeid(Landing::defs::o_land_requested),
 		typeid(Landing::defs::o_LP_expired),
 		typeid(Landing::defs::o_mission_complete),
 		typeid(Landing::defs::o_notify_pilot),
@@ -131,9 +131,9 @@ public:
 		dynamic::translate::make_EIC<Landing::defs::i_aircraft_state, LP_Manager<TIME>::defs::i_aircraft_state>("lp_manager"),
 
 		// lp_reposition
-		dynamic::translate::make_EIC<Landing::defs::i_landing_achieved, LP_Reposition_defs::i_landing_achieved>("lp_reposition"),
-		dynamic::translate::make_EIC<Landing::defs::i_aircraft_state, LP_Reposition_defs::i_aircraft_state>("lp_reposition"),
-		dynamic::translate::make_EIC<Landing::defs::i_pilot_takeover, LP_Reposition_defs::i_pilot_takeover>("lp_reposition"),
+		dynamic::translate::make_EIC<Landing::defs::i_landing_achieved, LP_Reposition::defs::i_landing_achieved>("lp_reposition"),
+		dynamic::translate::make_EIC<Landing::defs::i_aircraft_state, LP_Reposition::defs::i_aircraft_state>("lp_reposition"),
+		dynamic::translate::make_EIC<Landing::defs::i_pilot_takeover, LP_Reposition::defs::i_pilot_takeover>("lp_reposition"),
 
 		// stabilize
 		dynamic::translate::make_EIC<Landing::defs::i_aircraft_state, Stabilize_defs::i_aircraft_state>("stabilize"),
@@ -151,10 +151,12 @@ public:
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_manager"),
 
 		// lp_reposition
-		dynamic::translate::make_EOC<LP_Reposition_defs::o_mission_complete, Landing::defs::o_mission_complete>("lp_reposition"),
-		dynamic::translate::make_EOC<LP_Reposition_defs::o_land_requested, Landing::defs::o_land_requested>("lp_reposition"),
-		dynamic::translate::make_EOC<LP_Reposition_defs::o_fcc_command_velocity, Landing::defs::o_fcc_command_velocity>("lp_reposition"),
-		dynamic::translate::make_EOC<LP_Reposition_defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_fcc_command_land, Landing::defs::o_fcc_command_land>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_fcc_command_velocity, Landing::defs::o_fcc_command_velocity>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_mission_complete, Landing::defs::o_mission_complete>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_boss, Landing::defs::o_update_boss>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_gcs, Landing::defs::o_update_gcs>("lp_reposition"),
 
 		// handover_control
 		dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded, Landing::defs::o_control_yielded>("handover_control"),
@@ -168,23 +170,23 @@ public:
 	//Define the internal to internal couplings for the Landing.
 	dynamic::modeling::ICs ics = {
 		// lp_manager
-		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_lp_new, LP_Reposition_defs::i_lp_new>("lp_manager","lp_reposition"),
+		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_lp_new, LP_Reposition::defs::i_lp_new>("lp_manager","lp_reposition"),
 		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_pilot_handover, Handover_Control_defs::i_pilot_handover>("lp_manager","handover_control"),
 		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_stabilize, Stabilize_defs::i_stabilize>("lp_manager","stabilize"),
 
 		// lp_reposition
-		dynamic::translate::make_IC<LP_Reposition_defs::o_cancel_hover, Stabilize_defs::i_cancel_hover>("lp_reposition","stabilize"),
-		dynamic::translate::make_IC<LP_Reposition_defs::o_stabilize, Stabilize_defs::i_stabilize>("lp_reposition","stabilize"),
-		dynamic::translate::make_IC<LP_Reposition_defs::o_pilot_handover, Handover_Control_defs::i_pilot_handover>("lp_reposition","handover_control"),
+		dynamic::translate::make_IC<LP_Reposition::defs::o_cancel_hover, Stabilize_defs::i_cancel_hover>("lp_reposition","stabilize"),
+		dynamic::translate::make_IC<LP_Reposition::defs::o_stabilize, Stabilize_defs::i_stabilize>("lp_reposition","stabilize"),
+		dynamic::translate::make_IC<LP_Reposition::defs::o_pilot_handover, Handover_Control_defs::i_pilot_handover>("lp_reposition","handover_control"),
 
 		// stabilize
 		dynamic::translate::make_IC<Stabilize_defs::o_hover_criteria_met, Handover_Control_defs::i_hover_criteria_met>("stabilize","handover_control"),
 		dynamic::translate::make_IC<Stabilize_defs::o_hover_criteria_met, LP_Manager<TIME>::defs::i_hover_criteria_met>("stabilize","lp_manager"),
-		dynamic::translate::make_IC<Stabilize_defs::o_hover_criteria_met, LP_Reposition_defs::i_hover_criteria_met>("stabilize","lp_reposition"),
+		dynamic::translate::make_IC<Stabilize_defs::o_hover_criteria_met, LP_Reposition::defs::i_hover_criteria_met>("stabilize","lp_reposition"),
 
 		// handover_control
 		dynamic::translate::make_IC<Handover_Control_defs::o_control_yielded, LP_Manager<TIME>::defs::i_control_yielded>("handover_control","lp_manager"),
-		dynamic::translate::make_IC<Handover_Control_defs::o_control_yielded, LP_Reposition_defs::i_control_yielded>("handover_control","lp_reposition"),
+		dynamic::translate::make_IC<Handover_Control_defs::o_control_yielded, LP_Reposition::defs::i_control_yielded>("handover_control","lp_reposition"),
 		dynamic::translate::make_IC<Handover_Control_defs::o_stabilize, Stabilize_defs::i_stabilize>("handover_control","stabilize")
 	};
 };
