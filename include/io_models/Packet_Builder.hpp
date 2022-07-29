@@ -97,7 +97,7 @@ public:
 
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		vector<std::array<char, sizeof(TYPE)>> packets;
+		vector<std::array<char, sizeof(data)>> packets;
 
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:
@@ -135,7 +135,7 @@ protected:
 	TYPE data;
 	uint8_t packet_sequence;
 
-	virtual std::array<char, sizeof(TYPE)> generate_packet() const {
+	virtual std::array<char, sizeof(data)> generate_packet() const {
 		std::string e = "The type \"" + std::string(typeid(TYPE).name()) + "\" is not a supported type";
 		assert(false && e.c_str());
 	}
@@ -144,16 +144,17 @@ protected:
 template<typename TIME>
 class Packet_Builder_FCC : public Packet_Builder<message_fcc_command_t, TIME> {
 public:
-	Packet_Builder_FCC() = default;
-	explicit Packet_Builder_FCC(typename Packet_Builder<message_fcc_command_t, TIME>::States initial_state) : Packet_Builder<message_fcc_command_t, TIME>(initial_state){};
+	using TYPE = message_fcc_command_t;
 
-	[[nodiscard]] std::array<char, sizeof(message_fcc_command_t)> generate_packet() const {
-		std::array<char, sizeof(message_fcc_command_t)> packet = {};
-		std::memcpy(packet.data(), &data, sizeof(message_fcc_command_t));
+	Packet_Builder_FCC() = default;
+	explicit Packet_Builder_FCC(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
+
+private:
+	[[nodiscard]] std::array<char, sizeof(TYPE)> generate_packet() const {
+		std::array<char, sizeof(TYPE)> packet = {};
+		std::memcpy(packet.data(), &this->data, sizeof(TYPE));
 		return packet;
 	}
-private:
-	message_fcc_command_t data;
 };
 
 #endif // PACKET_BUILDER_HPP

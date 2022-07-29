@@ -24,8 +24,8 @@ struct o_packet : public out_port<std::array<char, sizeof(message_fcc_command_t)
 int main() {
 	int test_set_enumeration = 0;
 
-	const std::string i_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/input_data/packet_builder/");
-	const std::string o_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/simulation_results/packet_builder/");
+	const std::string i_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/input_data/packet_builder_fcc/");
+	const std::string o_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/simulation_results/packet_builder_fcc/");
 
 	do {
 		// Input locations
