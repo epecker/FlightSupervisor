@@ -1,6 +1,7 @@
 #ifndef ENUM_STRING_CONVERSION_HPP
 #define ENUM_STRING_CONVERSION_HPP
 
+#include <string>
 #include <boost/preprocessor.hpp>
 
 #define X_DEFINE_ENUM_WITH_STRING_CONVERSIONS_TOSTRING_CASE(r, data, elem)    \
@@ -27,7 +28,7 @@
         }                                                                     \
     }                                                                         \
                                                                               \
-    static name stringToEnum(const string& s)                           	  \
+    static name stringToEnum(const std::string& s)                         	  \
     {                                                                         \
             BOOST_PP_SEQ_FOR_EACH(                                            \
                 X_DEFINE_STRING_TO_ENUM_CONVERSIONS,                          \
