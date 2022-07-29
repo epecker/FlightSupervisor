@@ -33,13 +33,6 @@
 using namespace cadmium;
 using namespace std;
 
-// Input and output port definitions
-struct Landing_Achieved_Demand_Input_defs {
-	struct o_message : public out_port<bool> { };
-	struct i_start : public in_port<bool> { };
-	struct i_quit : public in_port<bool> { };
-};
-
 // Atomic model
 template<typename TIME>
 class Landing_Achieved_Demand_Input {
@@ -57,6 +50,13 @@ public:
 		(IDLE)
 		(POLL)
 	);
+
+	// Input and output port definitions
+	struct defs {
+		struct o_message : public out_port<bool> { };
+		struct i_start : public in_port<message_fcc_command_t> { };
+		struct i_quit : public in_port<bool> { };
+	};
 
 	// Default constructor
 	Landing_Achieved_Demand_Input() {
@@ -100,12 +100,12 @@ public:
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = std::tuple<
-		typename Landing_Achieved_Demand_Input_defs::i_start,
-		typename Landing_Achieved_Demand_Input_defs::i_quit
+		typename Landing_Achieved_Demand_Input<TIME>::defs::i_start,
+		typename Landing_Achieved_Demand_Input<TIME>::defs::i_quit
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = std::tuple<typename Landing_Achieved_Demand_Input_defs::o_message>;
+	using output_ports = std::tuple<typename Landing_Achieved_Demand_Input<TIME>::defs::o_message>;
 
 	// Internal transitions
 	// These are transitions occuring from internal inputs
@@ -120,10 +120,10 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
 	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename Landing_Achieved_Demand_Input_defs::i_quit>(mbs).size() >= 1) {
+		if (get_messages<typename Landing_Achieved_Demand_Input<TIME>::defs::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
-		else if (get_messages<typename Landing_Achieved_Demand_Input_defs::i_start>(mbs).size() >= 1) {
+		else if (get_messages<typename Landing_Achieved_Demand_Input<TIME>::defs::i_start>(mbs).size() >= 1) {
 			state.current_state = States::POLL;
 		}
 	}
@@ -141,7 +141,7 @@ public:
 		vector<bool> bag_port_message;
 		if (state.current_state == States::POLL && model.sharedMemoryStruct->hg1700.mixedhgt < landing_height_ft) {
 			bag_port_message.push_back(true);
-			get_messages<typename Landing_Achieved_Demand_Input_defs::o_message>(bags) = bag_port_message;
+			get_messages<typename Landing_Achieved_Demand_Input<TIME>::defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}

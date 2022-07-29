@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 		// Instantiate the input readers.
 		// One for each input
 		std::shared_ptr<dynamic::modeling::model> ir_start =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start", std::move(input_file_start.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_start", std::move(input_file_start.c_str()));
 		std::shared_ptr<dynamic::modeling::model> ir_quit =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", std::move(input_file_quit.c_str()));
 
@@ -98,8 +98,8 @@ int main(int argc, char* argv[]) {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_Achieved_Demand_Input_defs::i_start>("ir_start", "landing_achieved_demand_input"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_Achieved_Demand_Input_defs::i_quit>("ir_quit", "landing_achieved_demand_input")
+			dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out, Landing_Achieved_Demand_Input<TIME>::defs::i_start>("ir_start", "landing_achieved_demand_input"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing_Achieved_Demand_Input<TIME>::defs::i_quit>("ir_quit", "landing_achieved_demand_input")
 		};
 
 		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
