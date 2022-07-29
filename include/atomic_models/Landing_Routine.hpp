@@ -17,22 +17,16 @@
 #include <assert.h> // Used to check values and stop the simulation
 #include <string>
 
- // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
+// Message structures
+#include "message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
+
+// Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
-
-// Input and output port definition
-struct Landing_Routine_defs {
-	struct i_landing_achieved : public in_port<bool> {};
-	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_land : public in_port<bool> {};
-
-	struct o_land_requested : public out_port<bool> {};
-	struct o_mission_complete : public out_port<bool> {};
-};
 
 // Atomic Model
 template<typename TIME> class Landing_Routine {
@@ -48,17 +42,31 @@ public:
 		(PILOT_CONTROL)
 	);
 
+	// Input and output port definition
+	struct defs {
+		struct i_landing_achieved : public in_port<bool> {};
+		struct i_pilot_takeover : public in_port<bool> {};
+		struct i_land : public in_port<bool> {};
+
+		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
+		struct o_mission_complete : public out_port<bool> {};
+		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public out_port<string> {};
+	};
+
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Landing_Routine_defs::i_landing_achieved,
-		typename Landing_Routine_defs::i_pilot_takeover,
-		typename Landing_Routine_defs::i_land
+		typename Landing_Routine<TIME>::defs::i_landing_achieved,
+		typename Landing_Routine<TIME>::defs::i_pilot_takeover,
+		typename Landing_Routine<TIME>::defs::i_land
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Landing_Routine_defs::o_land_requested,
-		typename Landing_Routine_defs::o_mission_complete
+		typename Landing_Routine<TIME>::defs::o_fcc_command_land,
+		typename Landing_Routine<TIME>::defs::o_mission_complete,
+		typename Landing_Routine<TIME>::defs::o_update_boss,
+		typename Landing_Routine<TIME>::defs::o_update_gcs
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -103,28 +111,28 @@ public:
 		bool received_hover_crit_met;
 		bool received_land;
 
-		received_pilot_takeover = get_messages<typename Landing_Routine_defs::i_pilot_takeover>(mbs).size() >= 1;
+		received_pilot_takeover = get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).size() >= 1;
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
-					received_land = get_messages<typename Landing_Routine_defs::i_land>(mbs).size() >= 1;
+					received_land = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).size() >= 1;
 
 					if (received_land) {
 						state.current_state = States::REQUEST_LAND;
 					}
 					break;
 				case States::LANDING:
-					received_landing_achieved = get_messages<typename Landing_Routine_defs::i_landing_achieved>(mbs).size() >= 1;
+					received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
 
 					if (received_landing_achieved) {
 						state.current_state = States::NOTIFY_LANDED;
 					}
 					break;
 				case States::PILOT_CONTROL:
-					received_landing_achieved = get_messages<typename Landing_Routine_defs::i_landing_achieved>(mbs).size() >= 1;
+					received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
 
 					if (received_landing_achieved) {
 						state.current_state = States::NOTIFY_LANDED;
@@ -147,15 +155,32 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
+		vector<message_fcc_command_t> fcc_messages;
+		vector<message_boss_mission_update_t> boss_messages;
+		vector<string> gcs_messages;
 
 		switch (state.current_state) {
-			case States::REQUEST_LAND:
-				bag_port_out.push_back(true);
-				get_messages<typename Landing_Routine_defs::o_land_requested>(bags) = bag_port_out;
+			case States::REQUEST_LAND: 
+				{
+					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
+					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
+					message_boss_mission_update_t temp_boss_update = message_boss_mission_update_t();
+					strcpy(temp_boss_update.description, "LAND");
+					string temp_gcs_update = "Landing";
+
+					fcc_messages.push_back(temp_fcc_command);
+					boss_messages.push_back(temp_boss_update);
+					gcs_messages.push_back(temp_gcs_update);
+
+					get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags) = fcc_messages;
+					get_messages<typename Landing_Routine<TIME>::defs::o_update_boss>(bags) = boss_messages;
+					get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+
+				}
 				break;
 			case States::NOTIFY_LANDED:
 				bag_port_out.push_back(true);
-				get_messages<typename Landing_Routine_defs::o_mission_complete>(bags) = bag_port_out;
+				get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = bag_port_out;
 				break;
 			default:
 				break;

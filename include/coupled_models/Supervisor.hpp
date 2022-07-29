@@ -80,8 +80,8 @@ struct Supervisor_defs {
 	/* Landing Outputs ********************************************************/
 	struct o_control_yielded : public out_port<bool> {};
 	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
+	struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-	struct o_land_requested : public out_port<bool> {};
 	struct o_LP_expired : public out_port<message_landing_point_t> {};
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
@@ -124,8 +124,8 @@ public:
 
 		typeid(Supervisor_defs::o_control_yielded),
 		typeid(Supervisor_defs::o_fcc_command_hover),
+		typeid(Supervisor_defs::o_fcc_command_land),
 		typeid(Supervisor_defs::o_fcc_command_velocity),
-		typeid(Supervisor_defs::o_land_requested),
 		typeid(Supervisor_defs::o_LP_expired),
 		typeid(Supervisor_defs::o_mission_complete),
 		typeid(Supervisor_defs::o_notify_pilot),
@@ -171,8 +171,8 @@ public:
 		dynamic::translate::make_EOC<Landing::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_control_yielded, Supervisor_defs::o_control_yielded>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_land, Supervisor_defs::o_fcc_command_land>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("landing"),
-		dynamic::translate::make_EOC<Landing::defs::o_land_requested, Supervisor_defs::o_land_requested>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_LP_expired, Supervisor_defs::o_LP_expired>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_mission_complete, Supervisor_defs::o_mission_complete>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),

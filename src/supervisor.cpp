@@ -88,9 +88,9 @@ int main(int argc, char* argv[]) {
 
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<Landing_Achieved_Demand_Input_defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_land_requested, Landing_Achieved_Demand_Input_defs::i_start>("supervisor", "im_landing_achieved"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input_defs::i_quit>("supervisor", "im_landing_achieved"),
+		dynamic::translate::make_IC<Landing_Achieved_Demand_Input<TIME>::defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Landing_Achieved_Demand_Input<TIME>::defs::i_start>("supervisor", "im_landing_achieved"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input<TIME>::defs::i_quit>("supervisor", "im_landing_achieved"),
 
 		dynamic::translate::make_IC<Aircraft_State_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("supervisor", "im_aircraft_state"),
