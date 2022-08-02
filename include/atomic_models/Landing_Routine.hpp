@@ -179,8 +179,13 @@ public:
 				}
 				break;
 			case States::NOTIFY_LANDED:
-				bag_port_out.push_back(true);
-				get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = bag_port_out;
+				{
+					string temp_gcs_update = "Just landed!";
+					gcs_messages.push_back(temp_gcs_update);
+					bag_port_out.push_back(true);
+					get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = bag_port_out;
+					get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+				}
 				break;
 			default:
 				break;
