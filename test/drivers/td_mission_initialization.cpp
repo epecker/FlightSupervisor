@@ -21,13 +21,6 @@ using TIME = NDTime;
 ofstream out_messages;
 ofstream out_state;
 
-// Model output ports
-struct o_request_perception_status : public out_port<bool> {};
-struct o_request_aircraft_state : public out_port<bool> {};
-struct o_start_mission : public out_port<bool> {};
-struct o_start_monitoring : public out_port<bool> {};
-struct o_update_gcs : public out_port<std::string> {};
-
 int main() {
 	int test_set_enumeration = 0;
 
@@ -92,26 +85,14 @@ int main() {
 				mission_initialization
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-				typeid(o_request_perception_status),
-				typeid(o_request_aircraft_state),
-				typeid(o_start_mission),
-				typeid(o_start_monitoring),
-				typeid(o_update_gcs)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-				dynamic::translate::make_EOC<Mission_Initialization_defs::o_request_perception_status,o_request_perception_status>("mission_initialization"),
-				dynamic::translate::make_EOC<Mission_Initialization_defs::o_request_aircraft_state,o_request_aircraft_state>("mission_initialization"),
-				dynamic::translate::make_EOC<Mission_Initialization_defs::o_start_mission,o_start_mission>("mission_initialization"),
-				dynamic::translate::make_EOC<Mission_Initialization_defs::o_start_monitoring,o_start_monitoring>("mission_initialization"),
-				dynamic::translate::make_EOC<Mission_Initialization_defs::o_update_gcs,o_update_gcs>("mission_initialization")
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {

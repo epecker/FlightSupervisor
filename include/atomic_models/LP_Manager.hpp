@@ -17,6 +17,7 @@
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_aircraft_state_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -62,7 +63,7 @@ public:
 		struct o_request_aircraft_state : public out_port<bool> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
-		struct o_update_gcs : public out_port<string> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
 	// ports definition
@@ -316,7 +317,7 @@ public:
 		vector<bool> bool_messages;
 		vector<message_hover_criteria_t> stabilize_messages;
 		vector<message_boss_mission_update_t> boss_messages;
-		vector<string> gcs_messages;
+		vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
@@ -342,11 +343,13 @@ public:
 
 			case States::START_LZE_SCAN:
 				{
-					string temp_string = "Starting an orbit to scan LZ";
+					message_update_gcs_t temp_gcs_update;
+					temp_gcs_update.text = "Starting an orbit to scan LZ";
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
 					strcpy(temp_boss.description, "LZ scan");
 					boss_messages.push_back(temp_boss);
-					gcs_messages.push_back(temp_string);
+					gcs_messages.push_back(temp_gcs_update);
 					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 				}

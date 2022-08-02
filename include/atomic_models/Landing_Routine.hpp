@@ -20,6 +20,7 @@
 // Message structures
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "enum_string_conversion.hpp"
@@ -51,7 +52,7 @@ public:
 		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
-		struct o_update_gcs : public out_port<string> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -157,7 +158,7 @@ public:
 		vector<bool> bag_port_out;
 		vector<message_fcc_command_t> fcc_messages;
 		vector<message_boss_mission_update_t> boss_messages;
-		vector<string> gcs_messages;
+		vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::REQUEST_LAND: 
@@ -166,7 +167,9 @@ public:
 					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
 					message_boss_mission_update_t temp_boss_update = message_boss_mission_update_t();
 					strcpy(temp_boss_update.description, "LAND");
-					string temp_gcs_update = "Landing";
+					message_update_gcs_t temp_gcs_update;
+					temp_gcs_update.text = "Landing";
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss_update);
@@ -180,7 +183,9 @@ public:
 				break;
 			case States::NOTIFY_LANDED:
 				{
-					string temp_gcs_update = "Just landed!";
+					message_update_gcs_t temp_gcs_update;
+					temp_gcs_update.text = "Just landed!";
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 					gcs_messages.push_back(temp_gcs_update);
 					bag_port_out.push_back(true);
 					get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = bag_port_out;

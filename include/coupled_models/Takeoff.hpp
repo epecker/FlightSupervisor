@@ -29,6 +29,7 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 //Atomic model headers
 #include "atomic_models/Mission_Initialization.hpp"
@@ -61,7 +62,7 @@ struct Takeoff_defs {
 	struct o_request_aircraft_state : public out_port<bool> {};
 	struct o_start_mission : public out_port<bool> {};
 	struct o_start_monitoring : public out_port<bool> {};
-	struct o_update_gcs : public out_port<std::string> {};
+	struct o_update_gcs : public out_port<message_update_gcs_t> {};
 };
 
 class Takeoff {

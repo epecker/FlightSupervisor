@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 
-enum class Mav_Severities_E {
+enum Mav_Severities_E {
 	MAV_SEVERITY_ALERT = 1,
 	MAV_SEVERITY_INFO = 6
 };

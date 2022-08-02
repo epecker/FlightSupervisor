@@ -32,6 +32,7 @@
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 //Atomic model headers
 #include "atomic_models/LP_Manager.hpp"
@@ -78,7 +79,7 @@ public:
 		struct o_notify_pilot : public out_port<bool> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
-		struct o_update_gcs : public out_port<string> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
 	/**

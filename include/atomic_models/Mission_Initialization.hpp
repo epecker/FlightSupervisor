@@ -18,6 +18,7 @@
 
 #include "message_structures/message_aircraft_state_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -34,7 +35,7 @@ struct Mission_Initialization_defs {
 	struct o_request_aircraft_state : public out_port<bool> {};
 	struct o_start_mission : public out_port<bool> {};
 	struct o_start_monitoring : public out_port<bool> {};
-	struct o_update_gcs : public out_port<std::string> {};
+	struct o_update_gcs : public out_port<message_update_gcs_t> {};
 };
 
 template<typename TIME>
@@ -180,40 +181,58 @@ public:
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bool_port_out;
-		vector<std::string> string_port_out;
+		vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::CHECK_AUTONOMY:
-				if (autonomy_armed) {
-					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization_defs::o_request_perception_status>(bags) = bool_port_out;
+				{
+					if (autonomy_armed) {
+						bool_port_out.push_back(true);
+						get_messages<typename Mission_Initialization_defs::o_request_perception_status>(bags) = bool_port_out;
+					}
 				}
 				break;
 			case States::OUTPUT_PERCEPTION_STATUS:
-				if (perception_healthy) {
-					string_port_out.emplace_back("The perceptions system is ready for operation!");
-				} else {
-					string_port_out.emplace_back("The perception system is not operational!");
+				{
+					message_update_gcs_t temp_gcs_update;
+					if (perception_healthy) {
+						temp_gcs_update.text = "The perceptions system is ready for operation!";
+					} else {
+						temp_gcs_update.text = "The perception system is not operational!";
+					}
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+					gcs_messages.emplace_back(temp_gcs_update);
+					get_messages<typename Mission_Initialization_defs::o_update_gcs>(bags) = gcs_messages;
 				}
-				get_messages<typename Mission_Initialization_defs::o_update_gcs>(bags) = string_port_out;
 				break;
 			case States::REQUEST_AIRCRAFT_STATE:
-				bool_port_out.push_back(true);
-				get_messages<typename Mission_Initialization_defs::o_request_aircraft_state>(bags) = bool_port_out;
+				{
+					bool_port_out.push_back(true);
+					get_messages<typename Mission_Initialization_defs::o_request_aircraft_state>(bags) = bool_port_out;
+				}
 				break;
 			case States::OUTPUT_TAKEOFF_POSITION:
-				if (aircraft_height > 10.0) {
-					string_port_out.emplace_back("Starting Mission in air!");
-					get_messages<typename Mission_Initialization_defs::o_update_gcs>(bags) = string_port_out;
+				{
+					if (aircraft_height > 10.0) {
+						message_update_gcs_t temp_gcs_update;
+						temp_gcs_update.text = "Starting Mission in air!";
+						temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+						gcs_messages.emplace_back(temp_gcs_update);
+						get_messages<typename Mission_Initialization_defs::o_update_gcs>(bags) = gcs_messages;
+					}
 				}
 				break;
 			case States::REQUIRE_MONITORING:
-				bool_port_out.push_back(true);
-				get_messages<typename Mission_Initialization_defs::o_start_monitoring>(bags) = bool_port_out;
+				{
+					bool_port_out.push_back(true);
+					get_messages<typename Mission_Initialization_defs::o_start_monitoring>(bags) = bool_port_out;
+				}
 				break;
 			case States::START_MISSION:
-				bool_port_out.push_back(true);
-				get_messages<typename Mission_Initialization_defs::o_start_mission>(bags) = bool_port_out;
+				{
+					bool_port_out.push_back(true);
+					get_messages<typename Mission_Initialization_defs::o_start_mission>(bags) = bool_port_out;
+				}
 				break;
 			default:
 				break;
