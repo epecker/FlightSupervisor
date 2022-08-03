@@ -17,6 +17,7 @@
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
 #include "message_structures/message_update_gcs_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
 
 using namespace cadmium::basic_models::pdevs;
 
@@ -44,6 +45,14 @@ class Input_Reader_Double : public iestream_input<double, T> {
 public:
 	Input_Reader_Double() = default;
 	Input_Reader_Double(const char* file_path) : iestream_input<double, T>(file_path) {};
+};
+
+// FCC Command
+template<typename T>
+class Input_Reader_Boss_Mission_Update : public iestream_input<message_boss_mission_update_t, T> {
+public:
+	Input_Reader_Boss_Mission_Update() = default;
+	Input_Reader_Boss_Mission_Update(const char* file_path) : iestream_input<message_boss_mission_update_t, T>(file_path) {};
 };
 
 // FCC Command

@@ -25,6 +25,7 @@ add_executable(td_handle_waypoint				"td_handle_waypoint.cpp" 				"${MavNRC_GEO}
 add_executable(td_supervisor					"td_supervisor.cpp" 					"${MavNRC_GEO}")
 add_executable(td_packet_builder_fcc			"td_packet_builder_fcc.cpp" 			"${MavNRC_GEO}")
 add_executable(td_packet_builder_gcs			"td_packet_builder_gcs.cpp" 			"${MavNRC_GEO}")
+add_executable(td_packet_builder_boss			"td_packet_builder_boss.cpp" 			"${MavNRC_GEO}")
 
 target_include_directories(td_handover_control 				PUBLIC ${includes_list})
 target_include_directories(td_landing_routine 				PUBLIC ${includes_list})
@@ -54,6 +55,8 @@ target_include_directories(td_supervisor_udp_input         	PUBLIC ${includes_li
 target_include_directories(td_supervisor		         	PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_fcc		    PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_gcs		    PUBLIC ${includes_list})
+target_include_directories(td_packet_builder_boss		    PUBLIC ${includes_list})
+
 
 target_compile_definitions(td_blocking_input 				PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_udp_output 					PUBLIC RT_LINUX RT_DEVS)
@@ -94,3 +97,4 @@ target_link_libraries(td_handle_waypoint	 			${Boost_LIBRARIES})
 target_link_libraries(td_supervisor			 			${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_fcc			    ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_gcs 		    ${Boost_LIBRARIES})
+target_link_libraries(td_packet_builder_boss 		    ${Boost_LIBRARIES})
