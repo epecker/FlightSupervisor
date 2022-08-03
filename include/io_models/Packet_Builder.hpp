@@ -21,7 +21,18 @@
 #include "component_macros.h"
 #include "Constants.hpp"
 
-template<typename TYPE, typename TIME>
+
+// Temp
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+int qGcsSockFd;
+
+template<typename TYPE, uint32_t SIZE, typename TIME>
 class Packet_Builder {
 public:
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
@@ -32,7 +43,7 @@ public:
 	// Input and output port definitions
 	struct defs {
 		struct i_data : public cadmium::in_port<TYPE> {};
-		struct o_packet: public cadmium::out_port<std::array<char, sizeof(TYPE)>> {};
+		struct o_packet: public cadmium::out_port<std::array<char, SIZE>> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -57,6 +68,9 @@ public:
 	}
 
 	explicit Packet_Builder(States initial_state) {
+		qGcsSockFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP); // Global socket file descriptor for coms with qgc
+		if (qGcsSockFd < 0)
+			assert(false && "Failed to open socket");
 		state.current_state = initial_state;
 		data = TYPE();
 		packet_sequence = 0;
@@ -97,7 +111,7 @@ public:
 
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		vector<std::array<char, sizeof(data)>> packets;
+		vector<std::array<char, SIZE>> packets;
 
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:
@@ -126,7 +140,7 @@ public:
 	}
 
 	// Used for logging outputs the state's name. (required for the simulator)
-	friend ostringstream& operator<<(ostringstream& os, const typename Packet_Builder<TYPE, TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename Packet_Builder<TYPE, SIZE, TIME>::state_type& i) {
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
@@ -135,24 +149,130 @@ protected:
 	TYPE data;
 	uint8_t packet_sequence;
 
-	virtual std::array<char, sizeof(data)> generate_packet() const {
+	virtual std::array<char, SIZE> generate_packet() const {
 		std::string e = "The type \"" + std::string(typeid(TYPE).name()) + "\" is not a supported type";
 		assert(false && e.c_str());
 	}
 };
 
+/**
+ * \brief Packet_Builder_FCC creates packets for use in output models
+ * \details Packet_Builder_FCC simply copies the bytes of a structure to an array.
+ */
 template<typename TIME>
-class Packet_Builder_FCC : public Packet_Builder<message_fcc_command_t, TIME> {
+class Packet_Builder_FCC : public Packet_Builder<message_fcc_command_t, sizeof(message_fcc_command_t), TIME> {
 public:
 	using TYPE = message_fcc_command_t;
 
 	Packet_Builder_FCC() = default;
-	explicit Packet_Builder_FCC(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
+	explicit Packet_Builder_FCC(typename Packet_Builder<TYPE, sizeof(TYPE), TIME>::States initial_state) : Packet_Builder<TYPE, sizeof(TYPE), TIME>(initial_state){};
 
 private:
 	[[nodiscard]] std::array<char, sizeof(TYPE)> generate_packet() const {
 		std::array<char, sizeof(TYPE)> packet = {};
 		std::memcpy(packet.data(), &this->data, sizeof(TYPE));
+		return packet;
+	}
+};
+
+/**
+ * \brief Packet_Builder_GCS creates packets for use in output models
+ * \details Packet_Builder_GCS creates packets in the same style as mavlink.
+ * 			This allows the packets to be sent systems using the mavlink protocol.
+ */
+template<typename TIME>
+class Packet_Builder_GCS : public Packet_Builder<message_update_gcs_t, MAVLINK_PACKET_SIZE, TIME> {
+public:
+	static const int SIZE = MAVLINK_PACKET_SIZE;
+	using TYPE = message_update_gcs_t;
+
+	Packet_Builder_GCS() = default;
+	explicit Packet_Builder_GCS(typename Packet_Builder<TYPE, SIZE, TIME>::States initial_state) : Packet_Builder<TYPE, SIZE, TIME>(initial_state){};
+
+private:
+	struct mavlink_message_t {
+		uint8_t magic;
+		uint8_t len;
+		uint8_t incompat_flags;
+		uint8_t compat_flags;
+		uint8_t seq;
+		uint8_t sysid;
+		uint8_t compid;
+		uint32_t msgid:24;
+		uint64_t payload64[(MAVLINK_MAX_PAYLOAD_LEN+MAVLINK_NUM_CHECKSUM_BYTES+7)/8];
+	};
+
+	struct mavlink_statustext_t {
+		uint8_t severity;
+		char text[50];
+		uint16_t id;
+		uint8_t chunk_seq;
+	};
+
+	void crc_accumulate_CUSTOM(uint8_t data, uint16_t *crcAccum) const
+	{
+		uint8_t tmp;
+
+		tmp = data ^ (uint8_t)(*crcAccum &0xff);
+		tmp ^= (tmp<<4);
+		*crcAccum = (*crcAccum>>8) ^ (tmp<<8) ^ (tmp <<3) ^ (tmp>>4);
+	}
+
+	void crc(uint16_t *crcAccum, const uint8_t *header, uint16_t header_length, const uint8_t *buffer, uint16_t buffer_length, const uint8_t static_crc) const
+	{
+		while (header_length--) {
+			crc_accumulate_CUSTOM(*header++, crcAccum);
+		}
+		while (buffer_length--) {
+			crc_accumulate_CUSTOM(*buffer++, crcAccum);
+		}
+		crc_accumulate_CUSTOM(static_crc, crcAccum);
+	}
+
+	void create_packet(uint8_t *buf, mavlink_message_t *msg) const
+	{
+		buf[0] = msg->magic;
+		buf[1] = msg->len;
+		buf[2] = msg->incompat_flags;
+		buf[3] = msg->compat_flags;
+		buf[4] = msg->seq;
+		buf[5] = msg->sysid;
+		buf[6] = msg->compid;
+		buf[7] = msg->msgid & 0xFF;
+		buf[8] = (msg->msgid >> 8) & 0xFF;
+		buf[9] = (msg->msgid >> 16) & 0xFF;
+		memcpy(&buf[10], (const char *)&msg->payload64, msg->len);
+
+		uint16_t checksum = 0xffff;
+		crc(&checksum, &buf[1], MAVLINK_CORE_HEADER_LEN, (const uint8_t *)&msg->payload64, msg->len, MAVLINK_MSG_ID_STATUSTEXT_CRC);
+		buf[MAVLINK_CORE_HEADER_LEN + msg->len + 1] = (uint8_t)(checksum & 0xFF);
+		buf[MAVLINK_CORE_HEADER_LEN + msg->len + 2] = (uint8_t)(checksum >> 8);
+	}
+
+	void create_message(mavlink_message_t * msg) const {
+		mavlink_statustext_t status_text{};
+		status_text.severity = this->data.severity;
+		status_text.id = 0;
+		status_text.chunk_seq = 0;
+		memcpy(status_text.text, this->data.text.c_str(), sizeof(char)*50);
+		memcpy((char *)msg->payload64, &status_text, MAVLINK_MSG_ID_STATUSTEXT_LEN);
+		msg->msgid = MAVLINK_MSG_ID_STATUSTEXT;
+		msg->magic = MAVLINK_STX;
+		msg->len = strlen((char *)msg->payload64);
+		msg->sysid = MY_MAV_SYS_ID;
+		msg->compid = MY_MAV_COMP_ID;
+		msg->incompat_flags = 0;
+		msg->compat_flags = 0;
+		msg->seq = this->packet_sequence;
+	}
+
+	[[nodiscard]] std::array<char, SIZE> generate_packet() const {
+		std::array<char, SIZE> packet{};
+		mavlink_message_t msg{};
+
+		create_message(&msg);
+		create_packet((uint8_t*)packet.data(), &msg);
+		
 		return packet;
 	}
 };
