@@ -16,6 +16,7 @@
 
 #include "message_structures/message_update_gcs_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -138,6 +139,26 @@ private:
 	virtual std::array<char, SIZE> generate_packet() const {
 		std::string e = "The type \"" + std::string(typeid(TYPE).name()) + "\" is not a supported type";
 		assert(false && e.c_str());
+	}
+};
+
+/**
+ * \brief Packet_Builder_Boss creates packets for use in output models
+ * \details Packet_Builder_Boss simply copies the bytes of a structure to an array.
+ */
+template<typename TIME>
+class Packet_Builder_Boss : public Packet_Builder<message_boss_mission_update_t, sizeof(message_boss_mission_update_t), TIME> {
+public:
+	using TYPE = message_boss_mission_update_t;
+
+	Packet_Builder_Boss() = default;
+	explicit Packet_Builder_Boss(typename Packet_Builder<TYPE, sizeof(TYPE), TIME>::States initial_state) : Packet_Builder<TYPE, sizeof(TYPE), TIME>(initial_state){};
+
+private:
+	[[nodiscard]] std::array<char, sizeof(TYPE)> generate_packet() const {
+		std::array<char, sizeof(TYPE)> packet = {};
+		std::memcpy(packet.data(), &this->data, sizeof(TYPE));
+		return packet;
 	}
 };
 
