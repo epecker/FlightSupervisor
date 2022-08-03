@@ -18,19 +18,7 @@
 #include "message_structures/message_fcc_command_t.hpp"
 
 #include "enum_string_conversion.hpp"
-#include "component_macros.h"
 #include "Constants.hpp"
-
-
-// Temp
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-int qGcsSockFd;
 
 template<typename TYPE, uint32_t SIZE, typename TIME>
 class Packet_Builder {
@@ -68,9 +56,6 @@ public:
 	}
 
 	explicit Packet_Builder(States initial_state) {
-		qGcsSockFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP); // Global socket file descriptor for coms with qgc
-		if (qGcsSockFd < 0)
-			assert(false && "Failed to open socket");
 		state.current_state = initial_state;
 		data = TYPE();
 		packet_sequence = 0;
@@ -149,6 +134,7 @@ protected:
 	TYPE data;
 	uint8_t packet_sequence;
 
+private:
 	virtual std::array<char, SIZE> generate_packet() const {
 		std::string e = "The type \"" + std::string(typeid(TYPE).name()) + "\" is not a supported type";
 		assert(false && e.c_str());
