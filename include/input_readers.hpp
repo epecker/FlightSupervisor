@@ -16,6 +16,7 @@
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 using namespace cadmium::basic_models::pdevs;
 
@@ -75,6 +76,14 @@ class Input_Reader_Start_Supervisor : public iestream_input<message_start_superv
 public:
 	Input_Reader_Start_Supervisor() = default;
 	Input_Reader_Start_Supervisor(const char* file_path) : iestream_input<message_start_supervisor_t, T>(file_path) {};
+};
+
+// FCC Command
+template<typename T>
+class Input_Reader_Update_GCS : public iestream_input<message_update_gcs_t, T> {
+public:
+	Input_Reader_Update_GCS() = default;
+	Input_Reader_Update_GCS(const char* file_path) : iestream_input<message_update_gcs_t, T>(file_path) {};
 };
 
 #endif // INPUT_READERS_HPP
