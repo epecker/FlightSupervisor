@@ -8,35 +8,21 @@
 #ifndef UDP_OUTPUT_HPP
 #define UDP_OUTPUT_HPP
 
-// System libraries
-#include <array>
-#include <iostream>
-#include <assert.h>
-#include <mutex>
-#include <string>
-#include <chrono>
-
 #include <boost/asio.hpp>
 
 // RT-Cadmium
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
 
 using namespace cadmium;
-using namespace std;
 
 // Atomic model
-template<typename MSG, typename TIME>
+template<typename TIME>
 class UDP_Output {
-
-// Protected members.
 protected:
-	// Networking members
     boost::asio::ip::udp::endpoint network_endpoint;
     
 public:
@@ -49,28 +35,26 @@ public:
 
 	// Input and output port definitions
 	struct defs{
-	    struct i_message : public in_port<MSG> { };
+	    struct i_message : public in_port<vector<char>> { };
 	};
 
     // Default constructor
     UDP_Output() {
         state.current_state = States::IDLE;
-        unsigned short port_num = (unsigned short) MAVLINK_OVER_UDP_PORT;
-        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), port_num);
+        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), MAVLINK_OVER_UDP_PORT);
     }
 
     // Constructor with polling rate parameter
-    UDP_Output(string address, string port) {
+    UDP_Output(const string& address, unsigned short port) {
         state.current_state = States::IDLE;
-        unsigned short port_num = (unsigned short) strtoul(port.c_str(), NULL, 0);
-        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port_num);
+        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port);
     }
 
 	// This is used to track the state of the atomic model. 
 	// (required for the simulator)
     struct state_type{
         States current_state;
-		std::vector<MSG> messages;
+		std::vector<vector<char>> messages;
     };
     state_type state;
 
@@ -81,7 +65,7 @@ public:
     using output_ports=std::tuple<>;
 
 	// Internal transitions
-	// These are transitions occuring from internal inputs
+	// These are transitions occurring from internal inputs
 	// (required for the simulator)
     void internal_transition() {
         if (state.current_state == States::SENDING) {
@@ -91,42 +75,31 @@ public:
     }
 
 	// External transitions
-	// These are transitions occuring from external inputs
+	// These are transitions occurring from external inputs
 	// (required for the simulator)
     void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
 		if (get_messages<typename UDP_Output::defs::i_message>(mbs).size() >= 1){
 			state.current_state = States::SENDING;
-			for (MSG m : get_messages<typename UDP_Output::defs::i_message>(mbs)) {
+			for (vector<char> m : get_messages<typename UDP_Output::defs::i_message>(mbs)) {
 				state.messages.push_back(m);
 			}
 		}
     }
 
 	// Confluence transition
-	// Used to call set call precedence
-    void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	// Used to call set call precedent
+    void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
         internal_transition();
         external_transition(TIME(), std::move(mbs));
     }
 
     // Output function
-    typename make_message_bags<output_ports>::type output() const {
+    [[nodiscard]] typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		boost::asio::io_service io_service;
-		boost::asio::ip::udp::socket socket(io_service);
-		boost::system::error_code err;
+
         switch(state.current_state) {
             case States::SENDING:
-				for (MSG m : state.messages) {
-					char data[sizeof(MSG)];
-					memcpy(data, &m, sizeof(data));
-					socket.open(boost::asio::ip::udp::v4());
-					socket.send_to(boost::asio::buffer(data, sizeof(data)), network_endpoint, 0, err);
-					socket.close();
-					if (err) {
-						std::cout << "[UDP Output] (ERROR) Error sending packet using UDP Output model: " << err.message() << std::endl;
-					}
-				} 
+                send_packets();
 		        break;
             default:
                 break;
@@ -140,14 +113,32 @@ public:
         switch (state.current_state) {
             case States::IDLE:
                 return std::numeric_limits<TIME>::infinity();
-            default:
+            case States::SENDING:
                 return TIME(TA_ZERO);
+            default:
+                assert(false && "Unhandled time advance in UDP_Output.hpp");
         }
     }
 
     friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Output::state_type& i) {
         os << "State: " << enumToString(i.current_state) + string("\n");
         return os;
+    }
+
+private:
+    void send_packets() const {
+        boost::asio::io_service io_service;
+        boost::asio::ip::udp::socket socket(io_service);
+        boost::system::error_code err;
+
+        for (vector<char> m : state.messages) {
+            socket.open(boost::asio::ip::udp::v4());
+            socket.send_to(boost::asio::buffer(m.data(), m.size()), network_endpoint, 0, err);
+            socket.close();
+            if (err) {
+                std::cout << "[UDP Output] (ERROR) Error sending packet using UDP Output model: " << err.message() << std::endl;
+            }
+        }
     }
 };
 
