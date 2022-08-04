@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
 		string input_dir = i_base_dir + to_string(test_set_enumeration);
 		string input_file_initial_state = input_dir + string("/initial_state.txt");
 		string input_file_aircraft_state = input_dir + string("/aircraft_state.txt");
+		string input_file_fcc_command_land = input_dir + string("/fcc_command_land.txt");
 		string input_file_lp_recv = input_dir + string("/lp_recv.txt");
 		string input_file_plp_ach = input_dir + string("/plp_ach.txt");
 		string input_file_pilot_takeover = input_dir + string("/pilot_takeover.txt");
@@ -62,6 +63,7 @@ int main(int argc, char* argv[]) {
 
 		if (!filesystem::exists(input_file_initial_state) ||
 			!filesystem::exists(input_file_aircraft_state) ||
+			!filesystem::exists(input_file_fcc_command_land) ||
 			!filesystem::exists(input_file_lp_recv) ||
 			!filesystem::exists(input_file_plp_ach) ||
 			!filesystem::exists(input_file_pilot_takeover) ||
@@ -97,6 +99,8 @@ int main(int argc, char* argv[]) {
 		// One for each input
 		shared_ptr<dynamic::modeling::model> ir_aircraft_state =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
+		shared_ptr<dynamic::modeling::model> ir_fcc_command_land =
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_fcc_command_land", move(input_file_fcc_command_land.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_lp_recv =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_recv", move(input_file_lp_recv.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_plp_ach =
@@ -112,6 +116,7 @@ int main(int argc, char* argv[]) {
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 			ir_aircraft_state,
+			ir_fcc_command_land,
 			ir_lp_recv,
 			ir_plp_ach,
 			ir_pilot_takeover,
@@ -132,6 +137,7 @@ int main(int argc, char* argv[]) {
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,LP_Manager<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "lp_manager"),
+			dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out,LP_Manager<TIME>::defs::i_fcc_command_land>("ir_fcc_command_land", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
