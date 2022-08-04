@@ -22,24 +22,14 @@
 
 // Data structures that are used in message transport
 #include "message_structures/message_landing_point_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 // Macros
 #include "Constants.hpp"
 
 using namespace cadmium;
 using namespace std;
-
-// Input and output port definition
-struct Reposition_Timer_defs {
-	struct i_control_yielded : public in_port<bool> {};
-	struct i_lp_crit_met : public in_port<message_landing_point_t> {};
-	struct i_lp_new : public in_port<message_landing_point_t> {};
-	struct i_pilot_takeover : public in_port<bool> {};
-
-	struct o_land : public out_port<bool> {};
-	struct o_pilot_handover : public out_port<message_landing_point_t> {};
-	struct o_request_reposition : public out_port<message_landing_point_t> {};
-};
 
 // Atomic Model
 template<typename TIME> class Reposition_Timer {
@@ -56,19 +46,35 @@ public:
 		(PILOT_CONTROL)
 	);
 
+	// Input and output port definition
+	struct defs {
+		struct i_control_yielded : public in_port<bool> {};
+		struct i_lp_crit_met : public in_port<message_landing_point_t> {};
+		struct i_lp_new : public in_port<message_landing_point_t> {};
+		struct i_pilot_takeover : public in_port<bool> {};
+
+		struct o_land : public out_port<bool> {};
+		struct o_pilot_handover : public out_port<message_landing_point_t> {};
+		struct o_request_reposition : public out_port<message_landing_point_t> {};
+		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+	};
+
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Reposition_Timer_defs::i_control_yielded,
-		typename Reposition_Timer_defs::i_lp_crit_met,
-		typename Reposition_Timer_defs::i_lp_new,
-		typename Reposition_Timer_defs::i_pilot_takeover
+		typename Reposition_Timer::defs::i_control_yielded,
+		typename Reposition_Timer::defs::i_lp_crit_met,
+		typename Reposition_Timer::defs::i_lp_new,
+		typename Reposition_Timer::defs::i_pilot_takeover
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Reposition_Timer_defs::o_land,
-		typename Reposition_Timer_defs::o_pilot_handover,
-		typename Reposition_Timer_defs::o_request_reposition
+		typename Reposition_Timer::defs::o_land,
+		typename Reposition_Timer::defs::o_pilot_handover,
+		typename Reposition_Timer::defs::o_request_reposition,
+		typename Reposition_Timer::defs::o_update_boss,
+		typename Reposition_Timer::defs::o_update_gcs
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -131,26 +137,26 @@ public:
 		bool received_lp_crit_met;
 		bool received_pilot_takeover;
 
-		received_pilot_takeover = get_messages<typename Reposition_Timer_defs::i_pilot_takeover>(mbs).size() >= 1;
+		received_pilot_takeover = get_messages<typename Reposition_Timer::defs::i_pilot_takeover>(mbs).size() >= 1;
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
-					received_lp_new = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs).size() >= 1;
+					received_lp_new = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
 						landing_point = new_landing_points[0];
 						state.current_state = States::NEW_LP_REPO;
 					}
 					break;
 				case States::LP_REPO:
-					received_lp_new = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs).size() >= 1;
-					received_lp_crit_met = get_messages<typename Reposition_Timer_defs::i_lp_crit_met>(mbs).size() >= 1;
+					received_lp_new = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).size() >= 1;
+					received_lp_crit_met = get_messages<typename Reposition_Timer::defs::i_lp_crit_met>(mbs).size() >= 1;
 
 					if (received_lp_new) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer_defs::i_lp_new>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::NEW_LP_REPO;
 					} else if (received_lp_crit_met) {
@@ -158,7 +164,7 @@ public:
 					}
 					break;
 				case States::HANDOVER_CTRL:
-					received_control_yielded = get_messages<typename Reposition_Timer_defs::i_control_yielded>(mbs).size() >= 1;
+					received_control_yielded = get_messages<typename Reposition_Timer::defs::i_control_yielded>(mbs).size() >= 1;
 
 					if (received_control_yielded) {
 						state.current_state = States::PILOT_CONTROL;
@@ -182,19 +188,32 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
 		vector<message_landing_point_t> bag_port_lp_out;
+		vector<message_boss_mission_update_t> boss_messages;
+		vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::REQUEST_LAND:
 				bag_port_out.push_back(LAND_OUTPUT);
-				get_messages<typename Reposition_Timer_defs::o_land>(bags) = bag_port_out;
+				get_messages<typename Reposition_Timer::defs::o_land>(bags) = bag_port_out;
 				break;
 			case States::LP_REPO:
-				bag_port_lp_out.push_back(landing_point);
-				get_messages<typename Reposition_Timer_defs::o_pilot_handover>(bags) = bag_port_lp_out;
+				{
+					message_boss_mission_update_t temp_boss;
+					strcpy(temp_boss.description, "MAN CTRL");
+					message_update_gcs_t temp_gcs;
+					temp_gcs.text = "Repo timer expired, hovering over the last LP";
+					temp_gcs.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+					boss_messages.push_back(temp_boss);
+					gcs_messages.push_back(temp_gcs);
+					bag_port_lp_out.push_back(landing_point);
+					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
+					get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags) = gcs_messages;
+					get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags) = bag_port_lp_out;
+				}
 				break;
 			case States::NEW_LP_REPO:
 				bag_port_lp_out.push_back(landing_point);
-				get_messages<typename Reposition_Timer_defs::o_request_reposition>(bags) = bag_port_lp_out;
+				get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags) = bag_port_lp_out;
 				break;
 			default:
 				break;

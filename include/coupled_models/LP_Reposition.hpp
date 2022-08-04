@@ -123,9 +123,9 @@ public:
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Command_Reposition_defs::i_pilot_takeover>("command_reposition"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_aircraft_state, Command_Reposition_defs::i_aircraft_state>("command_reposition"),
 
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Reposition_Timer_defs::i_pilot_takeover>("reposition_timer"),
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_control_yielded, Reposition_Timer_defs::i_control_yielded>("reposition_timer"),
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_lp_new, Reposition_Timer_defs::i_lp_new>("reposition_timer")
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Reposition_Timer<TIME>::defs::i_pilot_takeover>("reposition_timer"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_control_yielded, Reposition_Timer<TIME>::defs::i_control_yielded>("reposition_timer"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_lp_new, Reposition_Timer<TIME>::defs::i_lp_new>("reposition_timer")
 	};
 
 	//Define the internal to external couplings for the Landing Point Reposition model.
@@ -140,16 +140,18 @@ public:
 		dynamic::translate::make_EOC<Command_Reposition_defs::o_fcc_command_velocity, LP_Reposition::defs::o_fcc_command_velocity>("command_reposition"),
 		dynamic::translate::make_EOC<Command_Reposition_defs::o_request_aircraft_state, LP_Reposition::defs::o_request_aircraft_state>("command_reposition"),
 
-		dynamic::translate::make_EOC<Reposition_Timer_defs::o_pilot_handover, LP_Reposition::defs::o_pilot_handover>("reposition_timer")
+		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_pilot_handover, LP_Reposition::defs::o_pilot_handover>("reposition_timer"),
+		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("reposition_timer"),
+		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("reposition_timer")
 	};
 
 	//Define the internal to internal couplings for the Landing Point Reposition model.
 	dynamic::modeling::ICs ics = {
-		dynamic::translate::make_IC<Command_Reposition_defs::o_lp_criteria_met, Reposition_Timer_defs::i_lp_crit_met>("command_reposition", "reposition_timer"),
+		dynamic::translate::make_IC<Command_Reposition_defs::o_lp_criteria_met, Reposition_Timer<TIME>::defs::i_lp_crit_met>("command_reposition", "reposition_timer"),
 
-		dynamic::translate::make_IC<Reposition_Timer_defs::o_land, Landing_Routine<TIME>::defs::i_land>("reposition_timer", "landing_routine"),
-		dynamic::translate::make_IC<Reposition_Timer_defs::o_pilot_handover, Command_Reposition_defs::i_pilot_handover>("reposition_timer", "command_reposition"),
-		dynamic::translate::make_IC<Reposition_Timer_defs::o_request_reposition, Command_Reposition_defs::i_request_reposition>("reposition_timer", "command_reposition")
+		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_land, Landing_Routine<TIME>::defs::i_land>("reposition_timer", "landing_routine"),
+		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_pilot_handover, Command_Reposition_defs::i_pilot_handover>("reposition_timer", "command_reposition"),
+		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_request_reposition, Command_Reposition_defs::i_request_reposition>("reposition_timer", "command_reposition")
 	};
 };
 

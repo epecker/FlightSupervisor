@@ -27,11 +27,6 @@ using namespace std;
 ofstream out_messages;
 ofstream out_state;
 
-// Model output ports
-struct o_pilot_handover : public out_port<message_landing_point_t> {};
-struct o_land : public out_port<bool> {};
-struct o_request_reposition : public out_port<message_landing_point_t> {};
-
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
@@ -104,27 +99,19 @@ int main(int argc, char* argv[]) {
 
 		dynamic::modeling::Ports iports_TestDriver = {	};
 
-		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(o_pilot_handover),
-			typeid(o_land),
-			typeid(o_request_reposition)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Reposition_Timer_defs::o_pilot_handover,o_pilot_handover>("reposition_timer"),
-			dynamic::translate::make_EOC<Reposition_Timer_defs::o_land,o_land>("reposition_timer"),
-			dynamic::translate::make_EOC<Reposition_Timer_defs::o_request_reposition,o_request_reposition>("reposition_timer")
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Reposition_Timer_defs::i_lp_new>("ir_lp_new", "reposition_timer"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_pilot_takeover>("ir_pilot_takeover", "reposition_timer"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Reposition_Timer_defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer_defs::i_control_yielded>("ir_control_yielded", "reposition_timer")
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Reposition_Timer<TIME>::defs::i_lp_new>("ir_lp_new", "reposition_timer"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "reposition_timer"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Reposition_Timer<TIME>::defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer<TIME>::defs::i_control_yielded>("ir_control_yielded", "reposition_timer")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
