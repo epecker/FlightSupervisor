@@ -343,8 +343,20 @@ public:
 				break;
 
 			case States::LZE_SCAN:
-				plp_messages.push_back(plp);
-				get_messages<typename LP_Manager<TIME>::defs::o_pilot_handover>(bags) = plp_messages;
+				{
+					message_update_gcs_t temp_gcs_update;
+					temp_gcs_update.text = "Landing point not found. Hovering over PLP";
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
+					strcpy(temp_boss.description, "PLP rep");
+					boss_messages.push_back(temp_boss);
+					gcs_messages.push_back(temp_gcs_update);
+					plp_messages.push_back(plp);
+					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_pilot_handover>(bags) = plp_messages;
+
+				}
 				break;
 
 			case States::NOTIFY_LP:
