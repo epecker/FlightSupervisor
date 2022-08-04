@@ -1,32 +1,24 @@
 //C++ headers
-#include <chrono>
-#include <algorithm>
 #include <string>
-#include <iostream>
 #include <filesystem>
 
 //Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
-
-//Real-Time Headers
-#include <cadmium/basic_model/pdevs/generator.hpp>
-#include <cadmium/modeling/coupling.hpp>
-#include <cadmium/concept/coupled_model_assert.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
 //Messages structures
+#include "message_structures/message_update_gcs_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
 #include "input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
+#include "io_models/Packet_Builder.hpp"
 #include "io_models/UDP_Output.hpp"
 
 using namespace std;
@@ -35,18 +27,7 @@ using namespace cadmium;
 using hclock = std::chrono::high_resolution_clock;
 using TIME = NDTime;
 
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
-ofstream out_info;
-template<typename T>
-class UDP_Output_LP : public UDP_Output<message_landing_point_t, T> {
-public:
-    UDP_Output_LP() = default;
-    UDP_Output_LP(string address, string port) : UDP_Output<message_landing_point_t, T>(address, port){}
-};
-
-int main(int argc, char* argv[]) {
+int main() {
 	int test_set_enumeration = 0;
 
 	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/udp_output/");
@@ -72,34 +53,36 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output_LP, TIME, const char*, const char*>("udp_output", std::move("127.0.0.1"), std::move("23000"));
+		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char*, const unsigned short>("udp_output", "127.0.0.1", 14550);
 
-		// Instantiate the input readers.
+		// Instantiate the input readers.	
 		// One for each input
 		std::shared_ptr<dynamic::modeling::model> ir_message =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", std::move(input_file_in.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Update_GCS, TIME, const char* >("ir_message", input_file_in.c_str());
+		std::shared_ptr<dynamic::modeling::model> packet_builder =
+			dynamic::translate::make_dynamic_atomic_model<Packet_Builder_GCS, TIME>("packet_builder");
 
 		// The models to be included in this coupled model 
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 			udp_output,
-			ir_message
+			ir_message,
+			packet_builder
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output<message_landing_point_t, TIME>::defs::i_message>("ir_message", "udp_output")
+			dynamic::translate::make_IC<iestream_input_defs<message_update_gcs_t>::out, Packet_Builder_GCS<TIME>::defs::i_data>("ir_message", "packet_builder"),
+			dynamic::translate::make_IC<Packet_Builder_GCS<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("packet_builder", "udp_output")
 		};
 
 		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
@@ -107,6 +90,10 @@ int main(int argc, char* argv[]) {
 		);
 
 		/*************** Loggers *******************/
+        static ofstream out_messages;
+        static ofstream out_state;
+        static ofstream out_info;
+
 		out_messages = ofstream(out_messages_file);
 		struct oss_sink_messages {
 			static ostream& sink() {
@@ -138,7 +125,7 @@ int main(int argc, char* argv[]) {
 		auto start = hclock::now(); //to measure simulation execution time
 
 		cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, { TIME("00:00:00:000:000") });
-		r.run_until(TIME("00:00:20:000:000"));
+		r.run_until_passivate();
 
 		auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 		cout << "\nSimulation took: " << elapsed << " seconds" << endl;
@@ -146,7 +133,7 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
-	fflush(NULL);
+	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
 	if (std::system("python3 --version") == 0) {

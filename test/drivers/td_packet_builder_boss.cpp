@@ -19,7 +19,7 @@ using TIME = NDTime;
 
 using namespace cadmium;
 
-struct o_packet : public out_port<std::array<char, sizeof(message_boss_mission_update_t)>> {};
+struct o_packet : public out_port<std::vector<char>> {};
 
 int main() {
 	int test_set_enumeration = 0;

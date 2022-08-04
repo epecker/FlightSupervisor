@@ -21,7 +21,7 @@
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
 
-template<typename TYPE, uint32_t SIZE, typename TIME>
+template<typename TYPE, typename TIME>
 class Packet_Builder {
 public:
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
@@ -32,7 +32,7 @@ public:
 	// Input and output port definitions
 	struct defs {
 		struct i_data : public cadmium::in_port<TYPE> {};
-		struct o_packet: public cadmium::out_port<std::array<char, SIZE>> {};
+    struct o_packet: public cadmium::out_port<std::vector<char>> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -92,17 +92,18 @@ public:
 	// (required for the simulator)
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
-		external_transition(TIME(), move(mbs));
+		external_transition(TIME(), std::move(mbs));
 	}
 
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		vector<std::array<char, SIZE>> packets;
+		std::vector<std::vector<char>> packets;
+        vector<char> v;
 
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:
-				packets.push_back(generate_packet());
-				cadmium::get_messages<typename Packet_Builder::defs::o_packet>(bags) = packets;
+                packets.push_back(generate_packet());
+                cadmium::get_messages<typename Packet_Builder::defs::o_packet>(bags) = packets;
 				break;
 			default:
 				break;
@@ -120,13 +121,13 @@ public:
 				next_internal = TIME(TA_ZERO);
 				break;
 			default:
-				assert(false && "Unhandled time advance");
-		}
+                assert(false && "Unhandled time advance in Packet_Builder.hpp");
+        }
 		return next_internal;
 	}
 
 	// Used for logging outputs the state's name. (required for the simulator)
-	friend ostringstream& operator<<(ostringstream& os, const typename Packet_Builder<TYPE, SIZE, TIME>::state_type& i) {
+	friend ostringstream& operator<<(ostringstream& os, const typename Packet_Builder<TYPE, TIME>::state_type& i) {
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
@@ -136,50 +137,39 @@ protected:
 	uint8_t packet_sequence;
 
 private:
-	virtual std::array<char, SIZE> generate_packet() const {
-		std::string e = "The type \"" + std::string(typeid(TYPE).name()) + "\" is not a supported type";
-		assert(false && e.c_str());
-	}
+    [[nodiscard]] virtual std::vector<char> generate_packet() const {
+        std::vector<char> packet(sizeof(TYPE));
+        std::memcpy(packet.data(), (char *)&this->data, sizeof(TYPE));
+        return packet;
+    }
 };
 
 /**
- * \brief Packet_Builder_Boss creates packets for use in output models
- * \details Packet_Builder_Boss simply copies the bytes of a structure to an array.
+ * \brief Packet_Builder_Structure creates packets for use in output models
+ * \details Packet_Builder_Structure uses the default implementation of
+ *          generate_packet from Packet builder.
  */
 template<typename TIME>
-class Packet_Builder_Boss : public Packet_Builder<message_boss_mission_update_t, sizeof(message_boss_mission_update_t), TIME> {
-public:
+class Packet_Builder_Boss : public Packet_Builder<message_boss_mission_update_t, TIME> {
 	using TYPE = message_boss_mission_update_t;
 
+public:
 	Packet_Builder_Boss() = default;
-	explicit Packet_Builder_Boss(typename Packet_Builder<TYPE, sizeof(TYPE), TIME>::States initial_state) : Packet_Builder<TYPE, sizeof(TYPE), TIME>(initial_state){};
-
-private:
-	[[nodiscard]] std::array<char, sizeof(TYPE)> generate_packet() const {
-		std::array<char, sizeof(TYPE)> packet = {};
-		std::memcpy(packet.data(), &this->data, sizeof(TYPE));
-		return packet;
-	}
+	explicit Packet_Builder_Boss(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
 };
 
 /**
- * \brief Packet_Builder_FCC creates packets for use in output models
- * \details Packet_Builder_FCC simply copies the bytes of a structure to an array.
+ * \brief Packet_Builder_Structure creates packets for use in output models
+ * \details Packet_Builder_Structure uses the default implementation of
+ *          generate_packet from Packet builder.
  */
 template<typename TIME>
-class Packet_Builder_FCC : public Packet_Builder<message_fcc_command_t, sizeof(message_fcc_command_t), TIME> {
+class Packet_Builder_Fcc : public Packet_Builder<message_fcc_command_t, TIME> {
+    using TYPE = message_fcc_command_t;
+
 public:
-	using TYPE = message_fcc_command_t;
-
-	Packet_Builder_FCC() = default;
-	explicit Packet_Builder_FCC(typename Packet_Builder<TYPE, sizeof(TYPE), TIME>::States initial_state) : Packet_Builder<TYPE, sizeof(TYPE), TIME>(initial_state){};
-
-private:
-	[[nodiscard]] std::array<char, sizeof(TYPE)> generate_packet() const {
-		std::array<char, sizeof(TYPE)> packet = {};
-		std::memcpy(packet.data(), &this->data, sizeof(TYPE));
-		return packet;
-	}
+    Packet_Builder_Fcc() = default;
+    explicit Packet_Builder_Fcc(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
 };
 
 /**
@@ -188,13 +178,12 @@ private:
  * 			This allows the packets to be sent systems using the mavlink protocol.
  */
 template<typename TIME>
-class Packet_Builder_GCS : public Packet_Builder<message_update_gcs_t, MAVLINK_PACKET_SIZE, TIME> {
+class Packet_Builder_GCS : public Packet_Builder<message_update_gcs_t, TIME> {
 public:
-	static const int SIZE = MAVLINK_PACKET_SIZE;
 	using TYPE = message_update_gcs_t;
 
 	Packet_Builder_GCS() = default;
-	explicit Packet_Builder_GCS(typename Packet_Builder<TYPE, SIZE, TIME>::States initial_state) : Packet_Builder<TYPE, SIZE, TIME>(initial_state){};
+	explicit Packet_Builder_GCS(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
 
 private:
 	struct mavlink_message_t {
@@ -273,12 +262,12 @@ private:
 		msg->seq = this->packet_sequence;
 	}
 
-	[[nodiscard]] std::array<char, SIZE> generate_packet() const {
-		std::array<char, SIZE> packet{};
+	[[nodiscard]] std::vector<char> generate_packet() const {
 		mavlink_message_t msg{};
-
 		create_message(&msg);
-		create_packet((uint8_t*)packet.data(), &msg);
+
+        std::vector<char> packet(MAVLINK_CORE_HEADER_LEN + msg.len + 3); // 3 = checksum(2 bytes) + magic(1 byte)
+		create_packet((uint8_t *)packet.data(), &msg);
 		
 		return packet;
 	}
