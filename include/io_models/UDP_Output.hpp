@@ -9,6 +9,7 @@
 #define UDP_OUTPUT_HPP
 
 // System libraries
+#include <array>
 #include <iostream>
 #include <assert.h>
 #include <mutex>
@@ -29,22 +30,14 @@
 using namespace cadmium;
 using namespace std;
 
-// Input and output port definitions
-template<typename MSG> struct UDP_Output_defs{
-    struct i_message   : public in_port<MSG> { };
-};
-
 // Atomic model
 template<typename MSG, typename TIME>
 class UDP_Output {
 
-// Private members.
-private:
+// Protected members.
+protected:
 	// Networking members
-	// boost::asio::io_service io_service;
-	// boost::asio::ip::udp::socket socket{ io_service };
     boost::asio::ip::udp::endpoint network_endpoint;
-    MSG message;
     
 public:
 	// Used to keep track of the states
@@ -54,12 +47,16 @@ public:
 		(SENDING)
 	);
 
+	// Input and output port definitions
+	struct defs{
+	    struct i_message : public in_port<MSG> { };
+	};
+
     // Default constructor
     UDP_Output() {
         state.current_state = States::IDLE;
         unsigned short port_num = (unsigned short) MAVLINK_OVER_UDP_PORT;
         network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), port_num);
-		// socket.open(boost::asio::ip::udp::v4());
     }
 
     // Constructor with polling rate parameter
@@ -67,22 +64,18 @@ public:
         state.current_state = States::IDLE;
         unsigned short port_num = (unsigned short) strtoul(port.c_str(), NULL, 0);
         network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port_num);
-		// socket.open(boost::asio::ip::udp::v4());
     }
-
-	~UDP_Output() {
-		// socket.close();
-	}
 
 	// This is used to track the state of the atomic model. 
 	// (required for the simulator)
     struct state_type{
         States current_state;
+		std::vector<MSG> messages;
     };
     state_type state;
 
 	// Create a tuple of input ports (required for the simulator)
-    using input_ports=std::tuple<typename UDP_Output_defs<MSG>::i_message>;
+    using input_ports=std::tuple<typename UDP_Output::defs::i_message>;
  
     // Create a tuple of output ports (required for the simulator)
     using output_ports=std::tuple<>;
@@ -93,6 +86,7 @@ public:
     void internal_transition() {
         if (state.current_state == States::SENDING) {
             state.current_state = States::IDLE;
+			state.messages.clear();
         }
     }
 
@@ -100,13 +94,12 @@ public:
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
     void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-        bool have_message = get_messages<typename UDP_Output_defs<MSG>::i_message>(mbs).size() >= 1;
-        if (state.current_state == States::IDLE) {
-            if (have_message){
-                state.current_state = States::SENDING;
-                message = get_messages<typename UDP_Output_defs<MSG>::i_message>(mbs)[0];
-            }
-        }
+		if (get_messages<typename UDP_Output::defs::i_message>(mbs).size() >= 1){
+			state.current_state = States::SENDING;
+			for (MSG m : get_messages<typename UDP_Output::defs::i_message>(mbs)) {
+				state.messages.push_back(m);
+			}
+		}
     }
 
 	// Confluence transition
@@ -124,14 +117,16 @@ public:
 		boost::system::error_code err;
         switch(state.current_state) {
             case States::SENDING:
-        		char data[sizeof(MSG)];
-                memcpy(data, &message, sizeof(data)); // Convert back to MSG: MSG recv = MSG(); memcpy(recv, data, sizeof(data));
-				socket.open(boost::asio::ip::udp::v4());
-                socket.send_to(boost::asio::buffer(data, sizeof(data)), network_endpoint, 0, err);
-				socket.close();
-				if (err) {
-					std::cout << "[UDP Output] (ERROR) Error sending packet using UDP Output model: " << err.message() << std::endl;
-				}
+				for (MSG m : state.messages) {
+					char data[sizeof(MSG)];
+					memcpy(data, &m, sizeof(data));
+					socket.open(boost::asio::ip::udp::v4());
+					socket.send_to(boost::asio::buffer(data, sizeof(data)), network_endpoint, 0, err);
+					socket.close();
+					if (err) {
+						std::cout << "[UDP Output] (ERROR) Error sending packet using UDP Output model: " << err.message() << std::endl;
+					}
+				} 
 		        break;
             default:
                 break;
@@ -150,7 +145,7 @@ public:
         }
     }
 
-    friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Output<MSG, TIME>::state_type& i) {
+    friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Output::state_type& i) {
         os << "State: " << enumToString(i.current_state) + string("\n");
         return os;
     }

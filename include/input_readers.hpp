@@ -47,6 +47,14 @@ public:
 	Input_Reader_Double(const char* file_path) : iestream_input<double, T>(file_path) {};
 };
 
+// Int
+template<typename T>
+class Input_Reader_Int : public iestream_input<int, T> {
+public:
+	Input_Reader_Int() = default;
+	Input_Reader_Int(const char* file_path) : iestream_input<int, T>(file_path) {};
+};
+
 // FCC Command
 template<typename T>
 class Input_Reader_Boss_Mission_Update : public iestream_input<message_boss_mission_update_t, T> {

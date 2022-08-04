@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output_defs<message_landing_point_t>::i_message>("ir_message", "udp_output"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output<message_landing_point_t, TIME>::defs::i_message>("ir_message", "udp_output"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, UDP_Input_Async_defs<message_landing_point_t>::i_quit>("ir_quit", "udp_input_async")
 		};
 

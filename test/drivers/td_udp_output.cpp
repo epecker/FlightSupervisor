@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output_defs<message_landing_point_t>::i_message>("ir_message", "udp_output")
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, UDP_Output<message_landing_point_t, TIME>::defs::i_message>("ir_message", "udp_output")
 		};
 
 		std::shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<dynamic::modeling::coupled<TIME>>(
