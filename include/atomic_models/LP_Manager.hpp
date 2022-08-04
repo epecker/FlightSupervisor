@@ -366,8 +366,13 @@ public:
 				break;
 
 			case States::LP_APPROACH:
+				message_update_gcs_t temp_gcs_update;
+				temp_gcs_update.text = "LP accept timer expired";
+				temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
+				gcs_messages.push_back(temp_gcs_update);
 				lp_messages.push_back(lp);
 				get_messages<typename LP_Manager<TIME>::defs::o_lp_expired>(bags) = lp_messages;
+				get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 				break;
 
 			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
