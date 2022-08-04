@@ -179,6 +179,7 @@ public:
 		dynamic::translate::make_IC<LP_Reposition::defs::o_cancel_hover, Stabilize_defs::i_cancel_hover>("lp_reposition","stabilize"),
 		dynamic::translate::make_IC<LP_Reposition::defs::o_stabilize, Stabilize_defs::i_stabilize>("lp_reposition","stabilize"),
 		dynamic::translate::make_IC<LP_Reposition::defs::o_pilot_handover, Handover_Control_defs::i_pilot_handover>("lp_reposition","handover_control"),
+		dynamic::translate::make_IC<LP_Reposition::defs::o_fcc_command_land, LP_Manager<TIME>::defs::i_fcc_command_land>("lp_reposition","lp_manager"),
 
 		// stabilize
 		dynamic::translate::make_IC<Stabilize_defs::o_hover_criteria_met, Handover_Control_defs::i_hover_criteria_met>("stabilize","handover_control"),

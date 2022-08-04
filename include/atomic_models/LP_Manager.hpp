@@ -18,6 +18,7 @@
 #include "message_structures/message_aircraft_state_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
 #include "message_structures/message_update_gcs_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
 
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
@@ -50,6 +51,7 @@ public:
 
 	//Port definition
 	struct defs {
+		struct i_fcc_command_land : public in_port<message_fcc_command_t> {};
 		struct i_lp_recv : public in_port<message_landing_point_t> {};
 		struct i_plp_ach : public in_port<message_landing_point_t> {};
 		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
@@ -68,6 +70,7 @@ public:
 
 	// ports definition
 	using input_ports = tuple<
+		typename LP_Manager<TIME>::defs::i_fcc_command_land,
 		typename LP_Manager<TIME>::defs::i_lp_recv,
 		typename LP_Manager<TIME>::defs::i_plp_ach,
 		typename LP_Manager<TIME>::defs::i_aircraft_state,
@@ -166,6 +169,10 @@ public:
 		if (get_messages<typename LP_Manager<TIME>::defs::i_pilot_takeover>(mbs).size() >= 1 && state.current_state != States::HANDOVER_CONTROL)
 			state.current_state = States::PILOT_CONTROL;
 
+		if (state.current_state == States::LP_APPROACH && !get_messages<typename LP_Manager<TIME>::defs::i_fcc_command_land>(mbs).empty()) {
+			state.current_state = States::LP_ACCEPT_EXP;
+		}
+
 		//If we are in a state that can receive a landing point input,
 		if (state.current_state == States::WAYPOINT_MET || state.current_state == States::LZE_SCAN || state.current_state == States::LP_APPROACH) {
 			//If there are landing points that have been received,
@@ -204,28 +211,8 @@ public:
 				}
 
 				//If a valid landing point was identified out of the list of landing points,
-				switch (state.current_state) {
-					case States::WAYPOINT_MET: 
-						if (valid_lp_recv) {
-							//Transition into the notify reposition loop state.
-							state.current_state = States::REQUEST_STATE_LP;
-						}
-					case States::LZE_SCAN:
-						if (valid_lp_recv) {
-							//Transition into the notify reposition loop state.
-							state.current_state = States::REQUEST_STATE_LP;
-						}
-						break;
-					case States::LP_APPROACH:
-						if (valid_lp_recv) {
-							//Transition into the notify reposition loop state and store the current value of the LP accept timer.
-							state.current_state = States::REQUEST_STATE_LP;
-						}
-						break;
-					default:
-						assert(false && "Unhandled external transition on receipt of landing point.");
-						break;
-				}
+				//Transition into the notify reposition loop state.
+				state.current_state = States::REQUEST_STATE_LP;
 			}
 		}
 
@@ -366,18 +353,22 @@ public:
 				break;
 
 			case States::LP_APPROACH:
-				message_update_gcs_t temp_gcs_update;
-				temp_gcs_update.text = "LP accept timer expired";
-				temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
-				gcs_messages.push_back(temp_gcs_update);
-				lp_messages.push_back(lp);
-				get_messages<typename LP_Manager<TIME>::defs::o_lp_expired>(bags) = lp_messages;
-				get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+				{
+					message_update_gcs_t temp_gcs_update;
+					temp_gcs_update.text = "LP accept timer expired";
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
+					gcs_messages.push_back(temp_gcs_update);
+					lp_messages.push_back(lp);
+					get_messages<typename LP_Manager<TIME>::defs::o_lp_expired>(bags) = lp_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+				}
 				break;
 
 			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
-				bool_messages.push_back(true);
-				get_messages<typename LP_Manager<TIME>::defs::o_request_aircraft_state>(bags) = bool_messages;
+				{
+					bool_messages.push_back(true);
+					get_messages<typename LP_Manager<TIME>::defs::o_request_aircraft_state>(bags) = bool_messages;
+				}
 				break;
 
 			default:
