@@ -26,11 +26,6 @@ using namespace cadmium::basic_models::pdevs;
 
 using TIME = NDTime;
 
-// Define output ports to be used for logging purposes
-struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
-struct o_hover_criteria_met : public out_port<bool> {};
-struct o_request_aircraft_state : public out_port<bool> {};
-
 /**
 * ==========================================================
 * MAIN METHOD
@@ -101,28 +96,20 @@ int main() {
 			stabilize
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-				typeid(o_fcc_command_hover),
-				typeid(o_hover_criteria_met),
-				typeid(o_request_aircraft_state),
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Stabilize_defs::o_fcc_command_hover,o_fcc_command_hover>("stabilize"),
-			dynamic::translate::make_EOC<Stabilize_defs::o_hover_criteria_met,o_hover_criteria_met>("stabilize"),
-			dynamic::translate::make_EOC<Stabilize_defs::o_request_aircraft_state,o_request_aircraft_state>("stabilize"),
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Stabilize_defs::i_aircraft_state>("ir_aircraft_state", "stabilize"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize_defs::i_cancel_hover>("ir_cancel_hover", "stabilize"),
-			dynamic::translate::make_IC<iestream_input_defs<message_hover_criteria_t>::out,Stabilize_defs::i_stabilize>("ir_stabilize", "stabilize")
+			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Stabilize<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "stabilize"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize<TIME>::defs::i_cancel_hover>("ir_cancel_hover", "stabilize"),
+			dynamic::translate::make_IC<iestream_input_defs<message_hover_criteria_t>::out,Stabilize<TIME>::defs::i_stabilize>("ir_stabilize", "stabilize")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

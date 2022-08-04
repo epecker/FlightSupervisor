@@ -20,6 +20,7 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_aircraft_state_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 #include "mavNRC/geo.h"
 #include "enum_string_conversion.hpp"
@@ -28,17 +29,6 @@
 
 using namespace cadmium;
 using namespace std;
-
-// Input and output port definition
-struct Stabilize_defs {
-	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_cancel_hover : public in_port<bool> {};
-	struct i_stabilize : public in_port<message_hover_criteria_t> {};
-
-	struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
-	struct o_hover_criteria_met : public out_port<bool> {};
-	struct o_request_aircraft_state : public out_port<bool> {};
-};
 
 // Atomic Model
 template<typename TIME> class Stabilize {
@@ -55,18 +45,31 @@ public:
 		(HOVER)
 	)
 
-		// Create a tuple of input ports (required for the simulator)
-		using input_ports = tuple<
-		typename Stabilize_defs::i_aircraft_state,
-		typename Stabilize_defs::i_cancel_hover,
-		typename Stabilize_defs::i_stabilize
+	// Input and output port definition
+	struct defs {
+		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
+		struct i_cancel_hover : public in_port<bool> {};
+		struct i_stabilize : public in_port<message_hover_criteria_t> {};
+
+		struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
+		struct o_hover_criteria_met : public out_port<bool> {};
+		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+	};
+
+	// Create a tuple of input ports (required for the simulator)
+	using input_ports = tuple<
+		typename Stabilize::defs::i_aircraft_state,
+		typename Stabilize::defs::i_cancel_hover,
+		typename Stabilize::defs::i_stabilize
 		>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Stabilize_defs::o_fcc_command_hover,
-		typename Stabilize_defs::o_hover_criteria_met,
-		typename Stabilize_defs::o_request_aircraft_state
+		typename Stabilize::defs::o_fcc_command_hover,
+		typename Stabilize::defs::o_hover_criteria_met,
+		typename Stabilize::defs::o_request_aircraft_state,
+		typename Stabilize::defs::o_update_gcs
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -161,7 +164,7 @@ public:
 		bool received_aircraft_state;
 		bool received_stabilize;
 
-		bool received_cancel_hover = !get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).empty();
+		bool received_cancel_hover = !get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
 		if (received_cancel_hover) {
 			reset_state();
 			return;
@@ -169,24 +172,24 @@ public:
 
 		switch (state.current_state) {
 			case States::IDLE:
-				received_stabilize = !get_messages<typename Stabilize_defs::i_stabilize>(mbs).empty();
+				received_stabilize = !get_messages<typename Stabilize::defs::i_stabilize>(mbs).empty();
 				if (received_stabilize) {
-					hover_criteria = get_messages<typename Stabilize_defs::i_stabilize>(mbs)[0];
+					hover_criteria = get_messages<typename Stabilize::defs::i_stabilize>(mbs)[0];
 					stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					state.current_state = States::REQUEST_AIRCRAFT_STATE;
 				}
 				break;
 			case States::GET_AIRCRAFT_STATE:
-				received_aircraft_state = !get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !get_messages<typename Stabilize::defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
-					aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+					aircraft_state = get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
 					state.current_state = States::INIT_HOVER;
 				}
 				break;
 			case States::CHECK_STATE:
-				received_aircraft_state = !get_messages<typename Stabilize_defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !get_messages<typename Stabilize::defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
-					aircraft_state = get_messages<typename Stabilize_defs::i_aircraft_state>(mbs)[0];
+					aircraft_state = get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
 					state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
 					if (!state.in_tolerance) {
 						stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
@@ -205,7 +208,7 @@ public:
 	// confluence transition;
 	// Used to call set call order
 	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_cancel_hover = !get_messages<typename Stabilize_defs::i_cancel_hover>(mbs).empty();
+		bool received_cancel_hover = !get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
 
 		if (received_cancel_hover) {
 			external_transition(TIME(), move(mbs));
@@ -220,11 +223,12 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> message_out;
 		vector<message_fcc_command_t> message_fcc_out;
+		vector<message_update_gcs_t> message_gcs_out;
 
 		switch (state.current_state) {
 			case States::REQUEST_AIRCRAFT_STATE:
 				message_out.push_back(true);
-				get_messages<typename Stabilize_defs::o_request_aircraft_state>(bags) = message_out;
+				get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
 				break;
 			case States::INIT_HOVER:
 			{
@@ -236,17 +240,22 @@ public:
 						hover_criteria.desiredAltMSL
 						);
 				message_fcc_out.push_back(mfc);
-				get_messages<typename Stabilize_defs::o_fcc_command_hover>(bags) = message_fcc_out;
+				get_messages<typename Stabilize::defs::o_fcc_command_hover>(bags) = message_fcc_out;
 			}
 			break;
 			case States::STABILIZING:
 				if (state.time_tolerance_met && state.in_tolerance) {
+					message_update_gcs_t temp_gcs_update;
+					temp_gcs_update.text = "Came to hover!";
+					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 					message_out.push_back(true);
-					get_messages<typename Stabilize_defs::o_hover_criteria_met>(bags) = message_out;
+					message_gcs_out.push_back(temp_gcs_update);
+					get_messages<typename Stabilize::defs::o_hover_criteria_met>(bags) = message_out;
+					get_messages<typename Stabilize::defs::o_update_gcs>(bags) = message_gcs_out;
 				}
 				else {
 					message_out.push_back(true);
-					get_messages<typename Stabilize_defs::o_request_aircraft_state>(bags) = message_out;
+					get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
 				}
 				break;
 			default:
