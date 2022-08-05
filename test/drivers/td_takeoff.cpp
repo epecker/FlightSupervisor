@@ -82,9 +82,9 @@ int main() {
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-				dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Takeoff_defs::i_aircraft_state>("ir_aircraft_state", "takeoff"),
-				dynamic::translate::make_IC<iestream_input_defs<bool>::out,Takeoff_defs::i_perception_status>("ir_perception_status", "takeoff"),
-				dynamic::translate::make_IC<iestream_input_defs<message_start_supervisor_t>::out,Takeoff_defs::i_start_supervisor>("ir_start_supervisor", "takeoff")
+				dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Takeoff::defs::i_aircraft_state>("ir_aircraft_state", "takeoff"),
+				dynamic::translate::make_IC<iestream_input_defs<bool>::out,Takeoff::defs::i_perception_status>("ir_perception_status", "takeoff"),
+				dynamic::translate::make_IC<iestream_input_defs<message_start_supervisor_t>::out,Takeoff::defs::i_start_supervisor>("ir_start_supervisor", "takeoff")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
