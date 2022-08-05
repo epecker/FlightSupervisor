@@ -18,6 +18,7 @@
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
 
+#include "mavNRC/endian.hpp"
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
 
@@ -79,6 +80,7 @@ public:
 			case States::IDLE:
 				if (received_data){
 					data = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs)[0];
+                    preprocess_data();
 					state.current_state = States::GENERATE_PACKET;
 				}
 				break;
@@ -137,16 +139,18 @@ protected:
 	uint8_t packet_sequence;
 
 private:
+    virtual void preprocess_data() {}
+
     [[nodiscard]] virtual std::vector<char> generate_packet() const {
-        std::vector<char> packet(sizeof(TYPE));
-        std::memcpy(packet.data(), (char *)&this->data, sizeof(TYPE));
+        std::vector<char> packet(sizeof(this->data));
+        std::memcpy(packet.data(), (char *)&this->data, sizeof(this->data));
         return packet;
     }
 };
 
 /**
- * \brief Packet_Builder_Structure creates packets for use in output models
- * \details Packet_Builder_Structure uses the default implementation of
+ * \brief Packet_Builder_Boss creates packets for use in output models
+ * \details Packet_Builder_Boss uses the default implementation of
  *          generate_packet from Packet builder.
  */
 template<typename TIME>
@@ -159,9 +163,9 @@ public:
 };
 
 /**
- * \brief Packet_Builder_Structure creates packets for use in output models
- * \details Packet_Builder_Structure uses the default implementation of
- *          generate_packet from Packet builder.
+ * \brief Packet_Builder_Fcc creates packets for use in output models
+ * \details Packet_Builder_Fcc requires the bytes be swapped using a
+ *          the functions specified in MavNRC endian.c.
  */
 template<typename TIME>
 class Packet_Builder_Fcc : public Packet_Builder<message_fcc_command_t, TIME> {
@@ -170,6 +174,18 @@ class Packet_Builder_Fcc : public Packet_Builder<message_fcc_command_t, TIME> {
 public:
     Packet_Builder_Fcc() = default;
     explicit Packet_Builder_Fcc(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
+
+private:
+    void preprocess_data() {
+        Struct_ntohl((void *)&this->data, sizeof(this->data));
+        Swap_Double(&this->data.supervisor_gps_time);
+    }
+
+    [[nodiscard]] std::vector<char> generate_packet() const {
+        std::vector<char> packet(sizeof(this->data));
+        std::memcpy(packet.data(), (char *)&this->data, sizeof(this->data));
+        return packet;
+    }
 };
 
 /**

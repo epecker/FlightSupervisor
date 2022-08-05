@@ -30,8 +30,8 @@ using TIME = NDTime;
 int main() {
 	int test_set_enumeration = 0;
 
-	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/udp_output/");
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/udp_output/");
+	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/udp_output_gcs/");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/udp_output_gcs/");
 
 	do {
 		// Input Files
