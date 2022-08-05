@@ -85,6 +85,7 @@ struct Supervisor_defs {
 	struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 	struct o_LP_expired : public out_port<message_landing_point_t> {};
+	struct o_LP_new : public out_port<message_landing_point_t> {};
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
 	struct o_update_boss : public out_port<message_boss_mission_update_t> {};
@@ -131,6 +132,7 @@ public:
 		typeid(Supervisor_defs::o_fcc_command_land),
 		typeid(Supervisor_defs::o_fcc_command_velocity),
 		typeid(Supervisor_defs::o_LP_expired),
+		typeid(Supervisor_defs::o_LP_new),
 		typeid(Supervisor_defs::o_mission_complete),
 		typeid(Supervisor_defs::o_notify_pilot),
 		typeid(Supervisor_defs::o_update_boss),
@@ -180,6 +182,7 @@ public:
 		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_land, Supervisor_defs::o_fcc_command_land>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_LP_expired, Supervisor_defs::o_LP_expired>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_LP_new, Supervisor_defs::o_LP_new>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_mission_complete, Supervisor_defs::o_mission_complete>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_update_boss, Supervisor_defs::o_update_boss>("landing"),

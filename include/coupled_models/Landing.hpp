@@ -75,6 +75,7 @@ public:
 		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 		struct o_LP_expired : public out_port<message_landing_point_t> {};
+		struct o_LP_new : public out_port<message_landing_point_t> {};
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_notify_pilot : public out_port<bool> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
@@ -110,6 +111,7 @@ public:
 		typeid(Landing::defs::o_fcc_command_land),
 		typeid(Landing::defs::o_fcc_command_velocity),
 		typeid(Landing::defs::o_LP_expired),
+		typeid(Landing::defs::o_LP_new),
 		typeid(Landing::defs::o_mission_complete),
 		typeid(Landing::defs::o_notify_pilot),
 		typeid(Landing::defs::o_request_aircraft_state),
@@ -151,6 +153,7 @@ public:
 	dynamic::modeling::EOCs eocs = {
 		// lp_manager
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_lp_expired, Landing::defs::o_LP_expired>("lp_manager"),
+		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_lp_new, Landing::defs::o_LP_new>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_boss, Landing::defs::o_update_boss>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_gcs, Landing::defs::o_update_gcs>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_manager"),
