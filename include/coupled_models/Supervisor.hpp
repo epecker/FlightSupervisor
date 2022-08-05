@@ -88,6 +88,7 @@ struct Supervisor_defs {
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
 	struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+	struct o_update_mission_item : public out_port<bool> {};
 };
 
 class Supervisor {
@@ -132,7 +133,8 @@ public:
 		typeid(Supervisor_defs::o_LP_expired),
 		typeid(Supervisor_defs::o_mission_complete),
 		typeid(Supervisor_defs::o_notify_pilot),
-		typeid(Supervisor_defs::o_update_boss)
+		typeid(Supervisor_defs::o_update_boss),
+		typeid(Supervisor_defs::o_update_mission_item)
 	};
 
 	//Define the sub-models that make up the Landing Point Reposition coupled model.
@@ -182,7 +184,8 @@ public:
 		dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_update_boss, Supervisor_defs::o_update_boss>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("landing"),
-		dynamic::translate::make_EOC<Landing::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("landing")
+		dynamic::translate::make_EOC<Landing::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_update_mission_item, Supervisor_defs::o_update_mission_item>("landing")
 	};
 
 	//Define the internal takeoff_instance internal couplings.

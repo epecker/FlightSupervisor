@@ -76,6 +76,7 @@ public:
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_update_mission_item : public out_port<bool> {};
 	};
 
 	/**
@@ -106,7 +107,8 @@ public:
 		typeid(LP_Reposition::defs::o_set_mission_monitor_status),
 		typeid(LP_Reposition::defs::o_stabilize),
 		typeid(LP_Reposition::defs::o_update_boss),
-		typeid(LP_Reposition::defs::o_update_gcs)
+		typeid(LP_Reposition::defs::o_update_gcs),
+		typeid(LP_Reposition::defs::o_update_mission_item)
 	};
 
 	//Define the sub-models that make up the Landing Point Reposition coupled model.
@@ -136,6 +138,7 @@ public:
 		dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_mission_complete, LP_Reposition::defs::o_mission_complete>("landing_routine"),
 		dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("landing_routine"),
 		dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("landing_routine"),
+		dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_mission_item, LP_Reposition::defs::o_update_mission_item>("landing_routine"),
 
 		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_cancel_hover, LP_Reposition::defs::o_cancel_hover>("command_reposition"),
 		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_stabilize, LP_Reposition::defs::o_stabilize>("command_reposition"),

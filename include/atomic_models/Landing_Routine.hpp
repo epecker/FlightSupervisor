@@ -53,6 +53,7 @@ public:
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_update_mission_item : public out_port<bool> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -67,7 +68,8 @@ public:
 		typename Landing_Routine<TIME>::defs::o_fcc_command_land,
 		typename Landing_Routine<TIME>::defs::o_mission_complete,
 		typename Landing_Routine<TIME>::defs::o_update_boss,
-		typename Landing_Routine<TIME>::defs::o_update_gcs
+		typename Landing_Routine<TIME>::defs::o_update_gcs,
+		typename Landing_Routine<TIME>::defs::o_update_mission_item
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -155,7 +157,8 @@ public:
 	// output function
 	typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<bool> bag_port_out;
+		vector<bool> mission_complete_messages;
+		vector<bool> mission_item_messages;
 		vector<message_fcc_command_t> fcc_messages;
 		vector<message_boss_mission_update_t> boss_messages;
 		vector<message_update_gcs_t> gcs_messages;
@@ -187,8 +190,10 @@ public:
 					temp_gcs_update.text = "Just landed!";
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 					gcs_messages.push_back(temp_gcs_update);
-					bag_port_out.push_back(true);
-					get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = bag_port_out;
+					mission_complete_messages.push_back(true);
+					mission_item_messages.push_back(true);
+					get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = mission_complete_messages;
+					get_messages<typename Landing_Routine<TIME>::defs::o_update_mission_item>(bags) = mission_item_messages;
 					get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 				}
 				break;

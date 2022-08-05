@@ -81,6 +81,7 @@ public:
 		struct o_set_mission_monitor_status : public out_port<int> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_update_mission_item : public out_port<bool> {};
 	};
 
 	/**
@@ -114,7 +115,8 @@ public:
 		typeid(Landing::defs::o_request_aircraft_state),
 		typeid(Landing::defs::o_set_mission_monitor_status),
 		typeid(Landing::defs::o_update_boss),
-		typeid(Landing::defs::o_update_gcs)
+		typeid(Landing::defs::o_update_gcs),
+		typeid(Landing::defs::o_update_mission_item)
 	};
 
 	//Define the sub-models that make up the Landing coupled model.
@@ -162,6 +164,7 @@ public:
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_set_mission_monitor_status, Landing::defs::o_set_mission_monitor_status>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_boss, Landing::defs::o_update_boss>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_gcs, Landing::defs::o_update_gcs>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_mission_item, Landing::defs::o_update_mission_item>("lp_reposition"),
 
 		// handover_control
 		dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded, Landing::defs::o_control_yielded>("handover_control"),
