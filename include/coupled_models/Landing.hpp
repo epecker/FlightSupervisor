@@ -78,6 +78,7 @@ public:
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_notify_pilot : public out_port<bool> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<int> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
@@ -111,6 +112,7 @@ public:
 		typeid(Landing::defs::o_mission_complete),
 		typeid(Landing::defs::o_notify_pilot),
 		typeid(Landing::defs::o_request_aircraft_state),
+		typeid(Landing::defs::o_set_mission_monitor_status),
 		typeid(Landing::defs::o_update_boss),
 		typeid(Landing::defs::o_update_gcs)
 	};
@@ -150,6 +152,7 @@ public:
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_boss, Landing::defs::o_update_boss>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_gcs, Landing::defs::o_update_gcs>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_manager"),
+		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_set_mission_monitor_status, Landing::defs::o_set_mission_monitor_status>("lp_manager"),
 
 		// lp_reposition
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_fcc_command_land, Landing::defs::o_fcc_command_land>("lp_reposition"),

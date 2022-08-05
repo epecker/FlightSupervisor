@@ -51,18 +51,19 @@ public:
 
 	//Port definition
 	struct defs {
-		struct i_fcc_command_land : public in_port<message_fcc_command_t> {};
-		struct i_lp_recv : public in_port<message_landing_point_t> {};
-		struct i_plp_ach : public in_port<message_landing_point_t> {};
 		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-		struct i_pilot_takeover : public in_port<bool> {};
-		struct i_hover_criteria_met : public in_port<bool> {};
 		struct i_control_yielded : public in_port<bool> {};
+		struct i_fcc_command_land : public in_port<message_fcc_command_t> {};
+		struct i_hover_criteria_met : public in_port<bool> {};
+		struct i_lp_recv : public in_port<message_landing_point_t> {};
+		struct i_pilot_takeover : public in_port<bool> {};
+		struct i_plp_ach : public in_port<message_landing_point_t> {};
 
-		struct o_lp_new : public out_port<message_landing_point_t> {};
 		struct o_lp_expired : public out_port<message_landing_point_t> {};
+		struct o_lp_new : public out_port<message_landing_point_t> {};
 		struct o_pilot_handover : public out_port<message_landing_point_t> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<int> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
@@ -70,20 +71,21 @@ public:
 
 	// ports definition
 	using input_ports = tuple<
-		typename LP_Manager<TIME>::defs::i_fcc_command_land,
-		typename LP_Manager<TIME>::defs::i_lp_recv,
-		typename LP_Manager<TIME>::defs::i_plp_ach,
 		typename LP_Manager<TIME>::defs::i_aircraft_state,
-		typename LP_Manager<TIME>::defs::i_pilot_takeover,
+		typename LP_Manager<TIME>::defs::i_control_yielded,
+		typename LP_Manager<TIME>::defs::i_fcc_command_land,
 		typename LP_Manager<TIME>::defs::i_hover_criteria_met,
-		typename LP_Manager<TIME>::defs::i_control_yielded
+		typename LP_Manager<TIME>::defs::i_lp_recv,
+		typename LP_Manager<TIME>::defs::i_pilot_takeover,
+		typename LP_Manager<TIME>::defs::i_plp_ach
 	>;
 
 	using output_ports = tuple<
-		typename LP_Manager<TIME>::defs::o_lp_new,
 		typename LP_Manager<TIME>::defs::o_lp_expired,
+		typename LP_Manager<TIME>::defs::o_lp_new,
 		typename LP_Manager<TIME>::defs::o_pilot_handover,
 		typename LP_Manager<TIME>::defs::o_request_aircraft_state,
+		typename LP_Manager<TIME>::defs::o_set_mission_monitor_status,
 		typename LP_Manager<TIME>::defs::o_stabilize,
 		typename LP_Manager<TIME>::defs::o_update_boss,
 		typename LP_Manager<TIME>::defs::o_update_gcs
@@ -305,6 +307,7 @@ public:
 		vector<message_hover_criteria_t> stabilize_messages;
 		vector<message_boss_mission_update_t> boss_messages;
 		vector<message_update_gcs_t> gcs_messages;
+		vector<int> mission_monitor_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
@@ -337,8 +340,10 @@ public:
 					strcpy(temp_boss.description, "LZ scan");
 					boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
+					mission_monitor_messages.push_back(0);
 					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
 				}
 				break;
 
