@@ -18,6 +18,9 @@ enum class Mav_Command_E {
 	MAV_CMD_DO_REPOSITION = 192
 };
 
+// #pragma pack(push, 4) is used to set the byte alignment for the structure
+// This is used to make sure the byte alignment is the same on MavNRC
+#pragma pack(push, 4)
 struct message_fcc_command_t {
 	double supervisor_gps_time;
 	uint32_t supervisor_status;
@@ -115,6 +118,7 @@ struct message_fcc_command_t {
 		altitude_msl = alt_msl;
 	}
 };
+#pragma pack(pop)
 
 /***************************************************/
 /************* Output stream ***********************/
