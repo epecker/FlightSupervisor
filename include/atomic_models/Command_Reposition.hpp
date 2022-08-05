@@ -31,21 +31,6 @@
 using namespace cadmium;
 using namespace std;
 
-// Input and output port definitions
-struct Command_Reposition_defs {
-	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_hover_criteria_met : public in_port<bool> {};
-	struct i_pilot_handover : public in_port<message_landing_point_t> {};
-	struct i_pilot_takeover : public in_port<bool> {};
-	struct i_request_reposition : public in_port<message_landing_point_t> {};
-
-	struct o_cancel_hover : public out_port<bool> {};
-	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-	struct o_lp_criteria_met : public out_port<message_landing_point_t> {};
-	struct o_request_aircraft_state : public out_port<bool> {};
-	struct o_stabilize : public out_port<message_hover_criteria_t> {};
-};
-
 // Atomic Model
 template<typename TIME> class Command_Reposition {
 public:
@@ -65,22 +50,39 @@ public:
 		(PILOT_CONTROL)
 	);
 
+	// Input and output port definitions
+	struct defs {
+		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
+		struct i_hover_criteria_met : public in_port<bool> {};
+		struct i_pilot_handover : public in_port<message_landing_point_t> {};
+		struct i_pilot_takeover : public in_port<bool> {};
+		struct i_request_reposition : public in_port<message_landing_point_t> {};
+
+		struct o_cancel_hover : public out_port<bool> {};
+		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
+		struct o_lp_criteria_met : public out_port<message_landing_point_t> {};
+		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<int> {};
+		struct o_stabilize : public out_port<message_hover_criteria_t> {};
+	};
+
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-		typename Command_Reposition_defs::i_aircraft_state,
-		typename Command_Reposition_defs::i_hover_criteria_met,
-		typename Command_Reposition_defs::i_pilot_handover,
-		typename Command_Reposition_defs::i_pilot_takeover,
-		typename Command_Reposition_defs::i_request_reposition
+		typename Command_Reposition::defs::i_aircraft_state,
+		typename Command_Reposition::defs::i_hover_criteria_met,
+		typename Command_Reposition::defs::i_pilot_handover,
+		typename Command_Reposition::defs::i_pilot_takeover,
+		typename Command_Reposition::defs::i_request_reposition
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-		typename Command_Reposition_defs::o_cancel_hover,
-		typename Command_Reposition_defs::o_fcc_command_velocity,
-		typename Command_Reposition_defs::o_lp_criteria_met,
-		typename Command_Reposition_defs::o_request_aircraft_state,
-		typename Command_Reposition_defs::o_stabilize
+		typename Command_Reposition::defs::o_cancel_hover,
+		typename Command_Reposition::defs::o_fcc_command_velocity,
+		typename Command_Reposition::defs::o_lp_criteria_met,
+		typename Command_Reposition::defs::o_request_aircraft_state,
+		typename Command_Reposition::defs::o_set_mission_monitor_status,
+		typename Command_Reposition::defs::o_stabilize
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -139,8 +141,8 @@ public:
 		bool received_pilot_takeover;
 		bool received_request_reposition;
 
-		received_pilot_handover = !get_messages<typename Command_Reposition_defs::i_pilot_handover>(mbs).empty();
-		received_pilot_takeover = !get_messages<typename Command_Reposition_defs::i_pilot_takeover>(mbs).empty();
+		received_pilot_handover = !get_messages<typename Command_Reposition::defs::i_pilot_handover>(mbs).empty();
+		received_pilot_takeover = !get_messages<typename Command_Reposition::defs::i_pilot_takeover>(mbs).empty();
 
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
@@ -149,47 +151,47 @@ public:
 		} else {
 			switch (state.current_state) {
 				case States::IDLE:
-					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
+					received_request_reposition = !get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::REQUEST_STATE;
 					}
 					break;
 				case States::GET_STATE:
-					received_aircraft_state = !get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs).empty();
+					received_aircraft_state = !get_messages<typename Command_Reposition::defs::i_aircraft_state>(mbs).empty();
 
 					if (received_aircraft_state) {
-						vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Command_Reposition_defs::i_aircraft_state>(mbs);
+						vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Command_Reposition::defs::i_aircraft_state>(mbs);
 						aircraft_state = new_aircraft_state[0];
 						state.current_state = States::COMMAND_VEL;
 					}
 					break;
 				case States::COMMAND_VEL:
-					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
+					received_request_reposition = !get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::REQUEST_STATE;
 					}
 					break;
 				case States::COMMAND_HOVER:
-					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
+					received_request_reposition = !get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::REQUEST_STATE;
 					}
 					break;
 				case States::STABILIZING:
-					received_hover_criteria_met = !get_messages<typename Command_Reposition_defs::i_hover_criteria_met>(mbs).empty();
-					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
+					received_hover_criteria_met = !get_messages<typename Command_Reposition::defs::i_hover_criteria_met>(mbs).empty();
+					received_request_reposition = !get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
 					} else if (received_hover_criteria_met) {
@@ -197,10 +199,10 @@ public:
 					}
 					break;
 				case States::LP_CRITERIA_MET:
-					received_request_reposition = !get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs).empty();
+					received_request_reposition = !get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
 
 					if (received_request_reposition) {
-						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition_defs::i_request_reposition>(mbs);
+						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
 						landing_point = new_landing_points[0]; // set the new Landing 
 						state.current_state = States::CANCEL_HOVER;
 					}
@@ -224,11 +226,12 @@ public:
 		vector<message_landing_point_t> bag_port_LP_out;
 		vector<message_fcc_command_t> bag_port_fcc_out;
 		vector<message_hover_criteria_t> bag_port_hover_out;
+		vector<int> mission_monitor_messages;
 
 		switch (state.current_state) {
 			case States::REQUEST_STATE:
 				bag_port_out.push_back(true);
-				get_messages<typename Command_Reposition_defs::o_request_aircraft_state>(bags) = bag_port_out;
+				get_messages<typename Command_Reposition::defs::o_request_aircraft_state>(bags) = bag_port_out;
 				break;
 			case States::COMMAND_VEL:
 			{
@@ -241,7 +244,7 @@ public:
 				}
 				mfc.change_velocity(velocity, aircraft_state.gps_time);
 				bag_port_fcc_out.push_back(mfc);
-				get_messages<typename Command_Reposition_defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
+				get_messages<typename Command_Reposition::defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
 			}
 				break;
 			case States::COMMAND_HOVER:
@@ -261,16 +264,18 @@ public:
 					0
 				);
 				bag_port_hover_out.push_back(mhc);
-				get_messages<typename Command_Reposition_defs::o_stabilize>(bags) = bag_port_hover_out;
+				mission_monitor_messages.push_back(0);
+				get_messages<typename Command_Reposition::defs::o_stabilize>(bags) = bag_port_hover_out;
+				get_messages<typename Command_Reposition::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
 			}
 				break;
 			case States::CANCEL_HOVER:
 				bag_port_out.push_back(true);
-				get_messages<typename Command_Reposition_defs::o_cancel_hover>(bags) = bag_port_out;
+				get_messages<typename Command_Reposition::defs::o_cancel_hover>(bags) = bag_port_out;
 				break;
 			case States::LP_CRITERIA_MET:
 				bag_port_LP_out.emplace_back(message_landing_point_t());
-				get_messages<typename Command_Reposition_defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
+				get_messages<typename Command_Reposition::defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
 				break;
 			default:
 				break;

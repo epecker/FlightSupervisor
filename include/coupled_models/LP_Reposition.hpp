@@ -72,6 +72,7 @@ public:
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_pilot_handover : public out_port<message_landing_point_t> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<int> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
@@ -102,6 +103,7 @@ public:
 		typeid(LP_Reposition::defs::o_mission_complete),
 		typeid(LP_Reposition::defs::o_pilot_handover),
 		typeid(LP_Reposition::defs::o_request_aircraft_state),
+		typeid(LP_Reposition::defs::o_set_mission_monitor_status),
 		typeid(LP_Reposition::defs::o_stabilize),
 		typeid(LP_Reposition::defs::o_update_boss),
 		typeid(LP_Reposition::defs::o_update_gcs)
@@ -119,9 +121,9 @@ public:
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_landing_achieved, Landing_Routine<TIME>::defs::i_landing_achieved>("landing_routine"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Landing_Routine<TIME>::defs::i_pilot_takeover>("landing_routine"),
 
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_hover_criteria_met, Command_Reposition_defs::i_hover_criteria_met>("command_reposition"),
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Command_Reposition_defs::i_pilot_takeover>("command_reposition"),
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_aircraft_state, Command_Reposition_defs::i_aircraft_state>("command_reposition"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_hover_criteria_met, Command_Reposition<TIME>::defs::i_hover_criteria_met>("command_reposition"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Command_Reposition<TIME>::defs::i_pilot_takeover>("command_reposition"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_aircraft_state, Command_Reposition<TIME>::defs::i_aircraft_state>("command_reposition"),
 
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Reposition_Timer<TIME>::defs::i_pilot_takeover>("reposition_timer"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_control_yielded, Reposition_Timer<TIME>::defs::i_control_yielded>("reposition_timer"),
@@ -135,10 +137,11 @@ public:
 		dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("landing_routine"),
 		dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("landing_routine"),
 
-		dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize, LP_Reposition::defs::o_stabilize>("command_reposition"),
-		dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize, LP_Reposition::defs::o_stabilize>("command_reposition"),
-		dynamic::translate::make_EOC<Command_Reposition_defs::o_fcc_command_velocity, LP_Reposition::defs::o_fcc_command_velocity>("command_reposition"),
-		dynamic::translate::make_EOC<Command_Reposition_defs::o_request_aircraft_state, LP_Reposition::defs::o_request_aircraft_state>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_cancel_hover, LP_Reposition::defs::o_cancel_hover>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_stabilize, LP_Reposition::defs::o_stabilize>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_fcc_command_velocity, LP_Reposition::defs::o_fcc_command_velocity>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_set_mission_monitor_status, LP_Reposition::defs::o_set_mission_monitor_status>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_request_aircraft_state, LP_Reposition::defs::o_request_aircraft_state>("command_reposition"),
 
 		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_pilot_handover, LP_Reposition::defs::o_pilot_handover>("reposition_timer"),
 		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("reposition_timer"),
@@ -147,11 +150,11 @@ public:
 
 	//Define the internal to internal couplings for the Landing Point Reposition model.
 	dynamic::modeling::ICs ics = {
-		dynamic::translate::make_IC<Command_Reposition_defs::o_lp_criteria_met, Reposition_Timer<TIME>::defs::i_lp_crit_met>("command_reposition", "reposition_timer"),
+		dynamic::translate::make_IC<Command_Reposition<TIME>::defs::o_lp_criteria_met, Reposition_Timer<TIME>::defs::i_lp_crit_met>("command_reposition", "reposition_timer"),
 
 		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_land, Landing_Routine<TIME>::defs::i_land>("reposition_timer", "landing_routine"),
-		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_pilot_handover, Command_Reposition_defs::i_pilot_handover>("reposition_timer", "command_reposition"),
-		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_request_reposition, Command_Reposition_defs::i_request_reposition>("reposition_timer", "command_reposition")
+		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_pilot_handover, Command_Reposition<TIME>::defs::i_pilot_handover>("reposition_timer", "command_reposition"),
+		dynamic::translate::make_IC<Reposition_Timer<TIME>::defs::o_request_reposition, Command_Reposition<TIME>::defs::i_request_reposition>("reposition_timer", "command_reposition")
 	};
 };
 
