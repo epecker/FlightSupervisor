@@ -3,6 +3,7 @@
  *	\details	This header file defines a output atomic model for use in the
                 Cadmium DEVS simulation software.  
  *	\author		James Horner
+ *	\author		Tanner Trautrim
  */
 
 #ifndef UDP_OUTPUT_HPP

@@ -44,26 +44,12 @@ int main() {
 			return 1;
 		}
 
-		// Read the initial state of the model.
-		string initial_state_string;
-		fstream f;
-		f.open(input_file_initial_state, ios::in);
-		if (!f.is_open()) {
-			printf("Failed to open initial_state file\n");
-			return 1;
-		}
-		getline(f, initial_state_string);
-		f.close();
-
-		Packet_Builder_Boss<TIME>::States initial_state = Packet_Builder_Boss<TIME>::stringToEnum(initial_state_string);
-
 		// Create the output location
 		filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
-		using STATE = Packet_Builder_Boss<TIME>::States;
 		shared_ptr<dynamic::modeling::model> packet_builder =
-				dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Boss, TIME, STATE>("packet_builder", move(initial_state));
+				dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Boss, TIME>("packet_builder");
 
 		// Instantiate the input readers.
 		// One for each input
