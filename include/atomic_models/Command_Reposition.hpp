@@ -27,6 +27,8 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_update_gcs_t.hpp"
 
 using namespace cadmium;
 using namespace std;
@@ -64,6 +66,8 @@ public:
 		struct o_request_aircraft_state : public out_port<bool> {};
 		struct o_set_mission_monitor_status : public out_port<int> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
+		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -82,7 +86,9 @@ public:
 		typename Command_Reposition::defs::o_lp_criteria_met,
 		typename Command_Reposition::defs::o_request_aircraft_state,
 		typename Command_Reposition::defs::o_set_mission_monitor_status,
-		typename Command_Reposition::defs::o_stabilize
+		typename Command_Reposition::defs::o_stabilize,
+		typename Command_Reposition::defs::o_update_boss,
+		typename Command_Reposition::defs::o_update_gcs
 	>;
 
 	// This is used to track the state of the atomic model. 
@@ -227,11 +233,15 @@ public:
 		vector<message_fcc_command_t> bag_port_fcc_out;
 		vector<message_hover_criteria_t> bag_port_hover_out;
 		vector<int> mission_monitor_messages;
+		vector<message_boss_mission_update_t> boss_messages;
+		vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::REQUEST_STATE:
-				bag_port_out.push_back(true);
-				get_messages<typename Command_Reposition::defs::o_request_aircraft_state>(bags) = bag_port_out;
+				{
+					bag_port_out.push_back(true);
+					get_messages<typename Command_Reposition::defs::o_request_aircraft_state>(bags) = bag_port_out;
+				}
 				break;
 			case States::COMMAND_VEL:
 			{
@@ -249,24 +259,42 @@ public:
 				break;
 			case States::COMMAND_HOVER:
 			{
-				message_hover_criteria_t mhc = message_hover_criteria_t(
-					landing_point.lat,
-					landing_point.lon,
-					landing_point.alt,
-					landing_point.hdg,
-					DEFAULT_LAND_CRITERIA_HOR_DIST,
-					DEFAULT_LAND_CRITERIA_VERT_DIST,
-					DEFAULT_LAND_CRITERIA_VEL,
-					DEFAULT_LAND_CRITERIA_HDG,
-					DEFAULT_LAND_CRITERIA_TIME,
-					-1,
-					0,
-					0
-				);
+				message_hover_criteria_t mhc;
+				message_boss_mission_update_t temp_boss_update;
+				message_update_gcs_t temp_gcs_update;
+
+				mhc.desiredLat = landing_point.lat;
+				mhc.desiredLon = landing_point.lon;
+				mhc.desiredAltMSL = landing_point.alt;
+				mhc.desiredHdgDeg = landing_point.hdg;
+				mhc.horDistTolFt = DEFAULT_LAND_CRITERIA_HOR_DIST;
+				mhc.vertDistTolFt = DEFAULT_LAND_CRITERIA_VERT_DIST;
+				mhc.velTolKts = DEFAULT_LAND_CRITERIA_VEL;
+				mhc.hdgToleranceDeg = DEFAULT_LAND_CRITERIA_HDG;
+				mhc.timeTol = DEFAULT_LAND_CRITERIA_TIME;
+				mhc.timeCritFirstMet = -1;
+				mhc.hoverCompleted = 0;
+				mhc.manCtrlRequiredAfterCritMet = 0;
+
+				temp_gcs_update.text = "Repositioning to LP!";
+				temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+
+				temp_boss_update.lpNo = landing_point.id;
+				temp_boss_update.lpLat = landing_point.lat;
+				temp_boss_update.lpLon = landing_point.lon;
+				temp_boss_update.alt = landing_point.alt;
+				temp_boss_update.yaw = landing_point.hdg;
+				strcpy(temp_boss_update.description, "LP rep");
+				
 				bag_port_hover_out.push_back(mhc);
 				mission_monitor_messages.push_back(0);
+				boss_messages.push_back(temp_boss_update);
+				gcs_messages.push_back(temp_gcs_update);
+
 				get_messages<typename Command_Reposition::defs::o_stabilize>(bags) = bag_port_hover_out;
 				get_messages<typename Command_Reposition::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
+				get_messages<typename Command_Reposition::defs::o_update_boss>(bags) = boss_messages;	
+				get_messages<typename Command_Reposition::defs::o_update_gcs>(bags) = gcs_messages;	
 			}
 				break;
 			case States::CANCEL_HOVER:
@@ -274,7 +302,7 @@ public:
 				get_messages<typename Command_Reposition::defs::o_cancel_hover>(bags) = bag_port_out;
 				break;
 			case States::LP_CRITERIA_MET:
-				bag_port_LP_out.emplace_back(message_landing_point_t());
+				bag_port_LP_out.emplace_back(landing_point);
 				get_messages<typename Command_Reposition::defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
 				break;
 			default:

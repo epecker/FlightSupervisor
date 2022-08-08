@@ -145,6 +145,8 @@ public:
 		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_fcc_command_velocity, LP_Reposition::defs::o_fcc_command_velocity>("command_reposition"),
 		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_set_mission_monitor_status, LP_Reposition::defs::o_set_mission_monitor_status>("command_reposition"),
 		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_request_aircraft_state, LP_Reposition::defs::o_request_aircraft_state>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("command_reposition"),
+		dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("command_reposition"),
 
 		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_pilot_handover, LP_Reposition::defs::o_pilot_handover>("reposition_timer"),
 		dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("reposition_timer"),
