@@ -99,6 +99,8 @@ public:
 
 	// Public members of the class
 	bool lp_recvd;
+	bool first_lp;
+	int lp_count;
 	message_landing_point_t lp;
 	message_landing_point_t plp;
 	message_aircraft_state_t aircraft_state;
@@ -111,6 +113,8 @@ public:
 		lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
 		orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
 		lp_recvd = false;
+		first_lp = false;
+		lp_count = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
 		aircraft_state = message_aircraft_state_t();
@@ -122,6 +126,8 @@ public:
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
 		lp_recvd = false;
+		first_lp = false;
+		lp_count = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
 	}
@@ -132,6 +138,8 @@ public:
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
 		lp_recvd = false;
+		first_lp = false;
+		lp_count = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
 	}
@@ -186,7 +194,7 @@ public:
 				bool valid_lp_recv = false;
 
 				//If there was a previous landing point,
-				if (!lp_recvd) {
+				if (lp_recvd) {
 					//For each of the landing points received,
 					for (message_landing_point_t new_lp : landing_points) {
                         float distance_xy;
@@ -201,6 +209,8 @@ public:
 							//Set the current landing point to be the new landing point.
 							lp = new_lp;
 							valid_lp_recv = true;
+							first_lp = false;
+							lp_count++;
 							break;
 						}
 					}
@@ -210,6 +220,9 @@ public:
 					//Pick the first landing point in the list.
 					lp = landing_points[0];
 					valid_lp_recv = true;
+					lp_recvd = true;
+					first_lp = true;
+					lp_count++;
 				}
 
 				//If a valid landing point was identified out of the list of landing points,
@@ -365,8 +378,37 @@ public:
 				break;
 
 			case States::NOTIFY_LP:
-				lp_messages.push_back(lp);
-				get_messages<typename LP_Manager<TIME>::defs::o_lp_new>(bags) = lp_messages;
+				{
+					if (first_lp) {
+						message_update_gcs_t temp_gcs_update_1;
+						message_update_gcs_t temp_gcs_update_2;
+
+						temp_gcs_update_1.text = "LP timer started";
+						temp_gcs_update_1.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
+
+						temp_gcs_update_2.text = "LP found. Holding";
+						temp_gcs_update_2.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+
+						gcs_messages.push_back(temp_gcs_update_1);
+						gcs_messages.push_back(temp_gcs_update_2);
+
+						get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+					}
+					message_boss_mission_update_t temp_boss;
+
+					temp_boss.lpNo = lp_count;
+					temp_boss.lpLat = lp.lat;
+					temp_boss.lpLon = lp.lon;
+					temp_boss.alt = lp.alt;
+					temp_boss.yaw = lp.hdg;
+					strcpy(temp_boss.description, "LP UPD");
+
+					boss_messages.push_back(temp_boss);
+					lp_messages.push_back(lp);
+					
+					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
+					get_messages<typename LP_Manager<TIME>::defs::o_lp_new>(bags) = lp_messages;
+				}
 				break;
 
 			case States::LP_APPROACH:
