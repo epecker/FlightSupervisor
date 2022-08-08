@@ -24,8 +24,8 @@ struct o_packet : public out_port<std::vector<char>> {};
 int main() {
 	int test_set_enumeration = 0;
 
-	const std::string i_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/input_data/packet_builder_gcs/");
-	const std::string o_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/simulation_results/packet_builder_gcs/");
+	const std::string i_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/input_data/packet_builder_bool/");
+	const std::string o_base_dir = std::string(PROJECT_DIRECTORY) + std::string("/test/simulation_results/packet_builder_bool/");
 
 	do {
 		// Input locations
@@ -49,12 +49,12 @@ int main() {
 
 		// Instantiate the atomic model to test
 		shared_ptr<dynamic::modeling::model> packet_builder =
-				dynamic::translate::make_dynamic_atomic_model<Packet_Builder_GCS, TIME>("packet_builder");
+				dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("packet_builder", MISSION_MANAGER_STATUS_ID);
 
 		// Instantiate the input readers.
 		// One for each input
 		shared_ptr<dynamic::modeling::model> ir_data =
-				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Update_GCS, TIME, const char* >("ir_data", input_file_data.c_str());
+				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_data", input_file_data.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
@@ -73,12 +73,12 @@ int main() {
 
 		// The output ports will be used to export in logging
 		dynamic::modeling::EOCs eocs_TestDriver = {
-				dynamic::translate::make_EOC<Packet_Builder_GCS<TIME>::defs::o_packet,o_packet>("packet_builder")
+				dynamic::translate::make_EOC<Packet_Builder_Bool<TIME>::defs::o_packet,o_packet>("packet_builder")
 		};
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-				dynamic::translate::make_IC<iestream_input_defs<message_update_gcs_t>::out, Packet_Builder_GCS<TIME>::defs::i_data>("ir_data", "packet_builder")
+				dynamic::translate::make_IC<iestream_input_defs<bool>::out, Packet_Builder_Bool<TIME>::defs::i_data>("ir_data", "packet_builder")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(

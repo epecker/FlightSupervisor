@@ -10,6 +10,8 @@
 #define PACKET_BUILDER_HPP
 
 #include <limits>
+#include <cstring>
+#include <cassert>
 
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
@@ -17,6 +19,7 @@
 #include "message_structures/message_update_gcs_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
 
 #include "mavNRC/endian.hpp"
 #include "enum_string_conversion.hpp"
@@ -100,7 +103,7 @@ public:
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<std::vector<char>> packets;
-        vector<char> v;
+        std::vector<char> v;
 
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:
@@ -117,7 +120,7 @@ public:
 		TIME next_internal;
 		switch (state.current_state) {
 			case States::IDLE:
-				next_internal = numeric_limits<TIME>::infinity();
+				next_internal = std::numeric_limits<TIME>::infinity();
 				break;
 			case States::GENERATE_PACKET:
 				next_internal = TIME(TA_ZERO);
@@ -129,8 +132,8 @@ public:
 	}
 
 	// Used for logging outputs the state's name. (required for the simulator)
-	friend ostringstream& operator<<(ostringstream& os, const typename Packet_Builder<TYPE, TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Packet_Builder<TYPE, TIME>::state_type& i) {
+		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 
@@ -149,31 +152,73 @@ private:
 };
 
 /**
- * \brief Packet_Builder_Boss creates packets for use in output models
+ * \brief   Packet_Builder_Boss creates packets for use in output models
  * \details Packet_Builder_Boss uses the default implementation of
  *          generate_packet from Packet builder.
+ * \author	Tanner Trautrim
  */
 template<typename TIME>
 class Packet_Builder_Boss : public Packet_Builder<message_boss_mission_update_t, TIME> {
-	using TYPE = message_boss_mission_update_t;
-
 public:
 	Packet_Builder_Boss() = default;
-	explicit Packet_Builder_Boss(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
+};
+
+/**
+ * \brief   Packet_Builder_Boss creates packets for use in output models
+ * \details Packet_Builder_Boss uses the default implementation of
+ *          generate_packet from Packet builder.
+ * \author	Tanner Trautrim
+ */
+template<typename TIME>
+class Packet_Builder_Bool : public Packet_Builder<bool, TIME> {
+public:
+    Packet_Builder_Bool() = default;
+    explicit Packet_Builder_Bool(uint8_t signal_id) {
+        this->state.current_state = Packet_Builder_Bool::States::IDLE;
+        this->data = bool();
+        this->packet_sequence = 0;
+        this->signal_id = signal_id;
+    }
+
+    [[nodiscard]] virtual std::vector<char> generate_packet() const {
+        std::vector<char> packet(sizeof(this->data) + 1);
+        packet[0] = signal_id;
+        std::memcpy(&packet[1], (char *)&this->data, sizeof(this->data));
+        return packet;
+    }
+private:
+    uint8_t signal_id{};
+};
+
+/**
+ * \brief   Packet_Builder_Boss creates packets for use in output models
+ * \details Packet_Builder_Boss uses the default implementation of
+ *          generate_packet from Packet builder.
+ * \author	Tanner Trautrim
+ */
+template<typename TIME>
+class Packet_Builder_Landing_Point : public Packet_Builder<message_landing_point_t, TIME> {
+public:
+    Packet_Builder_Landing_Point() = default;
+
+    [[nodiscard]] virtual std::vector<char> generate_packet() const {
+        std::vector<char> packet(sizeof(this->data) + 1);
+        packet[0] = LANDING_POINT_ID;
+        std::memcpy(&packet[1], (char *)&this->data, sizeof(this->data));
+        return packet;
+    }
 };
 
 /**
  * \brief Packet_Builder_Fcc creates packets for use in output models
  * \details Packet_Builder_Fcc requires the bytes be swapped using a
  *          the functions specified in MavNRC endian.c.
+ * \author	Tanner Trautrim
  */
 template<typename TIME>
 class Packet_Builder_Fcc : public Packet_Builder<message_fcc_command_t, TIME> {
-    using TYPE = message_fcc_command_t;
-
 public:
     Packet_Builder_Fcc() = default;
-    explicit Packet_Builder_Fcc(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
 
 private:
     void preprocess_data() {
@@ -192,14 +237,12 @@ private:
  * \brief Packet_Builder_GCS creates packets for use in output models
  * \details Packet_Builder_GCS creates packets in the same style as mavlink.
  * 			This allows the packets to be sent systems using the mavlink protocol.
+ * \author	Tanner Trautrim
  */
 template<typename TIME>
 class Packet_Builder_GCS : public Packet_Builder<message_update_gcs_t, TIME> {
 public:
-	using TYPE = message_update_gcs_t;
-
 	Packet_Builder_GCS() = default;
-	explicit Packet_Builder_GCS(typename Packet_Builder<TYPE, TIME>::States initial_state) : Packet_Builder<TYPE, TIME>(initial_state){};
 
 private:
 	struct mavlink_message_t {
@@ -253,7 +296,7 @@ private:
 		buf[7] = msg->msgid & 0xFF;
 		buf[8] = (msg->msgid >> 8) & 0xFF;
 		buf[9] = (msg->msgid >> 16) & 0xFF;
-		memcpy(&buf[10], (const char *)&msg->payload64, msg->len);
+	    std::memcpy(&buf[10], (const char *)&msg->payload64, msg->len);
 
 		uint16_t checksum = 0xffff;
 		crc(&checksum, &buf[1], MAVLINK_CORE_HEADER_LEN, (const uint8_t *)&msg->payload64, msg->len, MAVLINK_MSG_ID_STATUSTEXT_CRC);
@@ -266,8 +309,8 @@ private:
 		status_text.severity = this->data.severity;
 		status_text.id = 0;
 		status_text.chunk_seq = 0;
-		memcpy(status_text.text, this->data.text.c_str(), sizeof(char)*50);
-		memcpy((char *)msg->payload64, &status_text, MAVLINK_MSG_ID_STATUSTEXT_LEN);
+	    std::memcpy(status_text.text, this->data.text.c_str(), sizeof(char)*50);
+	    std::memcpy((char *)msg->payload64, &status_text, MAVLINK_MSG_ID_STATUSTEXT_LEN);
 		msg->msgid = MAVLINK_MSG_ID_STATUSTEXT;
 		msg->magic = MAVLINK_STX;
 		msg->len = strlen((char *)msg->payload64);
