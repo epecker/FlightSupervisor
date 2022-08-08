@@ -50,9 +50,8 @@ public:
 
 		struct o_request_perception_status : public out_port<bool> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<int> {};
+		struct o_set_mission_monitor_status : public out_port<bool> {};
 		struct o_start_mission : public out_port<bool> {};
-		struct o_start_monitoring : public out_port<bool> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
@@ -69,7 +68,6 @@ public:
 			typename Mission_Initialization::defs::o_request_aircraft_state,
 			typename Mission_Initialization::defs::o_set_mission_monitor_status,
 			typename Mission_Initialization::defs::o_start_mission,
-			typename Mission_Initialization::defs::o_start_monitoring,
 			typename Mission_Initialization::defs::o_update_gcs
 			>;
 
@@ -184,7 +182,7 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bool_port_out;
 		vector<message_update_gcs_t> gcs_messages;
-		vector<int> mission_monitor_messages;
+		vector<bool> mission_monitor_messages;
 
 		switch (state.current_state) {
 			case States::CHECK_AUTONOMY:
@@ -216,7 +214,7 @@ public:
 				break;
 			case States::OUTPUT_TAKEOFF_POSITION:
 				{
-					mission_monitor_messages.emplace_back(1);
+					mission_monitor_messages.emplace_back(true);
 					get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
 
 					if (aircraft_height > 10.0) {
@@ -231,7 +229,7 @@ public:
 			case States::REQUIRE_MONITORING:
 				{
 					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization::defs::o_start_monitoring>(bags) = bool_port_out;
+					get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = bool_port_out;
 				}
 				break;
 			case States::START_MISSION:

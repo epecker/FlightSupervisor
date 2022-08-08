@@ -36,7 +36,7 @@ public:
 	// Input and output port definitions
 	struct defs {
 		struct i_data : public cadmium::in_port<TYPE> {};
-    struct o_packet: public cadmium::out_port<std::vector<char>> {};
+        struct o_packet: public cadmium::out_port<std::vector<char>> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
@@ -203,7 +203,7 @@ public:
 
     [[nodiscard]] virtual std::vector<char> generate_packet() const {
         std::vector<char> packet(sizeof(this->data) + 1);
-        packet[0] = LANDING_POINT_ID;
+        packet[0] = SIG_ID_LANDING_POINT;
         std::memcpy(&packet[1], (char *)&this->data, sizeof(this->data));
         return packet;
     }

@@ -49,7 +49,7 @@ int main() {
 
 		// Instantiate the atomic model to test
 		shared_ptr<dynamic::modeling::model> packet_builder =
-				dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("packet_builder", MISSION_MANAGER_STATUS_ID);
+				dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("packet_builder", SIG_ID_SET_MISSION_MONITOR_STATUS);
 
 		// Instantiate the input readers.
 		// One for each input
