@@ -72,6 +72,7 @@ struct Supervisor_defs {
 	/* Outputs =============================================================== */
 	/* Takeoff Outputs *********************************************************/
 	struct o_request_aircraft_state : public out_port<bool> {};
+	struct o_set_mission_monitor_status : public out_port<int> {};
 	struct o_start_monitoring : public out_port<bool> {};
 	struct o_update_gcs : public out_port<message_update_gcs_t> {};
 
@@ -84,9 +85,11 @@ struct Supervisor_defs {
 	struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 	struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 	struct o_LP_expired : public out_port<message_landing_point_t> {};
+	struct o_LP_new : public out_port<message_landing_point_t> {};
 	struct o_mission_complete : public out_port<bool> {};
 	struct o_notify_pilot : public out_port<bool> {};
 	struct o_update_boss : public out_port<message_boss_mission_update_t> {};
+	struct o_update_mission_item : public out_port<bool> {};
 };
 
 class Supervisor {
@@ -118,6 +121,7 @@ public:
 	//Define the outputs of the Landing Point Reposition coupled model.
 	dynamic::modeling::Ports oports = {
 		typeid(Supervisor_defs::o_request_aircraft_state),
+		typeid(Supervisor_defs::o_set_mission_monitor_status),
 		typeid(Supervisor_defs::o_start_monitoring),
 		typeid(Supervisor_defs::o_update_gcs),
 
@@ -128,9 +132,11 @@ public:
 		typeid(Supervisor_defs::o_fcc_command_land),
 		typeid(Supervisor_defs::o_fcc_command_velocity),
 		typeid(Supervisor_defs::o_LP_expired),
+		typeid(Supervisor_defs::o_LP_new),
 		typeid(Supervisor_defs::o_mission_complete),
 		typeid(Supervisor_defs::o_notify_pilot),
-		typeid(Supervisor_defs::o_update_boss)
+		typeid(Supervisor_defs::o_update_boss),
+		typeid(Supervisor_defs::o_update_mission_item)
 	};
 
 	//Define the sub-models that make up the Landing Point Reposition coupled model.
@@ -143,9 +149,9 @@ public:
 	//Define the external takeoff_instance internal couplings.
 	dynamic::modeling::EICs eics = {
 		/* Takeoff Inputs **********************************************************/
-		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Takeoff_defs::i_aircraft_state>("takeoff"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_perception_status, Takeoff_defs::i_perception_status>("takeoff"),
-		dynamic::translate::make_EIC<Supervisor_defs::i_start_supervisor, Takeoff_defs::i_start_supervisor>("takeoff"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Takeoff::defs::i_aircraft_state>("takeoff"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_perception_status, Takeoff::defs::i_perception_status>("takeoff"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_start_supervisor, Takeoff::defs::i_start_supervisor>("takeoff"),
 
 		/* On Route Inputs *********************************************************/
 		dynamic::translate::make_EIC<Supervisor_defs::i_waypoint, On_Route_defs::i_waypoint>("on_route"),
@@ -161,9 +167,10 @@ public:
 	//Define the internal takeoff_instance external couplings.
 	dynamic::modeling::EOCs eocs = {
 		/* Takeoff Outputs *********************************************************/
-		dynamic::translate::make_EOC<Takeoff_defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("takeoff"),
-		dynamic::translate::make_EOC<Takeoff_defs::o_start_monitoring, Supervisor_defs::o_start_monitoring>("takeoff"),
-		dynamic::translate::make_EOC<Takeoff_defs::o_update_gcs, Supervisor_defs::o_update_gcs>("takeoff"),
+		dynamic::translate::make_EOC<Takeoff::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("takeoff"),
+		dynamic::translate::make_EOC<Takeoff::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("takeoff"),
+		dynamic::translate::make_EOC<Takeoff::defs::o_start_monitoring, Supervisor_defs::o_start_monitoring>("takeoff"),
+		dynamic::translate::make_EOC<Takeoff::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("takeoff"),
 
 		/* On Route Outputs ********************************************************/
 		dynamic::translate::make_EOC<On_Route_defs::o_fcc_waypoint_update, Supervisor_defs::o_fcc_waypoint_update>("on_route"),
@@ -175,15 +182,18 @@ public:
 		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_land, Supervisor_defs::o_fcc_command_land>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_LP_expired, Supervisor_defs::o_LP_expired>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_LP_new, Supervisor_defs::o_LP_new>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_mission_complete, Supervisor_defs::o_mission_complete>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),
 		dynamic::translate::make_EOC<Landing::defs::o_update_boss, Supervisor_defs::o_update_boss>("landing"),
-		dynamic::translate::make_EOC<Landing::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("landing")
+		dynamic::translate::make_EOC<Landing::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("landing"),
+		dynamic::translate::make_EOC<Landing::defs::o_update_mission_item, Supervisor_defs::o_update_mission_item>("landing")
 	};
 
 	//Define the internal takeoff_instance internal couplings.
 	dynamic::modeling::ICs ics = {
-		dynamic::translate::make_IC<Takeoff_defs::o_start_mission, On_Route_defs::i_start_mission>("takeoff", "on_route")
+		dynamic::translate::make_IC<Takeoff::defs::o_start_mission, On_Route_defs::i_start_mission>("takeoff", "on_route")
 	};
 };
 

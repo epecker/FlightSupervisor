@@ -75,11 +75,14 @@ public:
 		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 		struct o_LP_expired : public out_port<message_landing_point_t> {};
+		struct o_LP_new : public out_port<message_landing_point_t> {};
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_notify_pilot : public out_port<bool> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<int> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_update_mission_item : public out_port<bool> {};
 	};
 
 	/**
@@ -108,11 +111,14 @@ public:
 		typeid(Landing::defs::o_fcc_command_land),
 		typeid(Landing::defs::o_fcc_command_velocity),
 		typeid(Landing::defs::o_LP_expired),
+		typeid(Landing::defs::o_LP_new),
 		typeid(Landing::defs::o_mission_complete),
 		typeid(Landing::defs::o_notify_pilot),
 		typeid(Landing::defs::o_request_aircraft_state),
+		typeid(Landing::defs::o_set_mission_monitor_status),
 		typeid(Landing::defs::o_update_boss),
-		typeid(Landing::defs::o_update_gcs)
+		typeid(Landing::defs::o_update_gcs),
+		typeid(Landing::defs::o_update_mission_item)
 	};
 
 	//Define the sub-models that make up the Landing coupled model.
@@ -147,17 +153,21 @@ public:
 	dynamic::modeling::EOCs eocs = {
 		// lp_manager
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_lp_expired, Landing::defs::o_LP_expired>("lp_manager"),
+		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_lp_new, Landing::defs::o_LP_new>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_boss, Landing::defs::o_update_boss>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_gcs, Landing::defs::o_update_gcs>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_manager"),
+		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_set_mission_monitor_status, Landing::defs::o_set_mission_monitor_status>("lp_manager"),
 
 		// lp_reposition
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_fcc_command_land, Landing::defs::o_fcc_command_land>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_fcc_command_velocity, Landing::defs::o_fcc_command_velocity>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_mission_complete, Landing::defs::o_mission_complete>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_request_aircraft_state, Landing::defs::o_request_aircraft_state>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_set_mission_monitor_status, Landing::defs::o_set_mission_monitor_status>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_boss, Landing::defs::o_update_boss>("lp_reposition"),
 		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_gcs, Landing::defs::o_update_gcs>("lp_reposition"),
+		dynamic::translate::make_EOC<LP_Reposition::defs::o_update_mission_item, Landing::defs::o_update_mission_item>("lp_reposition"),
 
 		// handover_control
 		dynamic::translate::make_EOC<Handover_Control_defs::o_control_yielded, Landing::defs::o_control_yielded>("handover_control"),

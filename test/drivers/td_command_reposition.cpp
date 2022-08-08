@@ -26,12 +26,6 @@ using namespace std;
 ofstream out_messages;
 ofstream out_state;
 
-// Model output ports
-struct o_cancel_hover : public out_port<bool> {};
-struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
-struct o_lp_criteria_met : public out_port<message_landing_point_t> {};
-struct o_stabilize : public out_port<message_hover_criteria_t> {};
-
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
@@ -104,32 +98,22 @@ int main(int argc, char* argv[]) {
 			command_reposition
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = {
-			typeid(o_cancel_hover),
-			typeid(o_fcc_command_velocity),
-			typeid(o_lp_criteria_met),
-			typeid(o_stabilize)
-		};
+		dynamic::modeling::Ports oports_TestDriver = { };
 
 		dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<Command_Reposition_defs::o_cancel_hover,o_cancel_hover>("command_reposition"),
-			dynamic::translate::make_EOC<Command_Reposition_defs::o_fcc_command_velocity,o_fcc_command_velocity>("command_reposition"),
-			dynamic::translate::make_EOC<Command_Reposition_defs::o_stabilize,o_stabilize>("command_reposition"),
-			dynamic::translate::make_EOC<Command_Reposition_defs::o_lp_criteria_met,o_lp_criteria_met>("command_reposition")
-		};
+		dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Command_Reposition_defs::i_aircraft_state>("ir_aircraft_state", "command_reposition"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_hover_criteria_met>("ir_hover_criteria_met", "command_reposition"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Command_Reposition_defs::i_pilot_handover>("ir_pilot_handover", "command_reposition"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition_defs::i_pilot_takeover>("ir_pilot_takeover", "command_reposition"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Command_Reposition_defs::i_request_reposition>("ir_request_reposition", "command_reposition")
+			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Command_Reposition<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "command_reposition"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition<TIME>::defs::i_hover_criteria_met>("ir_hover_criteria_met", "command_reposition"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Command_Reposition<TIME>::defs::i_pilot_handover>("ir_pilot_handover", "command_reposition"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Command_Reposition<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "command_reposition"),
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Command_Reposition<TIME>::defs::i_request_reposition>("ir_request_reposition", "command_reposition")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(

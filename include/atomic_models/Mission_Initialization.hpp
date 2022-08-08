@@ -25,19 +25,6 @@
 
 using namespace cadmium;
 
-// Input and output port definitions
-struct Mission_Initialization_defs {
-	struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-	struct i_perception_status : public in_port<bool> {};
-	struct i_start_supervisor : public in_port<message_start_supervisor_t> {};
-
-	struct o_request_perception_status : public out_port<bool> {};
-	struct o_request_aircraft_state : public out_port<bool> {};
-	struct o_start_mission : public out_port<bool> {};
-	struct o_start_monitoring : public out_port<bool> {};
-	struct o_update_gcs : public out_port<message_update_gcs_t> {};
-};
-
 template<typename TIME>
 class Mission_Initialization {
 public:
@@ -55,20 +42,35 @@ public:
 		(START_MISSION)
 	);
 
+	// Input and output port definitions
+	struct defs {
+		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
+		struct i_perception_status : public in_port<bool> {};
+		struct i_start_supervisor : public in_port<message_start_supervisor_t> {};
+
+		struct o_request_perception_status : public out_port<bool> {};
+		struct o_request_aircraft_state : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<int> {};
+		struct o_start_mission : public out_port<bool> {};
+		struct o_start_monitoring : public out_port<bool> {};
+		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+	};
+
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
-			typename Mission_Initialization_defs::i_aircraft_state,
-			typename Mission_Initialization_defs::i_perception_status,
-			typename Mission_Initialization_defs::i_start_supervisor
+			typename Mission_Initialization::defs::i_aircraft_state,
+			typename Mission_Initialization::defs::i_perception_status,
+			typename Mission_Initialization::defs::i_start_supervisor
 			>;
 
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
-			typename Mission_Initialization_defs::o_request_perception_status,
-			typename Mission_Initialization_defs::o_request_aircraft_state,
-			typename Mission_Initialization_defs::o_start_mission,
-			typename Mission_Initialization_defs::o_start_monitoring,
-			typename Mission_Initialization_defs::o_update_gcs
+			typename Mission_Initialization::defs::o_request_perception_status,
+			typename Mission_Initialization::defs::o_request_aircraft_state,
+			typename Mission_Initialization::defs::o_set_mission_monitor_status,
+			typename Mission_Initialization::defs::o_start_mission,
+			typename Mission_Initialization::defs::o_start_monitoring,
+			typename Mission_Initialization::defs::o_update_gcs
 			>;
 
 	// Tracks the state of the model
@@ -138,27 +140,27 @@ public:
 
 		switch (state.current_state) {
 			case States::IDLE:
-				received_start_supervisor = !get_messages<typename Mission_Initialization_defs::i_start_supervisor>(mbs).empty();
+				received_start_supervisor = !get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).empty();
 				if (received_start_supervisor) {
-					vector<message_start_supervisor_t> new_mission_data = get_messages<typename Mission_Initialization_defs::i_start_supervisor>(mbs);
+					vector<message_start_supervisor_t> new_mission_data = get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs);
 					mission_started = new_mission_data[0].mission_started;
 					autonomy_armed = new_mission_data[0].autonomy_armed;
 					state.current_state = States::MISSION_STATUS;
 				}
 				break;
 			case States::CHECK_PERCEPTION_SYSTEM:
-				received_perception_status = !get_messages<typename Mission_Initialization_defs::i_perception_status>(mbs).empty();
+				received_perception_status = !get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs).empty();
 				if (received_perception_status) {
-					vector<bool> perception_status = get_messages<typename Mission_Initialization_defs::i_perception_status>(mbs);
+					vector<bool> perception_status = get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs);
 					perception_healthy = perception_status[0];
 					state.current_state = States::OUTPUT_PERCEPTION_STATUS;
 				}
 				break;
 			case States::CHECK_AIRCRAFT_STATE:
-				received_aircraft_state = !get_messages<typename Mission_Initialization_defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs).empty();
 
 				if (received_aircraft_state) {
-					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Mission_Initialization_defs::i_aircraft_state>(mbs);
+					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs);
 					aircraft_height = new_aircraft_state[0].alt_AGL;
 					state.current_state = States::OUTPUT_TAKEOFF_POSITION;
 				}
@@ -182,13 +184,14 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bool_port_out;
 		vector<message_update_gcs_t> gcs_messages;
+		vector<int> mission_monitor_messages;
 
 		switch (state.current_state) {
 			case States::CHECK_AUTONOMY:
 				{
 					if (autonomy_armed) {
 						bool_port_out.push_back(true);
-						get_messages<typename Mission_Initialization_defs::o_request_perception_status>(bags) = bool_port_out;
+						get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags) = bool_port_out;
 					}
 				}
 				break;
@@ -202,36 +205,39 @@ public:
 					}
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
 					gcs_messages.emplace_back(temp_gcs_update);
-					get_messages<typename Mission_Initialization_defs::o_update_gcs>(bags) = gcs_messages;
+					get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
 				}
 				break;
 			case States::REQUEST_AIRCRAFT_STATE:
 				{
 					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization_defs::o_request_aircraft_state>(bags) = bool_port_out;
+					get_messages<typename Mission_Initialization::defs::o_request_aircraft_state>(bags) = bool_port_out;
 				}
 				break;
 			case States::OUTPUT_TAKEOFF_POSITION:
 				{
+					mission_monitor_messages.emplace_back(1);
+					get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
+
 					if (aircraft_height > 10.0) {
 						message_update_gcs_t temp_gcs_update;
 						temp_gcs_update.text = "Starting Mission in air!";
 						temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
 						gcs_messages.emplace_back(temp_gcs_update);
-						get_messages<typename Mission_Initialization_defs::o_update_gcs>(bags) = gcs_messages;
+						get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
 					}
 				}
 				break;
 			case States::REQUIRE_MONITORING:
 				{
 					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization_defs::o_start_monitoring>(bags) = bool_port_out;
+					get_messages<typename Mission_Initialization::defs::o_start_monitoring>(bags) = bool_port_out;
 				}
 				break;
 			case States::START_MISSION:
 				{
 					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization_defs::o_start_mission>(bags) = bool_port_out;
+					get_messages<typename Mission_Initialization::defs::o_start_mission>(bags) = bool_port_out;
 				}
 				break;
 			default:
