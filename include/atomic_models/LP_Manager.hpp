@@ -211,6 +211,7 @@ public:
 							valid_lp_recv = true;
 							first_lp = false;
 							lp_count++;
+							lp.id = lp_count;
 							break;
 						}
 					}
@@ -223,6 +224,7 @@ public:
 					lp_recvd = true;
 					first_lp = true;
 					lp_count++;
+					lp.id = lp_count;
 				}
 
 				//If a valid landing point was identified out of the list of landing points,
