@@ -53,7 +53,7 @@ int main() {
     // Instantiate the Packet Builders.
     shared_ptr<dynamic::modeling::model> pb_bool_mission_complete = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_complete", SIG_ID_MISSION_COMPLETE);
     shared_ptr<dynamic::modeling::model> pb_bool_mission_start = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_start", SIG_ID_START_MISSION);
-    shared_ptr<dynamic::modeling::model> pb_bool_set_mission_monitor_status = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, int>("pb_bool_set_mission_monitor_status", SIG_ID_SET_MISSION_MONITOR_STATUS);
+    shared_ptr<dynamic::modeling::model> pb_uint8_set_mission_monitor_status = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Uint8, TIME, uint8_t>("pb_uint8_set_mission_monitor_status", SIG_ID_SET_MISSION_MONITOR_STATUS);
 
     shared_ptr<dynamic::modeling::model> pb_boss = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Boss, TIME>("pb_boss");
     shared_ptr<dynamic::modeling::model> pb_fcc = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Fcc, TIME>("pb_fcc");
@@ -75,7 +75,7 @@ int main() {
             im_udp_interface,
             pb_bool_mission_complete,
             pb_bool_mission_start,
-            pb_bool_set_mission_monitor_status,
+            pb_uint8_set_mission_monitor_status,
             pb_boss,
             pb_fcc,
             pb_gcs,
@@ -119,7 +119,7 @@ int main() {
 
         dynamic::translate::make_IC<Supervisor_defs::o_start_mission, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_start"),
         dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_complete"),
-        dynamic::translate::make_IC<Supervisor_defs::o_set_mission_monitor_status, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_set_mission_monitor_status"),
+        dynamic::translate::make_IC<Supervisor_defs::o_set_mission_monitor_status, Packet_Builder_Uint8<TIME>::defs::i_data>("supervisor", "pb_uint8_set_mission_monitor_status"),
 
         dynamic::translate::make_IC<Supervisor_defs::o_update_boss, Packet_Builder_Boss<TIME>::defs::i_data>("supervisor", "pb_boss"),
         dynamic::translate::make_IC<Supervisor_defs::o_update_gcs, Packet_Builder_GCS<TIME>::defs::i_data>("supervisor", "pb_gcs"),
@@ -135,7 +135,7 @@ int main() {
 
         dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_bool_mission_start", "udp_mavnrc"),
         dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_bool_mission_complete", "udp_mavnrc"),
-        dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_bool_set_mission_monitor_status", "udp_mavnrc"),
+        dynamic::translate::make_IC<Packet_Builder_Uint8<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_uint8_set_mission_monitor_status", "udp_mavnrc"),
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

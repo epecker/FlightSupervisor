@@ -72,7 +72,7 @@ struct Supervisor_defs {
 	/* Outputs =============================================================== */
 	/* Takeoff Outputs *********************************************************/
 	struct o_request_aircraft_state : public out_port<bool> {};
-	struct o_set_mission_monitor_status : public out_port<bool> {};
+	struct o_set_mission_monitor_status : public out_port<uint8_t> {};
 	struct o_start_mission : public out_port<bool> {};
 	struct o_update_gcs : public out_port<message_update_gcs_t> {};
 

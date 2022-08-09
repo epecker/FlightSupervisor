@@ -63,7 +63,7 @@ public:
 		struct o_lp_new : public out_port<message_landing_point_t> {};
 		struct o_pilot_handover : public out_port<message_landing_point_t> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<bool> {};
+		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
@@ -322,7 +322,7 @@ public:
 		vector<message_hover_criteria_t> stabilize_messages;
 		vector<message_boss_mission_update_t> boss_messages;
 		vector<message_update_gcs_t> gcs_messages;
-		vector<bool> mission_monitor_messages;
+		vector<uint8_t> mission_monitor_messages;
 
 		switch (state.current_state) {
 			case States::HOVER_PLP:
@@ -355,7 +355,7 @@ public:
 					strcpy(temp_boss.description, "LZ scan");
 					boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
-					mission_monitor_messages.push_back(false);
+					mission_monitor_messages.emplace_back(0);
 					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
