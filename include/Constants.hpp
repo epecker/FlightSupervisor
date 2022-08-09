@@ -79,10 +79,12 @@
 #define SIG_ID_LANDING_POINT 5
 
 // Network Addresses & Ports
-#define IPV4_BOSS "127.0.0.1"
-#define IPV4_FCC "127.0.0.1"
-#define IPV4_GCS "127.0.0.1"
-#define IPV4_MAVNRC "127.0.0.1"
+#define LOCALHOST "127.0.0.1"
+#define HOST "192.168.101.106"
+#define IPV4_BOSS HOST
+#define IPV4_FCC HOST
+#define IPV4_GCS HOST
+#define IPV4_MAVNRC HOST
 
 #define PORT_BOSS 13333
 #define PORT_FCC 4060
