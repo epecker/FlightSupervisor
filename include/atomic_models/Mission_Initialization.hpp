@@ -117,9 +117,6 @@ public:
 				state.current_state = States::CHECK_AIRCRAFT_STATE;
 				break;
 			case States::OUTPUT_TAKEOFF_POSITION:
-				state.current_state = States::REQUIRE_MONITORING;
-				break;
-			case States::REQUIRE_MONITORING:
 				state.current_state = States::START_MISSION;
 				break;
 			case States::START_MISSION:
@@ -226,12 +223,6 @@ public:
 					}
 				}
 				break;
-			case States::REQUIRE_MONITORING:
-				{
-                    mission_monitor_messages.emplace_back(1);
-					get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
-				}
-				break;
 			case States::START_MISSION:
 				{
 					bool_port_out.push_back(true);
@@ -260,7 +251,6 @@ public:
 			case States::OUTPUT_PERCEPTION_STATUS:
 			case States::REQUEST_AIRCRAFT_STATE:
 			case States::OUTPUT_TAKEOFF_POSITION:
-			case States::REQUIRE_MONITORING:
 			case States::START_MISSION:
 				next_internal = TIME(TA_ZERO);
 				break;
