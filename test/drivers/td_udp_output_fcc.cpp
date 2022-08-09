@@ -54,7 +54,7 @@ int main() {
 
         // Instantiate the atomic model to test
         std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>(
-                "udp_output", "127.0.0.1", 4060);
+                "udp_output", IPV4_FCC, PORT_FCC);
 
         // Instantiate the input readers.
         // One for each input
