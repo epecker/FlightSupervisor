@@ -62,9 +62,8 @@ public:
 
 		/***** Define output ports for coupled model *****/
 		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<int> {};
+		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
 		struct o_start_mission : public out_port<bool> {};
-		struct o_start_monitoring : public out_port<bool> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
@@ -86,7 +85,6 @@ public:
 		typeid(Takeoff::defs::o_request_aircraft_state),
 		typeid(Takeoff::defs::o_set_mission_monitor_status),
 		typeid(Takeoff::defs::o_start_mission),
-		typeid(Takeoff::defs::o_start_monitoring),
 		typeid(Takeoff::defs::o_update_gcs)
 	};
 
@@ -109,7 +107,6 @@ public:
 		dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_request_aircraft_state, Takeoff::defs::o_request_aircraft_state>("mission_initialization"),
 		dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_set_mission_monitor_status, Takeoff::defs::o_set_mission_monitor_status>("mission_initialization"),
 		dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_start_mission, Takeoff::defs::o_start_mission>("mission_initialization"),
-		dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_start_monitoring, Takeoff::defs::o_start_monitoring>("mission_initialization"),
 		dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_update_gcs, Takeoff::defs::o_update_gcs>("mission_initialization"),
 
 	};

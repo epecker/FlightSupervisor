@@ -64,7 +64,7 @@ public:
 		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 		struct o_lp_criteria_met : public out_port<message_landing_point_t> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<int> {};
+		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
@@ -232,7 +232,7 @@ public:
 		vector<message_landing_point_t> bag_port_LP_out;
 		vector<message_fcc_command_t> bag_port_fcc_out;
 		vector<message_hover_criteria_t> bag_port_hover_out;
-		vector<int> mission_monitor_messages;
+		vector<uint8_t> mission_monitor_messages;
 		vector<message_boss_mission_update_t> boss_messages;
 		vector<message_update_gcs_t> gcs_messages;
 
@@ -287,7 +287,8 @@ public:
 				strcpy(temp_boss_update.description, "LP rep");
 				
 				bag_port_hover_out.push_back(mhc);
-				mission_monitor_messages.push_back(0);
+                
+				mission_monitor_messages.emplace_back(0);
 				boss_messages.push_back(temp_boss_update);
 				gcs_messages.push_back(temp_gcs_update);
 

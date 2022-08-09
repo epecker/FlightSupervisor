@@ -15,6 +15,7 @@
 #include "io_models/UDP_Input_Async.hpp"
 #include "io_models/Shared_Memory_Input.hpp"
 #endif
+
 #include "io_models/Cache_Input.hpp"
 
 // Messages structures
@@ -24,14 +25,11 @@
 #include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 
-using namespace cadmium::basic_models::pdevs;
-
 /**
 * ==========================================================
 * ASYNCHRONOUS UDP INPUT MODELS
 * ==========================================================
 */
-
 #ifdef RT_LINUX
 
 // Aircraft State

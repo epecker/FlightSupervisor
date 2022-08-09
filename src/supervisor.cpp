@@ -1,51 +1,38 @@
 //C++ headers
 #include <chrono>
-#include <algorithm>
 #include <string>
 #include <iostream>
 #include <filesystem>
 
 //Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
-
-//Real-Time Headers
-#include <cadmium/basic_model/pdevs/generator.hpp>
-#include <cadmium/modeling/coupling.hpp>
-#include <cadmium/concept/coupled_model_assert.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
-#include "input_models.hpp" // Input Model Definitions.
 #include "io_models/Supervisor_UDP_Input.hpp"
 #include "io_models/Aircraft_State_Input.hpp"
 #include "io_models/Landing_Achieved_Demand_Input.hpp"
 #include "io_models/Pilot_Takeover_Input.hpp"
+#include "io_models/Packet_Builder.hpp"
+#include "io_models/UDP_Output.hpp"
 
 //Coupled model headers
 #include "coupled_models/Supervisor.hpp"
 
-using namespace std;
 using namespace cadmium;
 
 using hclock = std::chrono::high_resolution_clock;
 using TIME = NDTime;
 
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
-ofstream out_info;
+int main() {
+	const string out_directory = string(PROJECT_DIRECTORY) + string("/test/simulation_results/supervisor/0");
 
-int main(int argc, char* argv[]) {
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/supervisor/0");
-
-	string out_directory = o_base_dir;
 	string out_messages_file = out_directory + string("/output_messages.txt");
 	string out_state_file = out_directory + string("/output_state.txt");
 	string out_info_file = out_directory + string("/output_info.txt");
@@ -53,28 +40,50 @@ int main(int argc, char* argv[]) {
 	// Create the output location
 	filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
-	// Instantiate the coupled model to test
+	// Instantiate the coupled model
 	Supervisor supervisor_instance = Supervisor();
 	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supervisor_instance.submodels, supervisor_instance.iports, supervisor_instance.oports, supervisor_instance.eics, supervisor_instance.eocs, supervisor_instance.ics);
 
 	// Instantiate the input readers.
-	// One for each input
-	shared_ptr<dynamic::modeling::model> im_udp_interface = dynamic::translate::make_dynamic_atomic_model<Supervisor_UDP_Input, TIME, TIME, unsigned short>("im_udp_interface", std::move(TIME("00:00:00:100")), std::move(23001));
-
+	shared_ptr<dynamic::modeling::model> im_udp_interface = dynamic::translate::make_dynamic_atomic_model<Supervisor_UDP_Input, TIME, TIME, unsigned short>("im_udp_interface", std::move(TIME("00:00:00:100")), 23001);
 	shared_ptr<dynamic::modeling::model> im_aircraft_state = dynamic::translate::make_dynamic_atomic_model<Aircraft_State_Input, TIME>("im_aircraft_state");
-
 	shared_ptr<dynamic::modeling::model> im_landing_achieved = dynamic::translate::make_dynamic_atomic_model<Landing_Achieved_Demand_Input, TIME, TIME, float>("im_landing_achieved", std::move(TIME("00:00:00:100")), DEFAULT_LAND_CRITERIA_VERT_DIST);
-
 	shared_ptr<dynamic::modeling::model> im_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Pilot_Takeover_Input, TIME, TIME>("im_pilot_takeover", std::move(TIME("00:00:01:000")));
+
+    // Instantiate the Packet Builders.
+    shared_ptr<dynamic::modeling::model> pb_bool_mission_complete = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_complete", SIG_ID_MISSION_COMPLETE);
+    shared_ptr<dynamic::modeling::model> pb_bool_mission_start = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_start", SIG_ID_START_MISSION);
+    shared_ptr<dynamic::modeling::model> pb_uint8_set_mission_monitor_status = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Uint8, TIME, uint8_t>("pb_uint8_set_mission_monitor_status", SIG_ID_SET_MISSION_MONITOR_STATUS);
+
+    shared_ptr<dynamic::modeling::model> pb_boss = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Boss, TIME>("pb_boss");
+    shared_ptr<dynamic::modeling::model> pb_fcc = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Fcc, TIME>("pb_fcc");
+    shared_ptr<dynamic::modeling::model> pb_gcs = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_GCS, TIME>("pb_gcs");
+    shared_ptr<dynamic::modeling::model> pb_landing_point = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Landing_Point, TIME>("pb_landing_point");
+
+    shared_ptr<dynamic::modeling::model> udp_boss = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_boss", IPV4_BOSS, PORT_BOSS);
+    shared_ptr<dynamic::modeling::model> udp_fcc = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_fcc", IPV4_FCC, PORT_FCC);
+    shared_ptr<dynamic::modeling::model> udp_gcs = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_gcs", IPV4_GCS, PORT_GCS);
+    shared_ptr<dynamic::modeling::model> udp_mavnrc = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_mavnrc", IPV4_MAVNRC, PORT_MAVNRC);
 
 	// The models to be included in this coupled model 
 	// (accepts atomic and coupled models)
 	dynamic::modeling::Models submodels_TestDriver = {
-		supervisor,
-		im_landing_achieved,
-		im_aircraft_state,
-		im_pilot_takeover,
-		im_udp_interface
+            supervisor,
+            im_landing_achieved,
+            im_aircraft_state,
+            im_pilot_takeover,
+            im_udp_interface,
+            pb_bool_mission_complete,
+            pb_bool_mission_start,
+            pb_uint8_set_mission_monitor_status,
+            pb_boss,
+            pb_fcc,
+            pb_gcs,
+            pb_landing_point,
+            udp_boss,
+            udp_fcc,
+            udp_gcs,
+            udp_mavnrc
 	};
 
 	dynamic::modeling::Ports iports_TestDriver = { };
@@ -103,7 +112,30 @@ int main(int argc, char* argv[]) {
 		dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_perception_status, Supervisor_defs::i_perception_status>("im_udp_interface", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_start_supervisor, Supervisor_defs::i_start_supervisor>("im_udp_interface", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_waypoint, Supervisor_defs::i_waypoint>("im_udp_interface", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Supervisor_UDP_Input_defs::i_quit>("supervisor", "im_udp_interface")
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Supervisor_UDP_Input_defs::i_quit>("supervisor", "im_udp_interface"),
+
+            // Output ICs
+        dynamic::translate::make_IC<Supervisor_defs::o_LP_new, Packet_Builder_Landing_Point<TIME>::defs::i_data>("supervisor", "pb_landing_point"),
+
+        dynamic::translate::make_IC<Supervisor_defs::o_start_mission, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_start"),
+        dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_complete"),
+        dynamic::translate::make_IC<Supervisor_defs::o_set_mission_monitor_status, Packet_Builder_Uint8<TIME>::defs::i_data>("supervisor", "pb_uint8_set_mission_monitor_status"),
+
+        dynamic::translate::make_IC<Supervisor_defs::o_update_boss, Packet_Builder_Boss<TIME>::defs::i_data>("supervisor", "pb_boss"),
+        dynamic::translate::make_IC<Supervisor_defs::o_update_gcs, Packet_Builder_GCS<TIME>::defs::i_data>("supervisor", "pb_gcs"),
+
+        dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_hover, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_velocity, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        dynamic::translate::make_IC<Supervisor_defs::o_fcc_waypoint_update, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+
+        dynamic::translate::make_IC<Packet_Builder_Boss<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_boss", "udp_boss"),
+        dynamic::translate::make_IC<Packet_Builder_Fcc<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_fcc", "udp_fcc"),
+        dynamic::translate::make_IC<Packet_Builder_GCS<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_gcs", "udp_gcs"),
+
+        dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_bool_mission_start", "udp_mavnrc"),
+        dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_bool_mission_complete", "udp_mavnrc"),
+        dynamic::translate::make_IC<Packet_Builder_Uint8<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_uint8_set_mission_monitor_status", "udp_mavnrc"),
 	};
 
 	shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -111,6 +143,10 @@ int main(int argc, char* argv[]) {
 	);
 
 	/*************** Loggers *******************/
+    static ofstream out_messages;
+    static ofstream out_state;
+    static ofstream out_info;
+
 	out_messages = ofstream(out_messages_file);
 	struct oss_sink_messages {
 		static ostream& sink() {
@@ -147,7 +183,7 @@ int main(int argc, char* argv[]) {
 	auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 	cout << "Simulation took: " << elapsed << " seconds" << endl;
 
-	fflush(NULL);
+	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
 	if (std::system("python3 --version") == 0) {

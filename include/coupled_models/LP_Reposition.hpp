@@ -72,7 +72,7 @@ public:
 		struct o_mission_complete : public out_port<bool> {};
 		struct o_pilot_handover : public out_port<message_landing_point_t> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<int> {};
+		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
 		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};

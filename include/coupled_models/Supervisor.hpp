@@ -72,8 +72,8 @@ struct Supervisor_defs {
 	/* Outputs =============================================================== */
 	/* Takeoff Outputs *********************************************************/
 	struct o_request_aircraft_state : public out_port<bool> {};
-	struct o_set_mission_monitor_status : public out_port<int> {};
-	struct o_start_monitoring : public out_port<bool> {};
+	struct o_set_mission_monitor_status : public out_port<uint8_t> {};
+	struct o_start_mission : public out_port<bool> {};
 	struct o_update_gcs : public out_port<message_update_gcs_t> {};
 
 	/* On Route Outputs ********************************************************/
@@ -122,7 +122,7 @@ public:
 	dynamic::modeling::Ports oports = {
 		typeid(Supervisor_defs::o_request_aircraft_state),
 		typeid(Supervisor_defs::o_set_mission_monitor_status),
-		typeid(Supervisor_defs::o_start_monitoring),
+		typeid(Supervisor_defs::o_start_mission),
 		typeid(Supervisor_defs::o_update_gcs),
 
 		typeid(Supervisor_defs::o_fcc_waypoint_update),
@@ -167,10 +167,10 @@ public:
 	//Define the internal takeoff_instance external couplings.
 	dynamic::modeling::EOCs eocs = {
 		/* Takeoff Outputs *********************************************************/
-		dynamic::translate::make_EOC<Takeoff::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("takeoff"),
-		dynamic::translate::make_EOC<Takeoff::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("takeoff"),
-		dynamic::translate::make_EOC<Takeoff::defs::o_start_monitoring, Supervisor_defs::o_start_monitoring>("takeoff"),
-		dynamic::translate::make_EOC<Takeoff::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("takeoff"),
+        dynamic::translate::make_EOC<Takeoff::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("takeoff"),
+        dynamic::translate::make_EOC<Takeoff::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("takeoff"),
+        dynamic::translate::make_EOC<Takeoff::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("takeoff"),
+        dynamic::translate::make_EOC<Takeoff::defs::o_start_mission, Supervisor_defs::o_start_mission>("takeoff"),
 
 		/* On Route Outputs ********************************************************/
 		dynamic::translate::make_EOC<On_Route_defs::o_fcc_waypoint_update, Supervisor_defs::o_fcc_waypoint_update>("on_route"),
