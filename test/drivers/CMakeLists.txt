@@ -28,6 +28,7 @@ add_executable(td_packet_builder_gcs			"td_packet_builder_gcs.cpp" 			"${MavNRC_
 add_executable(td_packet_builder_boss	        "td_packet_builder_boss.cpp" 		    "${MavNRC_GEO}")
 add_executable(td_packet_builder_bool	        "td_packet_builder_bool.cpp" 		    "${MavNRC_GEO}")
 add_executable(td_packet_builder_landing_point	"td_packet_builder_landing_point.cpp" 	"${MavNRC_GEO}")
+add_executable(td_rudp_output_mavnrc 			"td_rudp_output_mavnrc.cpp" 			"${MavNRC_GEO}" "${RUDP}")
 
 target_include_directories(td_handover_control 				PUBLIC ${includes_list})
 target_include_directories(td_landing_routine 				PUBLIC ${includes_list})
@@ -60,6 +61,7 @@ target_include_directories(td_packet_builder_gcs		    PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_boss		    PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_bool		    PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_landing_point	PUBLIC ${includes_list})
+target_include_directories(td_rudp_output_mavnrc			PUBLIC ${includes_list})
 
 
 target_compile_definitions(td_blocking_input 				PUBLIC RT_LINUX RT_DEVS)
@@ -74,6 +76,7 @@ target_compile_definitions(td_landing_achieved_demand_input PUBLIC RT_LINUX RT_D
 target_compile_definitions(td_pilot_takeover_input          PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_aircraft_state_input          PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_supervisor_udp_input          PUBLIC RT_LINUX RT_DEVS)
+target_compile_definitions(td_rudp_output_mavnrc	        PUBLIC RT_LINUX RT_DEVS)
 
 target_link_libraries(td_handover_control 				${Boost_LIBRARIES})
 target_link_libraries(td_landing_routine 				${Boost_LIBRARIES})
@@ -105,3 +108,4 @@ target_link_libraries(td_packet_builder_gcs 		    ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_boss 		    ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_bool 		    ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_landing_point 	${Boost_LIBRARIES})
+target_link_libraries(td_rudp_output_mavnrc			 	${Boost_LIBRARIES})
