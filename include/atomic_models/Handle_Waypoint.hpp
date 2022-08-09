@@ -131,7 +131,7 @@ public:
 			vector<message_fcc_command_t> waypoint_out_port;
 			message_fcc_command_t waypoint = next_waypoint;
 			waypoint.set_supervisor_status(Control_Mode_E::MAV_COMMAND);
-			waypoint_out_port.push_back(next_waypoint);
+			waypoint_out_port.push_back(waypoint);
 			get_messages<typename Handle_Waypoint_defs::o_fcc_waypoint_update>(bags) = waypoint_out_port;
 		}
 
