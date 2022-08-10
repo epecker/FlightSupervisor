@@ -73,6 +73,7 @@ public:
 		struct o_control_yielded : public out_port<bool> {};
 		struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
+		struct o_fcc_command_orbit : public out_port<message_fcc_command_t> {};
 		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
 		struct o_LP_expired : public out_port<message_landing_point_t> {};
 		struct o_LP_new : public out_port<message_landing_point_t> {};
@@ -109,6 +110,7 @@ public:
 		typeid(Landing::defs::o_control_yielded),
 		typeid(Landing::defs::o_fcc_command_hover),
 		typeid(Landing::defs::o_fcc_command_land),
+		typeid(Landing::defs::o_fcc_command_orbit),
 		typeid(Landing::defs::o_fcc_command_velocity),
 		typeid(Landing::defs::o_LP_expired),
 		typeid(Landing::defs::o_LP_new),
@@ -152,6 +154,7 @@ public:
 	//Define the internal to external couplings for the Landing.
 	dynamic::modeling::EOCs eocs = {
 		// lp_manager
+		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_fcc_command_orbit, Landing::defs::o_fcc_command_orbit>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_lp_expired, Landing::defs::o_LP_expired>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_lp_new, Landing::defs::o_LP_new>("lp_manager"),
 		dynamic::translate::make_EOC<LP_Manager<TIME>::defs::o_update_boss, Landing::defs::o_update_boss>("lp_manager"),
@@ -184,7 +187,6 @@ public:
 		// lp_manager
 		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_lp_new, LP_Reposition::defs::i_lp_new>("lp_manager","lp_reposition"),
 		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_pilot_handover, Handover_Control_defs::i_pilot_handover>("lp_manager","handover_control"),
-		dynamic::translate::make_IC<LP_Manager<TIME>::defs::o_stabilize, Stabilize<TIME>::defs::i_stabilize>("lp_manager","stabilize"),
 
 		// lp_reposition
 		dynamic::translate::make_IC<LP_Reposition::defs::o_cancel_hover, Stabilize<TIME>::defs::i_cancel_hover>("lp_reposition","stabilize"),
@@ -194,7 +196,6 @@ public:
 
 		// stabilize
 		dynamic::translate::make_IC<Stabilize<TIME>::defs::o_hover_criteria_met, Handover_Control_defs::i_hover_criteria_met>("stabilize","handover_control"),
-		dynamic::translate::make_IC<Stabilize<TIME>::defs::o_hover_criteria_met, LP_Manager<TIME>::defs::i_hover_criteria_met>("stabilize","lp_manager"),
 		dynamic::translate::make_IC<Stabilize<TIME>::defs::o_hover_criteria_met, LP_Reposition::defs::i_hover_criteria_met>("stabilize","lp_reposition"),
 
 		// handover_control
