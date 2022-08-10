@@ -38,8 +38,6 @@ public:
 		(GET_STATE_PLP)
 		(REQUEST_STATE_LP)
 		(GET_STATE_LP)
-		(HOVER_PLP)
-		(STABILIZING)
 		(START_LZE_SCAN)
 		(LZE_SCAN)
 		(HANDOVER_CONTROL)
@@ -54,17 +52,16 @@ public:
 		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 		struct i_control_yielded : public in_port<bool> {};
 		struct i_fcc_command_land : public in_port<message_fcc_command_t> {};
-		struct i_hover_criteria_met : public in_port<bool> {};
 		struct i_lp_recv : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
 		struct i_plp_ach : public in_port<message_landing_point_t> {};
 
+		struct o_fcc_command_orbit : public out_port<message_fcc_command_t> {};
 		struct o_lp_expired : public out_port<message_landing_point_t> {};
 		struct o_lp_new : public out_port<message_landing_point_t> {};
 		struct o_pilot_handover : public out_port<message_landing_point_t> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
 		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
-		struct o_stabilize : public out_port<message_hover_criteria_t> {};
 		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
@@ -74,19 +71,18 @@ public:
 		typename LP_Manager<TIME>::defs::i_aircraft_state,
 		typename LP_Manager<TIME>::defs::i_control_yielded,
 		typename LP_Manager<TIME>::defs::i_fcc_command_land,
-		typename LP_Manager<TIME>::defs::i_hover_criteria_met,
 		typename LP_Manager<TIME>::defs::i_lp_recv,
 		typename LP_Manager<TIME>::defs::i_pilot_takeover,
 		typename LP_Manager<TIME>::defs::i_plp_ach
 	>;
 
 	using output_ports = tuple<
+		typename LP_Manager<TIME>::defs::o_fcc_command_orbit,
 		typename LP_Manager<TIME>::defs::o_lp_expired,
 		typename LP_Manager<TIME>::defs::o_lp_new,
 		typename LP_Manager<TIME>::defs::o_pilot_handover,
 		typename LP_Manager<TIME>::defs::o_request_aircraft_state,
 		typename LP_Manager<TIME>::defs::o_set_mission_monitor_status,
-		typename LP_Manager<TIME>::defs::o_stabilize,
 		typename LP_Manager<TIME>::defs::o_update_boss,
 		typename LP_Manager<TIME>::defs::o_update_gcs
 	>;
@@ -147,17 +143,14 @@ public:
 	// internal transition
 	void internal_transition() {
 		switch (state.current_state) {
-			case States::HOVER_PLP:
-				state.current_state = States::STABILIZING;
+			case States::START_LZE_SCAN:
+				state.current_state = States::LZE_SCAN;
 				break;
 			case States::REQUEST_STATE_LP:
 				state.current_state = States::GET_STATE_LP;
 				break;
 			case States::REQUEST_STATE_PLP:
 				state.current_state = States::GET_STATE_PLP;
-				break;
-			case States::START_LZE_SCAN:
-				state.current_state = States::LZE_SCAN;
 				break;
 			case States::LZE_SCAN:
 				state.current_state = States::HANDOVER_CONTROL;
@@ -253,7 +246,7 @@ public:
 					} else {
 						plp.alt = aircraft_state.alt_MSL;
 					}
-					state.current_state = States::HOVER_PLP;
+					state.current_state = States::START_LZE_SCAN;
 				}
 				break;
 			case States::GET_STATE_LP:
@@ -270,14 +263,8 @@ public:
 					state.current_state = States::NOTIFY_LP;
 				}
 				break;
-			//If we are in a state that can receive a hover criteria met input,
-			case States::STABILIZING:
-				if (get_messages<typename LP_Manager<TIME>::defs::i_hover_criteria_met>(mbs).size() >= 1) {
-					state.current_state = States::START_LZE_SCAN;
-				}
-				break;
 
-				//If we are in a state that can receive a control yielded input,
+			//If we are in a state that can receive a control yielded input,
 			case States::HANDOVER_CONTROL:
 				if (get_messages<typename LP_Manager<TIME>::defs::i_control_yielded>(mbs).size() >= 1) {
 					state.current_state = States::PILOT_CONTROL;
@@ -319,43 +306,38 @@ public:
 		vector<message_landing_point_t> lp_messages;
 		vector<message_landing_point_t> plp_messages;
 		vector<bool> bool_messages;
-		vector<message_hover_criteria_t> stabilize_messages;
 		vector<message_boss_mission_update_t> boss_messages;
 		vector<message_update_gcs_t> gcs_messages;
 		vector<uint8_t> mission_monitor_messages;
+		vector<message_fcc_command_t> fcc_messages;
 
 		switch (state.current_state) {
-			case States::HOVER_PLP:
-				{
-					message_hover_criteria_t mhc = message_hover_criteria_t(
-						plp.lat,
-						plp.lon,
-						plp.alt,
-						plp.hdg,
-						DEFAULT_ORBIT_RADIUS,
-						DEFAULT_HOVER_ALTITUDE_AGL,
-						DEFAULT_ORBIT_VELOCITY,
-						DEFAULT_LAND_CRITERIA_HDG,
-						DEFAULT_LAND_CRITERIA_TIME,
-						-1,
-						0,
-						0
-					);
-					stabilize_messages.push_back(mhc);
-					get_messages<typename LP_Manager<TIME>::defs::o_stabilize>(bags) = stabilize_messages;
-				}
-				break;
-
 			case States::START_LZE_SCAN:
 				{
+					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
+					temp_fcc_command.orbit(
+						aircraft_state.gps_time,
+						plp.lat * (1E7),
+						plp.lon * (1E7),
+						plp.alt * 0.3048,
+						DEFAULT_ORBIT_RADIUS,
+						DEFAULT_ORBIT_VELOCITY,
+						DEFAULT_ORBIT_YAW_BEHAVIOUR
+					);
+
 					message_update_gcs_t temp_gcs_update;
 					temp_gcs_update.text = "Starting an orbit to scan LZ";
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
+
 					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
 					strcpy(temp_boss.description, "LZ scan");
+
+					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
 					mission_monitor_messages.emplace_back(0);
+
+					get_messages<typename LP_Manager<TIME>::defs::o_fcc_command_orbit>(bags) = fcc_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_update_boss>(bags) = boss_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 					get_messages<typename LP_Manager<TIME>::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
@@ -445,11 +427,11 @@ public:
 		TIME next_internal;
 
 		switch (state.current_state) {
-			case States::WAYPOINT_MET: case States::STABILIZING: case States::HANDOVER_CONTROL: case States::PILOT_CONTROL: case States::LP_ACCEPT_EXP:
+			case States::WAYPOINT_MET: case States::HANDOVER_CONTROL: case States::PILOT_CONTROL: case States::LP_ACCEPT_EXP:
 				next_internal = numeric_limits<TIME>::infinity();
 				break;
 
-			case States::HOVER_PLP: case States::START_LZE_SCAN: case States::NOTIFY_LP: case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
+			case States::START_LZE_SCAN: case States::NOTIFY_LP: case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
 				next_internal = TIME(TA_ZERO);
 				break;
 

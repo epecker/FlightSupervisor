@@ -27,7 +27,7 @@
 #define DEFAULT_ORBIT_RADIUS 30.0 //m, this is to send to FCC to do orbit
 #define DEFAULT_ORBIT_VELOCITY 2.0 //knots, this is to send to the FCC  to do orbit
 #define DEFAULT_HOVER_ALTITUDE_AGL 15.0 //ft, required to send to the FCC when hovering
-#define DEFAULT_ORBIT_YAW_BEHAVIOUR ORBIT_YAW_BEHAVIOUR_HOLD_FRONT_TANGENT_TO_CIRCLE
+#define DEFAULT_ORBIT_YAW_BEHAVIOUR Mav_Command_Orbit_Yaw_Behaviour_E::ORBIT_YAW_BEHAVIOUR_HOLD_FRONT_TANGENT_TO_CIRCLE
 // This is Mavlink type to be sent to FCC when conducting orbit
 #define LP_HOR_ACCEPT_TOLERANCE_DISTANCE 5.0 //meters, hor acceptance criteria to do repo
 #define DEFAULT_LAND_CRITERIA_TIME 3.0 //sec, timer to meet landing criteria

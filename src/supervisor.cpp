@@ -130,6 +130,7 @@ int main() {
 
         dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_hover, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
         dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_orbit, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
         dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_velocity, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
         dynamic::translate::make_IC<Supervisor_defs::o_fcc_waypoint_update, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
 

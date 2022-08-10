@@ -15,7 +15,16 @@ enum class Control_Mode_E
 
 enum class Mav_Command_E {
 	MAV_CMD_DO_CHANGE_SPEED = 178,
-	MAV_CMD_DO_REPOSITION = 192
+	MAV_CMD_DO_REPOSITION = 192,
+	MAV_CMD_DO_ORBIT = 34
+};
+
+enum class Mav_Command_Orbit_Yaw_Behaviour_E {
+	ORBIT_YAW_BEHAVIOUR_HOLD_FRONT_TO_CIRCLE_CENTER = 0,
+	ORBIT_YAW_BEHAVIOUR_HOLD_INITIAL_HEADING = 1,
+	ORBIT_YAW_BEHAVIOUR_UNCONTROLLED = 2,
+	ORBIT_YAW_BEHAVIOUR_HOLD_FRONT_TANGENT_TO_CIRCLE = 3,
+	ORBIT_YAW_BEHAVIOUR_RC_CONTROLLED = 4
 };
 
 // #pragma pack(push, 4) is used to set the byte alignment for the structure
@@ -113,6 +122,19 @@ struct message_fcc_command_t {
 		param2 = 0.0;
 		param3 = 0.0;
 		param4 = -NAN;
+		latitude = lat;
+		longitude = lon;
+		altitude_msl = alt_msl;
+	}
+
+	void orbit(double gps_time, int32_t lat, int32_t lon, float alt_msl, float radius, float velocity, Mav_Command_Orbit_Yaw_Behaviour_E behaviour) {
+		supervisor_gps_time = gps_time;
+		this->set_supervisor_status(Control_Mode_E::MAV_COMMAND);
+		command = static_cast<uint16_t>(Mav_Command_E::MAV_CMD_DO_ORBIT); // Get the uint16_t value of the enum
+		param1 = radius;
+		param2 = velocity;
+		param3 = static_cast<float>(behaviour); // Get the float value of the enum
+		param4 = 0;
 		latitude = lat;
 		longitude = lon;
 		altitude_msl = alt_msl;

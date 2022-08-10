@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
 		string input_file_lp_recv = input_dir + string("/lp_recv.txt");
 		string input_file_plp_ach = input_dir + string("/plp_ach.txt");
 		string input_file_pilot_takeover = input_dir + string("/pilot_takeover.txt");
-		string input_file_hover_criteria_met = input_dir + string("/hover_criteria_met.txt");
 		string input_file_control_yielded = input_dir + string("/control_yielded.txt");
 
 		// Output locations
@@ -67,7 +66,6 @@ int main(int argc, char* argv[]) {
 			!filesystem::exists(input_file_lp_recv) ||
 			!filesystem::exists(input_file_plp_ach) ||
 			!filesystem::exists(input_file_pilot_takeover) ||
-			!filesystem::exists(input_file_hover_criteria_met) ||
 			!filesystem::exists(input_file_control_yielded)
 			) {
 			printf("One of the input files do not exist\n");
@@ -107,8 +105,6 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_plp_ach", move(input_file_plp_ach.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_hover_criteria_met =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_hover_criteria_met", move(input_file_hover_criteria_met.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_control_yielded =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_control_yielded", move(input_file_control_yielded.c_str()));
 
@@ -120,7 +116,6 @@ int main(int argc, char* argv[]) {
 			ir_lp_recv,
 			ir_plp_ach,
 			ir_pilot_takeover,
-			ir_hover_criteria_met,
 			ir_control_yielded,
 			lp_manager
 		};
@@ -141,7 +136,6 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_hover_criteria_met>("ir_hover_criteria_met", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_control_yielded>("ir_control_yielded", "lp_manager")
 		};
 
