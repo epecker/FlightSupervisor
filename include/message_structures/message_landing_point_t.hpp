@@ -45,5 +45,6 @@ istream& operator>> (istream& is, message_landing_point_t& msg) {
 	is >> msg.hdg;
 	return is;
 }
+#pragma pack(pop)
 
 #endif // BOOST_SIMULATION_PLP_MESSAGE_HPP

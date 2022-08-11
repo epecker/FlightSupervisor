@@ -13,6 +13,8 @@
 #include <cstring>
 #include <cassert>
 
+#include <boost/container/vector.hpp>
+
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
 
@@ -56,13 +58,11 @@ public:
 
 	Packet_Builder() {
 		state.current_state = States::IDLE;
-		data = TYPE();
 		packet_sequence = 0;
 	}
 
 	explicit Packet_Builder(States initial_state) {
 		state.current_state = initial_state;
-		data = TYPE();
 		packet_sequence = 0;
 	}
 
@@ -79,11 +79,15 @@ public:
 
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_data = !cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs).empty();
+
 		switch (state.current_state) {
 			case States::IDLE:
 				if (received_data){
-					data = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs)[0];
-                    preprocess_data();
+                    vector<TYPE> temp = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs);
+                    for (int i = 0; i < temp.size(); i++) {
+                        data.push_back(temp[i]);
+                        preprocess_data(&data[i]);
+                    }
 					state.current_state = States::GENERATE_PACKET;
 				}
 				break;
@@ -107,8 +111,11 @@ public:
 
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:
-                packets.push_back(generate_packet());
+                for (int i = 0; i < data.size(); i++) {
+                    packets.push_back(generate_packet(&data[i]));
+                }
                 cadmium::get_messages<typename Packet_Builder::defs::o_packet>(bags) = packets;
+                data.clear();
 				break;
 			default:
 				break;
@@ -138,15 +145,15 @@ public:
 	}
 
 protected:
-	TYPE data;
+    mutable boost::container::vector<TYPE> data;
 	uint8_t packet_sequence;
 
 private:
-    virtual void preprocess_data() {}
+    virtual void preprocess_data(TYPE * data_point) {}
 
-    [[nodiscard]] virtual std::vector<char> generate_packet() const {
-        std::vector<char> packet(sizeof(this->data));
-        std::memcpy(packet.data(), (char *)&this->data, sizeof(this->data));
+    [[nodiscard]] virtual std::vector<char> generate_packet(TYPE * data_point) const {
+        std::vector<char> packet(sizeof(*data_point));
+        std::memcpy(packet.data(), (char *)data_point, sizeof(*data_point));
         return packet;
     }
 };
@@ -175,15 +182,14 @@ public:
     Packet_Builder_Bool() = default;
     explicit Packet_Builder_Bool(uint8_t signal_id) {
         this->state.current_state = Packet_Builder_Bool::States::IDLE;
-        this->data = bool();
         this->packet_sequence = 0;
         this->signal_id = signal_id;
     }
 
-    [[nodiscard]] virtual std::vector<char> generate_packet() const {
-        std::vector<char> packet(sizeof(this->data) + 1);
+    [[nodiscard]] virtual std::vector<char> generate_packet(bool * data_point) const {
+        std::vector<char> packet(sizeof(*data_point) + 1);
         packet[0] = signal_id;
-        std::memcpy(&packet[1], (char *)&this->data, sizeof(this->data));
+        std::memcpy(&packet[1], (char *)data_point, sizeof(*data_point));
         return packet;
     }
 private:
@@ -202,15 +208,14 @@ public:
     Packet_Builder_Uint8() = default;
     explicit Packet_Builder_Uint8(uint8_t signal_id) {
         this->state.current_state = Packet_Builder_Uint8::States::IDLE;
-        this->data = uint8_t();
         this->packet_sequence = 0;
         this->signal_id = signal_id;
     }
 
-    [[nodiscard]] virtual std::vector<char> generate_packet() const {
-        std::vector<char> packet(sizeof(this->data) + 1);
+    [[nodiscard]] virtual std::vector<char> generate_packet(uint8_t * data_point) const {
+        std::vector<char> packet(sizeof(*data_point) + 1);
         packet[0] = signal_id;
-        std::memcpy(&packet[1], (char *)&this->data, sizeof(this->data));
+        std::memcpy(&packet[1], (char *)data_point, sizeof(*data_point));
         return packet;
     }
 private:
@@ -228,10 +233,10 @@ class Packet_Builder_Landing_Point : public Packet_Builder<message_landing_point
 public:
     Packet_Builder_Landing_Point() = default;
 
-    [[nodiscard]] virtual std::vector<char> generate_packet() const {
-        std::vector<char> packet(sizeof(this->data) + 1);
+    [[nodiscard]] virtual std::vector<char> generate_packet(message_landing_point_t * data_point) const {
+        std::vector<char> packet(sizeof(*data_point) + 1);
         packet[0] = SIG_ID_LANDING_POINT;
-        std::memcpy(&packet[1], (char *)&this->data, sizeof(this->data));
+        std::memcpy(&packet[1], (char *)data_point, sizeof(*data_point));
         return packet;
     }
 };
@@ -248,15 +253,9 @@ public:
     Packet_Builder_Fcc() = default;
 
 private:
-    void preprocess_data() {
-        Struct_ntohl((void *)&this->data, sizeof(this->data));
-        Swap_Double(&this->data.supervisor_gps_time);
-    }
-
-    [[nodiscard]] std::vector<char> generate_packet() const {
-        std::vector<char> packet(sizeof(this->data));
-        std::memcpy(packet.data(), (char *)&this->data, sizeof(this->data));
-        return packet;
+    void preprocess_data(message_fcc_command_t * data_point) {
+        Struct_ntohl((void *)data_point, sizeof(*data_point));
+        Swap_Double(&data_point->supervisor_gps_time);
     }
 };
 
@@ -331,12 +330,12 @@ private:
 		buf[MAVLINK_CORE_HEADER_LEN + msg->len + 2] = (uint8_t)(checksum >> 8);
 	}
 
-	void create_message(mavlink_message_t * msg) const {
+	void create_message(mavlink_message_t * msg, message_update_gcs_t * data_point) const {
 		mavlink_statustext_t status_text{};
-		status_text.severity = this->data.severity;
+		status_text.severity = data_point->severity;
 		status_text.id = 0;
 		status_text.chunk_seq = 0;
-	    std::memcpy(status_text.text, this->data.text.c_str(), sizeof(char)*50);
+	    std::memcpy(status_text.text, data_point->text.c_str(), sizeof(char) * 50);
 	    std::memcpy((char *)msg->payload64, &status_text, MAVLINK_MSG_ID_STATUSTEXT_LEN);
 		msg->msgid = MAVLINK_MSG_ID_STATUSTEXT;
 		msg->magic = MAVLINK_STX;
@@ -348,9 +347,9 @@ private:
 		msg->seq = this->packet_sequence;
 	}
 
-	[[nodiscard]] std::vector<char> generate_packet() const {
+	[[nodiscard]] std::vector<char> generate_packet(message_update_gcs_t * data_point) const {
 		mavlink_message_t msg{};
-		create_message(&msg);
+		create_message(&msg, data_point);
 
         std::vector<char> packet(MAVLINK_CORE_HEADER_LEN + msg.len + 3); // 3 = checksum(2 bytes) + magic(1 byte)
 		create_packet((uint8_t *)packet.data(), &msg);
