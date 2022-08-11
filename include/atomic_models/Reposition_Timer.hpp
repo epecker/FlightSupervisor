@@ -147,7 +147,8 @@ public:
 					received_lp_new = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).size() >= 1;
 					if (received_lp_new) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
-						landing_point = new_landing_points[0];
+						// Get the most recent landing point input (found at the back of the vector of inputs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::NEW_LP_REPO;
 					}
 					break;
@@ -157,7 +158,8 @@ public:
 
 					if (received_lp_new) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
-						landing_point = new_landing_points[0]; // set the new Landing 
+						// Get the most recent landing point input (found at the back of the vector of inputs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::NEW_LP_REPO;
 					} else if (received_lp_crit_met) {
 						state.current_state = States::REQUEST_LAND;

@@ -98,7 +98,8 @@ public:
         if (state.current_state == States::IDLE) {
             if (new_input){
                 state.current_state = States::IDLE;
-                state.cached_input = get_messages<typename Cache_Input_defs<MSG>::i_new_input>(mbs)[0];
+				// Cache the most recent input (found at the back of the vector of inputs) 
+                state.cached_input = get_messages<typename Cache_Input_defs<MSG>::i_new_input>(mbs).back();
             }
 			if (get_input) {
 				state.current_state = States::SEND;

@@ -211,8 +211,8 @@ public:
 				}
 				//If this is the first bag of landing points that have been received,
 				else {
-					//Pick the first landing point in the list.
-					lp = landing_points[0];
+					// Pick the newest landing point for the first new LP (found at the back of the vector of inputs) 
+					lp = landing_points.back();
 					valid_lp_recv = true;
 					lp_recvd = true;
 					first_lp = true;
@@ -254,7 +254,7 @@ public:
 
 				if (received_aircraft_state) {
 					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename LP_Manager<TIME>::defs::i_aircraft_state>(mbs);
-					message_aircraft_state_t aircraft_state = new_aircraft_state[0];
+					aircraft_state = new_aircraft_state[0];
 					if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
 						lp.alt = (aircraft_state.alt_MSL - aircraft_state.alt_AGL + DEFAULT_HOVER_ALTITUDE_AGL);
 					} else {
