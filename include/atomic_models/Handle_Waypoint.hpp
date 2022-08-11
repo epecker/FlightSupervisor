@@ -63,12 +63,10 @@ public:
 
 	Handle_Waypoint() {
 		state.current_state = States::IDLE;
-		next_waypoint = message_fcc_command_t();
 	}
 
 	explicit Handle_Waypoint(States initial_state) {
 		state.current_state = initial_state;
-		next_waypoint = message_fcc_command_t();
 	}
 
 	// Internal transitions (required for the simulator)
@@ -104,8 +102,7 @@ public:
 			case States::WAIT_FOR_WAYPOINT:
 				received_waypoint = !get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs).empty();
 				if (received_waypoint) {
-					vector<message_fcc_command_t> new_waypoint = get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs);
-					next_waypoint = new_waypoint[0];
+					next_waypoint = get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs);
 					state.current_state = States::UPDATE_FCC;
 				}
 				break;
@@ -119,7 +116,7 @@ public:
 	// (required for the simulator)
 	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		internal_transition();
-		external_transition(TIME(), move(mbs));
+		external_transition(TIME(), std::move(mbs));
 	}
 
 	// Creates output messages (required for the simulator)
@@ -128,11 +125,10 @@ public:
 		typename make_message_bags<output_ports>::type bags;
 
 		if (state.current_state == States::UPDATE_FCC) {
-			vector<message_fcc_command_t> waypoint_out_port;
-			message_fcc_command_t waypoint = next_waypoint;
-			waypoint.set_supervisor_status(Control_Mode_E::MAV_COMMAND);
-			waypoint_out_port.push_back(waypoint);
-			get_messages<typename Handle_Waypoint_defs::o_fcc_waypoint_update>(bags) = waypoint_out_port;
+            for (message_fcc_command_t & waypoint : next_waypoint) {
+                waypoint.set_supervisor_status(Control_Mode_E::MAV_COMMAND);
+            }
+			get_messages<typename Handle_Waypoint_defs::o_fcc_waypoint_update>(bags) = next_waypoint;
 		}
 
 		return bags;
@@ -164,7 +160,7 @@ public:
 	}
 
 private:
-	message_fcc_command_t next_waypoint;
+    mutable vector<message_fcc_command_t> next_waypoint;
 };
 
 #endif // HANDLE_WAYPOINT_HPP
