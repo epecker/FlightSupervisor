@@ -29,6 +29,7 @@ add_executable(td_packet_builder_boss	        "td_packet_builder_boss.cpp" 		   
 add_executable(td_packet_builder_bool	        "td_packet_builder_bool.cpp" 		    "${MavNRC_GEO}")
 add_executable(td_packet_builder_landing_point	"td_packet_builder_landing_point.cpp" 	"${MavNRC_GEO}")
 add_executable(td_rudp_output_mavnrc 			"td_rudp_output_mavnrc.cpp" 			"${MavNRC_GEO}" "${RUDP}")
+add_executable(td_polling_condition_input_test	"td_polling_condition_input_test.cpp" 	"${MavNRC_GEO}")
 
 target_include_directories(td_handover_control 				PUBLIC ${includes_list})
 target_include_directories(td_landing_routine 				PUBLIC ${includes_list})
@@ -62,6 +63,7 @@ target_include_directories(td_packet_builder_boss		    PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_bool		    PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_landing_point	PUBLIC ${includes_list})
 target_include_directories(td_rudp_output_mavnrc			PUBLIC ${includes_list})
+target_include_directories(td_polling_condition_input_test	PUBLIC ${includes_list})
 
 
 target_compile_definitions(td_blocking_input 				PUBLIC RT_LINUX RT_DEVS)
@@ -109,3 +111,4 @@ target_link_libraries(td_packet_builder_boss 		    ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_bool 		    ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_landing_point 	${Boost_LIBRARIES})
 target_link_libraries(td_rudp_output_mavnrc			 	${Boost_LIBRARIES})
+target_link_libraries(td_polling_condition_input_test 	${Boost_LIBRARIES})
