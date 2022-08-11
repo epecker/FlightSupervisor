@@ -30,7 +30,7 @@
 using namespace cadmium;
 
 // Atomic model
-template<typename TYPE, typename TIME>
+template<typename START_TYPE, typename QUIT_TYPE, typename TIME>
 class Polling_Condition_Input {
 
 	// Private members.
@@ -52,8 +52,8 @@ public:
 	// Input and output port definitions
 	struct defs {
 		struct o_message : public out_port<bool> { };
-		struct i_start : public in_port<TYPE> { };
-		struct i_quit : public in_port<bool> { };
+		struct i_start : public in_port<START_TYPE> { };
+		struct i_quit : public in_port<QUIT_TYPE> { };
 	};
 
 	// Default constructor
@@ -92,8 +92,11 @@ public:
 	// These are transitions occuring from internal inputs
 	// (required for the simulator)
 	void internal_transition() {
-		if (state.current_state == States::POLL && check_condition()) {
+		if (state.condition_met) {
 			state.current_state = States::IDLE;
+			state.condition_met = false;
+		}
+		else if (state.current_state == States::POLL && check_condition()) {
 			state.condition_met = true;
 		}
 	}
@@ -108,7 +111,6 @@ public:
 		else if (get_messages<typename Polling_Condition_Input::defs::i_start>(mbs).size() >= 1) {
 			state.current_state = States::POLL;
 		}
-		state.condition_met = false;
 	}
 
 	// Confluence transition
@@ -136,13 +138,18 @@ public:
 			case States::IDLE:
 				return std::numeric_limits<TIME>::infinity();
 			case States::POLL:
-				return polling_rate;
+				if (state.condition_met) {
+					return TIME(TA_ZERO);				
+				}
+				else {
+					return polling_rate;
+				}
 			default:
 				return TIME(TA_ZERO);
 		}
 	}
 
-	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Polling_Condition_Input<TYPE, TIME>::state_type& i) {
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Polling_Condition_Input<START_TYPE, QUIT_TYPE, TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state) << "-" << (i.condition_met ? "MET" : "NOT_MET");
 		return os;
 	}
@@ -153,12 +160,10 @@ public:
  * \author	James Horner
  */
 template<typename TIME>
-class Polling_Condition_Input_Test : public Polling_Condition_Input<bool, TIME> {
-private:
-	int number_polls;
+class Polling_Condition_Input_Test : public Polling_Condition_Input<bool, bool, TIME> {
 public:
     Polling_Condition_Input_Test() = default;
-    Polling_Condition_Input_Test(TIME rate) : Polling_Condition_Input(rate) {
+    Polling_Condition_Input_Test(TIME rate) : Polling_Condition_Input<bool, bool, TIME>(rate) {
 		if (!setup()) {
 			throw(std::runtime_error("Could not set up polling condition input test."));
 		}
@@ -173,6 +178,9 @@ public:
 		number_polls++;
 		return (number_polls == 10);
 	}
+
+private:
+	int number_polls;
 };
 
 /**
@@ -180,14 +188,12 @@ public:
  * \author	James Horner
  */
 template<typename TIME>
-class Polling_Condition_Input_Landing_Achieved : public Polling_Condition_Input<message_fcc_command_t, TIME> {
-private:
-	SharedMemoryModel model;
-	float landing_height_ft;
-
+class Polling_Condition_Input_Landing_Achieved : public Polling_Condition_Input<message_fcc_command_t, bool, TIME> {
 public:
     Polling_Condition_Input_Landing_Achieved() = default;
-    Polling_Condition_Input_Landing_Achieved(TIME rate, float landing_height_ft) : Polling_Condition_Input(rate), landing_height_ft(landing_height_ft) {
+    Polling_Condition_Input_Landing_Achieved(TIME rate, float landing_height_ft) : 
+		Polling_Condition_Input<message_fcc_command_t, bool, TIME>(rate),
+		landing_height_ft(landing_height_ft) {
 		if (!setup()) {
 			throw(std::runtime_error("Could not set up polling condition input for landing achieved."));
 		}
@@ -200,12 +206,16 @@ public:
 	bool setup() {
 		model = SharedMemoryModel();
 		model.connectSharedMem();
-		return !model.isConnected();
+		return model.isConnected();
 	}
 
 	bool check_condition() {
 		return (model.sharedMemoryStruct->hg1700.mixedhgt < landing_height_ft);
 	}
+
+private:
+	SharedMemoryModel model;
+	float landing_height_ft;
 };
 
 /**
@@ -213,14 +223,11 @@ public:
  * \author	James Horner
  */
 template<typename TIME>
-class Polling_Condition_Input_Pilot_Takeover : public Polling_Condition_Input<message_fcc_command_t, TIME> {
-private:
-	SharedMemoryModel model;
-	uint32_t engaged;
-
+class Polling_Condition_Input_Pilot_Takeover : public Polling_Condition_Input<message_start_supervisor_t, bool, TIME> {
 public:
     Polling_Condition_Input_Pilot_Takeover() = default;
-    Polling_Condition_Input_Pilot_Takeover(TIME rate) : Polling_Condition_Input(rate) {
+    Polling_Condition_Input_Pilot_Takeover(TIME rate) : 
+		Polling_Condition_Input<message_start_supervisor_t, bool, TIME>(rate) {
 		if (!setup()) {
 			throw(std::runtime_error("Could not set up polling condition input for pilot takeover."));
 		}
@@ -234,7 +241,7 @@ public:
 		engaged = ((1 << 0) | (1 << 1));
 		model = SharedMemoryModel();
 		model.connectSharedMem();
-		return !model.isConnected();
+		return model.isConnected();
 	}
 
 	bool check_condition() {
@@ -245,6 +252,10 @@ public:
 		// If both FCC engaged bits are set, return true 
 		return (status == engaged);
 	}
+
+private:
+	SharedMemoryModel model;
+	uint32_t engaged;
 };
 
 #endif /* POLLING_CONDITION_INPUT_HPP */
