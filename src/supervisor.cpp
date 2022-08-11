@@ -17,8 +17,7 @@
 #include "SupervisorConfig.hpp"
 #include "io_models/Supervisor_UDP_Input.hpp"
 #include "io_models/Aircraft_State_Input.hpp"
-#include "io_models/Landing_Achieved_Demand_Input.hpp"
-#include "io_models/Pilot_Takeover_Input.hpp"
+#include "io_models/Polling_Condition_Input.hpp"
 #include "io_models/Packet_Builder.hpp"
 #include "io_models/UDP_Output.hpp"
 #include "io_models/RUDP_Output.hpp"
@@ -48,8 +47,8 @@ int main() {
 	// Instantiate the input readers.
 	shared_ptr<dynamic::modeling::model> im_udp_interface = dynamic::translate::make_dynamic_atomic_model<Supervisor_UDP_Input, TIME, TIME, unsigned short>("im_udp_interface", std::move(TIME("00:00:00:100")), 23001);
 	shared_ptr<dynamic::modeling::model> im_aircraft_state = dynamic::translate::make_dynamic_atomic_model<Aircraft_State_Input, TIME>("im_aircraft_state");
-	shared_ptr<dynamic::modeling::model> im_landing_achieved = dynamic::translate::make_dynamic_atomic_model<Landing_Achieved_Demand_Input, TIME, TIME, float>("im_landing_achieved", std::move(TIME("00:00:00:100")), DEFAULT_LAND_CRITERIA_VERT_DIST);
-	shared_ptr<dynamic::modeling::model> im_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Pilot_Takeover_Input, TIME, TIME>("im_pilot_takeover", std::move(TIME("00:00:01:000")));
+	shared_ptr<dynamic::modeling::model> im_landing_achieved = dynamic::translate::make_dynamic_atomic_model<Polling_Condition_Input_Landing_Achieved, TIME, TIME, float>("im_landing_achieved", std::move(TIME("00:00:00:100")), DEFAULT_LAND_CRITERIA_VERT_DIST);
+	shared_ptr<dynamic::modeling::model> im_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Polling_Condition_Input_Pilot_Takeover, TIME, TIME>("im_pilot_takeover", std::move(TIME("00:00:01:000")));
 
     // Instantiate the Packet Builders.
     shared_ptr<dynamic::modeling::model> pb_bool_mission_complete = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_complete", SIG_ID_MISSION_COMPLETE);
@@ -100,15 +99,16 @@ int main() {
 
 	// This will connect our outputs from our input reader to the file
 	dynamic::modeling::ICs ics_TestDriver = {
-		dynamic::translate::make_IC<Landing_Achieved_Demand_Input<TIME>::defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Landing_Achieved_Demand_Input<TIME>::defs::i_start>("supervisor", "im_landing_achieved"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Landing_Achieved_Demand_Input<TIME>::defs::i_quit>("supervisor", "im_landing_achieved"),
+		dynamic::translate::make_IC<Polling_Condition_Input_Landing_Achieved<TIME>::defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Polling_Condition_Input_Landing_Achieved<TIME>::defs::i_start>("supervisor", "im_landing_achieved"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Polling_Condition_Input_Landing_Achieved<TIME>::defs::i_quit>("supervisor", "im_landing_achieved"),
 
 		dynamic::translate::make_IC<Aircraft_State_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("supervisor", "im_aircraft_state"),
 
-		dynamic::translate::make_IC<Pilot_Takeover_Input_defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
-		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Pilot_Takeover_Input_defs::i_quit>("supervisor", "im_pilot_takeover"),
+		dynamic::translate::make_IC<Polling_Condition_Input_Pilot_Takeover<TIME>::defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
+		dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_start_supervisor, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_start>("im_udp_interface", "im_pilot_takeover"),
+		dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_quit>("supervisor", "im_pilot_takeover"),
 
 		dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_lp_recv, Supervisor_defs::i_LP_recv>("im_udp_interface", "supervisor"),
 		dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_plp_ach, Supervisor_defs::i_PLP_ach>("im_udp_interface", "supervisor"),

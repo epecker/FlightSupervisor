@@ -250,7 +250,7 @@ public:
 		// Clear all but the FCC engaged bits
 		status &= engaged;
 		// If both FCC engaged bits are set, return true 
-		return (status == engaged);
+		return (status != engaged);
 	}
 
 private:
