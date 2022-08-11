@@ -138,8 +138,10 @@ public:
 				received_start_supervisor = !get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).empty();
 				if (received_start_supervisor) {
 					vector<message_start_supervisor_t> new_mission_data = get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs);
-					mission_started = new_mission_data[0].mission_started;
-					autonomy_armed = new_mission_data[0].autonomy_armed;
+					// Get the most recent start supervisor input (found at the back of the vector of inputs) 
+					message_start_supervisor_t latest_start_supervisor = new_mission_data.back();
+					mission_started = latest_start_supervisor.mission_started;
+					autonomy_armed = latest_start_supervisor.autonomy_armed;
 					state.current_state = States::MISSION_STATUS;
 				}
 				break;

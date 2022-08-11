@@ -159,7 +159,7 @@ public:
         if (state.current_state == States::IDLE) {
             if (have_message) {
                 state.current_state = States::SEND;
-                message_to_send = get_messages<typename Shared_Memory_Output_defs<MSG>::i_message>(mbs)[0];
+                message_to_send = get_messages<typename Shared_Memory_Output_defs<MSG>::i_message>(mbs).back();
             }
         }
     }

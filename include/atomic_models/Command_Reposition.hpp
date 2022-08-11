@@ -161,7 +161,8 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
-						landing_point = new_landing_points[0]; // set the new Landing 
+						// Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::REQUEST_STATE;
 					}
 					break;
@@ -179,7 +180,8 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
-						landing_point = new_landing_points[0]; // set the new Landing 
+						// Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::REQUEST_STATE;
 					}
 					break;
@@ -188,7 +190,8 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
-						landing_point = new_landing_points[0]; // set the new Landing 
+						// Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::REQUEST_STATE;
 					}
 					break;
@@ -198,7 +201,8 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
-						landing_point = new_landing_points[0]; // set the new Landing 
+						// Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::CANCEL_HOVER;
 					} else if (received_hover_criteria_met) {
 						state.current_state = States::LP_CRITERIA_MET;
@@ -209,7 +213,8 @@ public:
 
 					if (received_request_reposition) {
 						vector<message_landing_point_t> new_landing_points = get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
-						landing_point = new_landing_points[0]; // set the new Landing 
+						// Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs) 
+						landing_point = new_landing_points.back();
 						state.current_state = States::CANCEL_HOVER;
 					}
 					break;

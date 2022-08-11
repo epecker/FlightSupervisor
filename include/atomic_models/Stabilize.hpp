@@ -174,7 +174,8 @@ public:
 			case States::IDLE:
 				received_stabilize = !get_messages<typename Stabilize::defs::i_stabilize>(mbs).empty();
 				if (received_stabilize) {
-					hover_criteria = get_messages<typename Stabilize::defs::i_stabilize>(mbs)[0];
+					// Get the most recent hover criteria input (found at the back of the vector of inputs) 
+					hover_criteria = get_messages<typename Stabilize::defs::i_stabilize>(mbs).back();
 					stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					state.current_state = States::REQUEST_AIRCRAFT_STATE;
 				}

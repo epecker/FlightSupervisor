@@ -125,7 +125,8 @@ public:
 					state.current_state = States::PILOT_CONTROL;
 				} else if (received_pilot_handover) {
 					state.current_state = States::HOVER;
-					hover_location = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs)[0];
+					// Set the hover location to the newest input (found at the back of the vector of inputs) 
+					hover_location = get_messages<typename Handover_Control_defs::i_pilot_handover>(mbs).back();
 				}
 				break;
 			case States::HOVER:
