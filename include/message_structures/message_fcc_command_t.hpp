@@ -83,7 +83,7 @@ struct message_fcc_command_t {
 
 		switch (new_mode) {
 			case Control_Mode_E::LANDING_REQUESTED:
-				supervisor_status = (1 << 1);
+				supervisor_status |= (1 << 1);
 				break;
 			case Control_Mode_E::TAKEOFF_REQUESTED:
 				supervisor_status |= (1 << 2);
