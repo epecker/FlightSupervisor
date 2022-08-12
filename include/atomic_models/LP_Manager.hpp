@@ -176,6 +176,16 @@ public:
 			state.current_state = States::LP_ACCEPT_EXP;
 		}
 
+		if (state.current_state == States::REQUEST_STATE_LP ||
+				state.current_state == States::GET_STATE_LP ||
+				state.current_state == States::NOTIFY_LP ||
+				state.current_state == States::LP_APPROACH) {
+			lp_accept_time_prev = lp_accept_time_prev - e;
+			if (lp_accept_time_prev <= TIME(TA_ZERO)) {
+				lp_accept_time_prev = TIME(TA_ZERO);
+			}
+		}
+
 		//If we are in a state that can receive a landing point input,
 		if (state.current_state == States::WAYPOINT_MET || state.current_state == States::LZE_SCAN || state.current_state == States::LP_APPROACH) {
 			//If there are landing points that have been received,
@@ -273,17 +283,6 @@ public:
 
 			default:
 				break;
-		}
-		if (
-			state.current_state == States::REQUEST_STATE_LP ||
-			state.current_state == States::GET_STATE_LP ||
-			state.current_state == States::NOTIFY_LP ||
-			state.current_state == States::LP_APPROACH
-		) {
-			lp_accept_time_prev = lp_accept_time_prev - e;
-			if (lp_accept_time_prev <= TIME(TA_ZERO)) {
-				lp_accept_time_prev = TIME(TA_ZERO);
-			}
 		}
 	}
 
