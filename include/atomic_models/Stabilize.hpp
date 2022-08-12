@@ -78,6 +78,7 @@ public:
 		States current_state;
 		bool in_tolerance;
 		bool time_tolerance_met;
+		TIME stabilization_time_prev;
 #ifdef DEBUG_MODELS
 		string failures;
 #endif
@@ -89,7 +90,7 @@ public:
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		polling_rate = TIME("00:00:00:100");
-		stabilization_time_prev = TIME("00:00:00:000");
+		state.stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -100,7 +101,7 @@ public:
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		this->polling_rate = polling_rate;
-		stabilization_time_prev = TIME("00:00:00:000");
+		state.stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -111,7 +112,7 @@ public:
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		polling_rate = TIME("00:00:00:100");
-		stabilization_time_prev = TIME("00:00:00:000");
+		state.stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -122,7 +123,7 @@ public:
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		this->polling_rate = polling_rate;
-		stabilization_time_prev = TIME("00:00:00:000");
+		state.stabilization_time_prev = TIME("00:00:00:000");
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
 	}
@@ -176,7 +177,7 @@ public:
 				if (received_stabilize) {
 					// Get the most recent hover criteria input (found at the back of the vector of inputs) 
 					hover_criteria = get_messages<typename Stabilize::defs::i_stabilize>(mbs).back();
-					stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
+					state.stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					state.current_state = States::REQUEST_AIRCRAFT_STATE;
 				}
 				break;
@@ -193,10 +194,10 @@ public:
 					aircraft_state = get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
 					state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
 					if (!state.in_tolerance) {
-						stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
+						state.stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					} else {
-						stabilization_time_prev = stabilization_time_prev - e;
-						state.time_tolerance_met = (stabilization_time_prev <= TIME("00:00:00:000"));
+						state.stabilization_time_prev = state.stabilization_time_prev - (polling_rate + e);
+						state.time_tolerance_met = (state.stabilization_time_prev <= TIME("00:00:00:000"));
 					}
 					state.current_state = States::STABILIZING;
 				}
@@ -292,7 +293,7 @@ public:
 
 	friend ostringstream& operator<<(ostringstream& os, const typename Stabilize<TIME>::state_type& i) {
 #ifdef DEBUG_MODELS
-		os << (string("State: ") + enumToString(i.current_state) + i.failures + string("\n"));
+		os << (string("State: ") + enumToString(i.current_state) + i.failures + "-") << i.stabilization_time_prev << string("\n");
 #else 
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 #endif
@@ -360,13 +361,12 @@ public:
 private:
 	message_hover_criteria_t hover_criteria;
 	message_aircraft_state_t aircraft_state;
-	TIME stabilization_time_prev;
 	TIME polling_rate;
 
 	void reset_state() {
 		hover_criteria = message_hover_criteria_t();
 		aircraft_state = message_aircraft_state_t();
-		stabilization_time_prev = TIME("00:00:000");
+		state.stabilization_time_prev = TIME("00:00:000");
 		state.in_tolerance = false;
 		state.time_tolerance_met = false;
 		state.current_state = States::IDLE;
