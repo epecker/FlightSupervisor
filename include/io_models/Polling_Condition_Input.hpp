@@ -60,6 +60,7 @@ public:
 	Polling_Condition_Input() {
 		//Initialise the current state
 		state.current_state = States::IDLE;
+		state.condition_met = false;
 
 		//Set the rate at which the shared memory segement will be polled.
 		polling_rate = TIME("00:00:00:100");
@@ -69,6 +70,7 @@ public:
 	Polling_Condition_Input(TIME rate) : polling_rate(rate) {
 		//Initialise the current state
 		state.current_state = States::IDLE;
+		state.condition_met = false;
 	}
 
 	// This is used to track the state of the atomic model. 
