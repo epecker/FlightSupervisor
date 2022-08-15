@@ -13,8 +13,8 @@
 #define LP_SEPARATION (10.0)
 
 //Macros for the time in the states.
-#define LZE_SCAN_TIME "00:01:00:000"
-#define LP_APPROACH_TIME "00:01:00:000"
+#define LZE_SCAN_TIME "00:02:00:000"
+#define LP_APPROACH_TIME "00:02:00:000"
 #define PLP_HANDOVER_CODE 0
 #define LP_TIME_EXPIRED_CODE 0
 
