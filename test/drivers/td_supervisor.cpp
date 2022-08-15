@@ -44,8 +44,8 @@ ofstream out_state;
 int main(int argc, char* argv[]) {
 	int test_set_enumeration = 0;
 
-	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/supervisor/");
-	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/supervisor/");
+	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/supervisor_test_driver/");
+	const string o_base_dir = string(PROJECT_DIRECTORY) + string("/test/simulation_results/supervisor_test_driver/");
 
 	do {
 		// Input Files
