@@ -10,23 +10,14 @@
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
-//Constants
-#include "Constants.hpp"
-
-//Utility functions
-
 //Messages structures
 #include "message_structures/message_aircraft_state_t.hpp"
 #include "message_structures/message_fcc_command_t.hpp"
-#include "message_structures/message_hover_criteria_t.hpp"
 #include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
@@ -37,17 +28,6 @@
 #include "coupled_models/On_Route.hpp"
 #include "coupled_models/Landing.hpp"
 
-//Project information headers this is created by cmake at generation time!!!!
-#include "SupervisorConfig.hpp"
-
-//C++ headers
-#include <chrono>
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <filesystem>
-
-using namespace std;
 using namespace cadmium;
 
 using TIME = NDTime;
@@ -157,6 +137,7 @@ public:
 
 		/* On Route Inputs *********************************************************/
 		dynamic::translate::make_EIC<Supervisor_defs::i_waypoint, On_Route_defs::i_waypoint>("on_route"),
+		dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, On_Route_defs::i_pilot_takeover>("on_route"),
 
 		/* Landing Inputs **********************************************************/
 		dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Landing::defs::i_aircraft_state>("landing"),
