@@ -13,21 +13,18 @@
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
 
-#include <limits> // Used to set the time advance to infinity
-#include <assert.h> // Used to check values and stop the simulation
+#include <limits>
+#include <cassert>
 #include <string>
 
-// Message structures
 #include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
 #include "message_structures/message_update_gcs_t.hpp"
 
-// Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
 #include "enum_string_conversion.hpp"
 #include "Constants.hpp"
 
 using namespace cadmium;
-using namespace std;
 
 // Atomic Model
 template<typename TIME> class Landing_Routine {
@@ -36,6 +33,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
+		(MISSION_STARTED)
 		(REQUEST_LAND)
 		(LANDING)
 		(NOTIFY_LANDED)
@@ -45,9 +43,10 @@ public:
 
 	// Input and output port definition
 	struct defs {
+		struct i_land : public in_port<bool> {};
 		struct i_landing_achieved : public in_port<bool> {};
 		struct i_pilot_takeover : public in_port<bool> {};
-		struct i_land : public in_port<bool> {};
+		struct i_start_mission : public in_port<bool> {};
 
 		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 		struct o_mission_complete : public out_port<bool> {};
@@ -58,9 +57,10 @@ public:
 
 	// Create a tuple of input ports (required for the simulator)
 	using input_ports = tuple<
+		typename Landing_Routine<TIME>::defs::i_land,
 		typename Landing_Routine<TIME>::defs::i_landing_achieved,
 		typename Landing_Routine<TIME>::defs::i_pilot_takeover,
-		typename Landing_Routine<TIME>::defs::i_land
+		typename Landing_Routine<TIME>::defs::i_start_mission
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
@@ -72,12 +72,11 @@ public:
 		typename Landing_Routine<TIME>::defs::o_update_mission_item
 	>;
 
-	// This is used to track the state of the atomic model. 
+	// This is used to track the state of the atomic model.
 	// (required for the simulator)
 	struct state_type {
 		States current_state;
-	};
-	state_type state;
+	} state;
 
 	// Default constructor
 	Landing_Routine() {
@@ -85,12 +84,12 @@ public:
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
-	Landing_Routine(States initial_state) {
+	explicit Landing_Routine(States initial_state) {
 		state.current_state = initial_state;
 	}
 
 	// Internal transitions
-	// These are transitions occuring from internal inputs
+	// These are transitions occurring from internal inputs
 	// (required for the simulator)
 	void internal_transition() {
 		switch (state.current_state) {
@@ -106,52 +105,53 @@ public:
 	}
 
 	// External transitions
-	// These are transitions occuring from external inputs
+	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_landing_achieved;
-		bool received_pilot_takeover;
-		bool received_hover_crit_met;
-		bool received_land;
-
-		received_pilot_takeover = get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).size() >= 1;
-
+	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+        bool received_pilot_takeover = !get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
-		} else {
-			switch (state.current_state) {
-				case States::IDLE:
-					received_land = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).size() >= 1;
-
-					if (received_land) {
-						state.current_state = States::REQUEST_LAND;
-					}
-					break;
-				case States::LANDING:
-					received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
-
-					if (received_landing_achieved) {
-						state.current_state = States::NOTIFY_LANDED;
-					}
-					break;
-				case States::PILOT_CONTROL:
-					received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
-
-					if (received_landing_achieved) {
-						state.current_state = States::NOTIFY_LANDED;
-					}
-					break;
-				default:
-					break;
-			}
+            return;
 		}
+
+        bool received_start_mission = !get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).empty();
+        if (received_start_mission) {
+            state.current_state = States::MISSION_STARTED;
+            return;
+        }
+
+        bool received_land;
+        bool received_landing_achieved;
+        switch (state.current_state) {
+            case States::MISSION_STARTED:
+                received_land = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).size() >= 1;
+                if (received_land) {
+                    state.current_state = States::REQUEST_LAND;
+                }
+                break;
+            case States::LANDING:
+                received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
+                if (received_landing_achieved) {
+                    state.current_state = States::NOTIFY_LANDED;
+                }
+                break;
+            case States::PILOT_CONTROL:
+                received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
+                if (received_landing_achieved) {
+                    state.current_state = States::NOTIFY_LANDED;
+                }
+                break;
+            default:
+                break;
+        }
+
 	}
 
 	// confluence transition
-	// Used to call set call precedence
-	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	// Used to call set call precedent
+	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		internal_transition();
-		external_transition(TIME(), move(mbs));
+		external_transition(TIME(), std::move(mbs));
 	}
 
 	// output function
@@ -164,7 +164,7 @@ public:
 		vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
-			case States::REQUEST_LAND: 
+			case States::REQUEST_LAND:
 				{
 					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
 					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
@@ -209,27 +209,16 @@ public:
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
+			case States::MISSION_STARTED:
+            case States::LANDING:
+            case States::LANDED:
+            case States::PILOT_CONTROL:
 				return numeric_limits<TIME>::infinity();
-				break;
 			case States::REQUEST_LAND:
-				return TIME(TA_ZERO);
-				break;
-			case States::LANDING:
-				return numeric_limits<TIME>::infinity();
-				break;
 			case States::NOTIFY_LANDED:
 				return TIME(TA_ZERO);
-				break;
-			case States::LANDED:
-				return numeric_limits<TIME>::infinity();
-				break;
-			case States::PILOT_CONTROL:
-				return numeric_limits<TIME>::infinity();
-				break;
 			default:
 				assert(false && "Unhandled state time advance.");
-				return numeric_limits<TIME>::infinity(); // Used to stop unhandled path warning will not be called because of assert
-				break;
 		}
 	}
 
