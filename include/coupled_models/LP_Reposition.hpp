@@ -12,10 +12,7 @@
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
@@ -42,16 +39,7 @@
 //Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
 
-//C++ headers
-#include <chrono>
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <filesystem>
-
-using namespace std;
 using namespace cadmium;
-
 using TIME = NDTime;
 
 class LP_Reposition {
@@ -64,6 +52,7 @@ public:
 		struct i_landing_achieved : public in_port<bool> {};
 		struct i_lp_new : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
+		struct i_start_mission : public in_port<bool> {};
 
 		/***** Define output ports for coupled model *****/
 		struct o_cancel_hover : public out_port<bool> {};
@@ -93,7 +82,8 @@ public:
 		typeid(LP_Reposition::defs::i_hover_criteria_met),
 		typeid(LP_Reposition::defs::i_landing_achieved),
 		typeid(LP_Reposition::defs::i_lp_new),
-		typeid(LP_Reposition::defs::i_pilot_takeover)
+		typeid(LP_Reposition::defs::i_pilot_takeover),
+		typeid(LP_Reposition::defs::i_start_mission)
 	};
 
 	//Define the outputs of the Landing Point Reposition coupled model.
@@ -122,14 +112,17 @@ public:
 	dynamic::modeling::EICs eics = {
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_landing_achieved, Landing_Routine<TIME>::defs::i_landing_achieved>("landing_routine"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Landing_Routine<TIME>::defs::i_pilot_takeover>("landing_routine"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_start_mission, Landing_Routine<TIME>::defs::i_start_mission>("landing_routine"),
 
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_hover_criteria_met, Command_Reposition<TIME>::defs::i_hover_criteria_met>("command_reposition"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Command_Reposition<TIME>::defs::i_pilot_takeover>("command_reposition"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_aircraft_state, Command_Reposition<TIME>::defs::i_aircraft_state>("command_reposition"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_start_mission, Command_Reposition<TIME>::defs::i_start_mission>("command_reposition"),
 
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Reposition_Timer<TIME>::defs::i_pilot_takeover>("reposition_timer"),
 		dynamic::translate::make_EIC<LP_Reposition::defs::i_control_yielded, Reposition_Timer<TIME>::defs::i_control_yielded>("reposition_timer"),
-		dynamic::translate::make_EIC<LP_Reposition::defs::i_lp_new, Reposition_Timer<TIME>::defs::i_lp_new>("reposition_timer")
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_lp_new, Reposition_Timer<TIME>::defs::i_lp_new>("reposition_timer"),
+		dynamic::translate::make_EIC<LP_Reposition::defs::i_start_mission, Reposition_Timer<TIME>::defs::i_start_mission>("reposition_timer")
 	};
 
 	//Define the internal to external couplings for the Landing Point Reposition model.
