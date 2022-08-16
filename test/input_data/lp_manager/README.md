@@ -1,20 +1,19 @@
 Test Cases
 =============================================================================================================================================================
-| Folder | Test Path
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------
-| 0 | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->HOVER_PLP->STABILIZING->START_LZE_SCAN->LZE_SCAN->HANDOVER_CTRL->PILOT_CONTROL
-| 1 | LZE_SCAN->PILOT_CONTROL
-| 2 | START_LZE_SCAN->PILOT_CONTROL
-| 3 | WAYPOINT_MET->GET_STATE_PLP->HOVER_PLP->STABILIZING->PILOT_CONTROL
-| 4 | HOVER_PLP->PILOT_CONTROL
-| 5 | WAYPOINT_MET->PILOT_CONTROL
-| 6 | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->HOVER_PLP->STABILIZING->START_LZE_SCAN->LZE_SCAN->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL
-| 7 | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->HOVER_PLP->STABILIZING->START_LZE_SCAN->LZE_SCAN->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL
-| 8 | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->HOVER_PLP->STABILIZING->START_LZE_SCAN->LZE_SCAN->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->PILOT_CONTROL
-| 9 | NOTIFY_LP->PILOT_CONTROL
-| 10 | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL
-| 11 | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL
-| 12 | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->PILOT_CONTROL
-| 13 | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->PILOT_CONTROL
-| 14 | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL
-| 15 | LP_APPROACH->LP_ACCEPT_EXP (External transition)
+| Folder | Test Path                                                                                                                                                                                                              |
+|--------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0      | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->START_LZE_SCAN->LZE_SCAN->HANDOVER_CTRL->PILOT_CONTROL                                                                                                                 |
+| 1      | LZE_SCAN->PILOT_CONTROL                                                                                                                                                                                                |
+| 2      | START_LZE_SCAN->PILOT_CONTROL                                                                                                                                                                                          |
+| 3      | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->PILOT_CONTROL                                                                                                                                                          |
+| 4      | WAYPOINT_MET->PILOT_CONTROL                                                                                                                                                                                            |
+| 5      | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->START_LZE_SCAN->LZE_SCAN->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL |
+| 6      | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->START_LZE_SCAN->LZE_SCAN->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL                                                         |
+| 7      | WAYPOINT_MET->REQUEST_STATE_PLP->GET_STATE_PLP->START_LZE_SCAN->LZE_SCAN->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->PILOT_CONTROL                                                                        |
+| 8      | NOTIFY_LP->PILOT_CONTROL                                                                                                                                                                                               |
+| 9      | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL                                                             |
+| 10     | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL                                                                                                                     |
+| 11     | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->PILOT_CONTROL                                                                                                                                    |
+| 12     | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->PILOT_CONTROL                                                                                                                                                 |
+| 13     | WAYPOINT_MET->REQUEST_STATE_LP->GET_STATE_LP->NOTIFY_LP->LP_APPROACH->LP_APPROACH->LP_ACCEPT_EXP->PILOT_CONTROL                                                                                                        |
+| 14     | LP_APPROACH->LP_ACCEPT_EXP (External transition)                                                                                                                                                                       |
