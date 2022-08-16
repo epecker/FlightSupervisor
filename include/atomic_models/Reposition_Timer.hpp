@@ -53,6 +53,7 @@ public:
 		struct i_lp_new : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
 
+		struct o_cancel_hover : public out_port<bool> {};
 		struct o_land : public out_port<bool> {};
 		struct o_pilot_handover : public out_port<message_landing_point_t> {};
 		struct o_request_reposition : public out_port<message_landing_point_t> {};
@@ -71,6 +72,7 @@ public:
 	// Create a tuple of output ports (required for the simulator)
 	using output_ports = tuple<
 		typename Reposition_Timer::defs::o_land,
+		typename Reposition_Timer::defs::o_cancel_hover,
 		typename Reposition_Timer::defs::o_pilot_handover,
 		typename Reposition_Timer::defs::o_request_reposition,
 		typename Reposition_Timer::defs::o_update_boss,
@@ -208,6 +210,8 @@ public:
 					boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs);
 					bag_port_lp_out.push_back(landing_point);
+					bag_port_out.push_back(true);
+					get_messages<typename Reposition_Timer::defs::o_cancel_hover>(bags) = bag_port_out;
 					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
 					get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags) = gcs_messages;
 					get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags) = bag_port_lp_out;
