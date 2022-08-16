@@ -1,13 +1,10 @@
 //C++ headers
 #include <chrono>
-#include <algorithm>
 #include <string>
 #include <iostream>
 #include <filesystem>
 
 //Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/logger/common_loggers.hpp>
@@ -17,7 +14,6 @@
 
 //Messages structures
 #include "message_structures/message_landing_point_t.hpp"
-#include "message_structures/message_fcc_command_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
@@ -26,22 +22,11 @@
 //Coupled model headers
 #include "coupled_models/Landing.hpp"
 
-using namespace std;
 using namespace cadmium;
 using namespace cadmium::basic_models::pdevs;
-
 using TIME = NDTime;
 
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
-
-/**
-* ==========================================================
-* MAIN METHOD
-* ==========================================================
-*/
-int main(int argc, char* argv[]) {
+int main() {
 	int test_set_enumeration = 0;
 
 	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/landing/");
@@ -55,6 +40,7 @@ int main(int argc, char* argv[]) {
 		string input_file_pilot_takeover = input_dir + string("/pilot_takeover.txt");
 		string input_file_LP_recv = input_dir + string("/LP_recv.txt");
 		string input_file_PLP_ach = input_dir + string("/PLP_ach.txt");
+		string input_file_start_mission = input_dir + string("/start_mission.txt");
 
 		// Output locations
 		string out_directory = o_base_dir + to_string(test_set_enumeration);
@@ -65,7 +51,8 @@ int main(int argc, char* argv[]) {
 			!filesystem::exists(input_file_aircraft_state) ||
 			!filesystem::exists(input_file_pilot_takeover) ||
 			!filesystem::exists(input_file_LP_recv) ||
-			!filesystem::exists(input_file_PLP_ach)) {
+			!filesystem::exists(input_file_PLP_ach) ||
+			!filesystem::exists(input_file_start_mission)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
@@ -80,17 +67,20 @@ int main(int argc, char* argv[]) {
 		// Instantiate the input readers.
 		// One for each input
 		shared_ptr<dynamic::modeling::model> ir_landing_achieved =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", move(input_file_landing_achieved.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", input_file_landing_achieved.c_str());
 		shared_ptr<dynamic::modeling::model> ir_aircraft_state =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", move(input_file_aircraft_state.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", input_file_aircraft_state.c_str());
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_file_pilot_takeover.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
 		shared_ptr<dynamic::modeling::model> ir_lp_recv =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_recv", move(input_file_LP_recv.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_recv", input_file_LP_recv.c_str());
 		shared_ptr<dynamic::modeling::model> ir_plp_ach =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_plp_ach", move(input_file_PLP_ach.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_plp_ach", input_file_PLP_ach.c_str());
+        shared_ptr<dynamic::modeling::model> ir_start_mission =
+                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 
-		// The models to be included in this coupled model 
+
+		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 				ldg,
@@ -98,7 +88,8 @@ int main(int argc, char* argv[]) {
 				ir_aircraft_state,
 				ir_pilot_takeover,
 				ir_lp_recv,
-				ir_plp_ach
+				ir_plp_ach,
+                ir_start_mission
 		};
 
 		dynamic::modeling::Ports iports_TestDriver = { };
@@ -116,7 +107,8 @@ int main(int argc, char* argv[]) {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out, Landing::defs::i_aircraft_state>("ir_aircraft_state", "landing"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing::defs::i_pilot_takeover>("ir_pilot_takeover", "landing"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing::defs::i_LP_recv>("ir_lp_recv", "landing"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing::defs::i_PLP_ach>("ir_plp_ach", "landing")
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out, Landing::defs::i_PLP_ach>("ir_plp_ach", "landing"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out, Landing::defs::i_start_mission>("ir_start_mission", "landing")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
@@ -124,6 +116,9 @@ int main(int argc, char* argv[]) {
 		);
 
 		/*************** Loggers *******************/
+        static ofstream out_messages;
+        static ofstream out_state;
+
 		out_messages = ofstream(out_messages_file);
 		struct oss_sink_messages {
 			static ostream& sink() {
@@ -151,7 +146,7 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
-	fflush(NULL);
+	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
 	if (system("python3 --version") == 0) {
