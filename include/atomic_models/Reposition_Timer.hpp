@@ -223,10 +223,10 @@ public:
         switch (state.current_state) {
             case States::NOTIFY_UPDATE:
 				{
-					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
-					strncpy(temp_boss.description, "LP UPD", 10);
+					message_boss_mission_update_t temp_boss{};
+                    temp_boss.update_message("LP UPD", true);
 					boss_messages.push_back(temp_boss);
-					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;				
+					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
 				}
                 break;
             case States::REQUEST_LAND:
@@ -235,8 +235,9 @@ public:
                 break;
             case States::LP_REPO:
             {
-                message_boss_mission_update_t temp_boss;
-                strncpy(temp_boss.description, "MAN CTRL", 10); // 10 is the size of the buffer
+                message_boss_mission_update_t temp_boss{};
+                temp_boss.update_message("MAN CTRL", false);
+
                 message_update_gcs_t temp_gcs("Repo timer expired, hovering over the last LP", Mav_Severities_E::MAV_SEVERITY_ALERT);
                 boss_messages.push_back(temp_boss);
                 gcs_messages.push_back(temp_gcs);

@@ -290,8 +290,8 @@ public:
 					temp_gcs_update.text = "Starting an orbit to scan LZ";
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 
-					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
-					strcpy(temp_boss.description, "LZ scan");
+					message_boss_mission_update_t temp_boss{};
+                    temp_boss.update_message("LZ SCAN", false);
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss);
@@ -306,12 +306,13 @@ public:
 				break;
 			case States::LZE_SCAN:
 				{
-					message_update_gcs_t temp_gcs_update;
-					temp_gcs_update.text = "Landing point not found. Hovering over PLP";
-					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
-					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
-					strcpy(temp_boss.description, "PLP rep");
-					boss_messages.push_back(temp_boss);
+					message_update_gcs_t temp_gcs_update{"Landing point not found. Hovering over PLP",
+                                                         Mav_Severities_E::MAV_SEVERITY_ALERT};
+
+					message_boss_mission_update_t temp_boss{};
+                    temp_boss.update_message("PLP REP", false);
+
+                    boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
 					plp_messages.push_back(plp);
 					get_messages<typename defs::o_update_boss>(bags) = boss_messages;
@@ -337,14 +338,9 @@ public:
 
 						get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
 					}
-					message_boss_mission_update_t temp_boss;
 
-					temp_boss.lpNo = lp_count;
-					temp_boss.lpLat = lp.lat;
-					temp_boss.lpLon = lp.lon;
-					temp_boss.alt = lp.alt;
-					temp_boss.yaw = lp.hdg;
-					strncpy(temp_boss.description, "LP UPD", 10);
+					message_boss_mission_update_t temp_boss{};
+                    temp_boss.update_landing_point(lp_count, lp.lat, lp.lon, lp.alt, lp.hdg, "LP UPD");
 
 					boss_messages.push_back(temp_boss);
 					lp_messages.push_back(lp);

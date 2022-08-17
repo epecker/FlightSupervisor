@@ -168,11 +168,11 @@ public:
 				{
 					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
 					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
-					message_boss_mission_update_t temp_boss_update = message_boss_mission_update_t();
-					strcpy(temp_boss_update.description, "LAND");
-					message_update_gcs_t temp_gcs_update;
-					temp_gcs_update.text = "Landing";
-					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+
+					message_boss_mission_update_t temp_boss_update{};
+                    temp_boss_update.update_message("LAND", true);
+
+					message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss_update);

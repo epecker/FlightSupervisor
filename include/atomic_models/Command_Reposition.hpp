@@ -272,9 +272,6 @@ public:
 			case States::COMMAND_HOVER:
 			{
 				message_hover_criteria_t mhc;
-				message_boss_mission_update_t temp_boss_update;
-				message_update_gcs_t temp_gcs_update;
-
 				mhc.desiredLat = landing_point.lat;
 				mhc.desiredLon = landing_point.lon;
 				mhc.desiredAltMSL = landing_point.alt;
@@ -288,15 +285,17 @@ public:
 				mhc.hoverCompleted = 0;
 				mhc.manCtrlRequiredAfterCritMet = 0;
 
-				temp_gcs_update.text = "Repositioning to LP!";
-				temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
+                message_update_gcs_t temp_gcs_update{"Repositioning to LP!", Mav_Severities_E::MAV_SEVERITY_ALERT};
 
-				temp_boss_update.lpNo = landing_point.id;
-				temp_boss_update.lpLat = landing_point.lat;
-				temp_boss_update.lpLon = landing_point.lon;
-				temp_boss_update.alt = landing_point.alt;
-				temp_boss_update.yaw = landing_point.hdg;
-				strcpy(temp_boss_update.description, "LP rep");
+                message_boss_mission_update_t temp_boss_update{};
+                temp_boss_update.update_landing_point(
+                        landing_point.id,
+                        landing_point.lat,
+                        landing_point.lon,
+                        landing_point.alt,
+                        landing_point.hdg,
+                        "LP REP"
+                        );
 
 				bag_port_hover_out.push_back(mhc);
 
