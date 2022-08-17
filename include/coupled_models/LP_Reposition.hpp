@@ -73,7 +73,7 @@ public:
 	*/
 	shared_ptr<dynamic::modeling::model> landing_routine = dynamic::translate::make_dynamic_atomic_model<Landing_Routine, TIME>("landing_routine");
 	shared_ptr<dynamic::modeling::model> command_reposition = dynamic::translate::make_dynamic_atomic_model<Command_Reposition, TIME>("command_reposition");
-	shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME, TIME>("reposition_timer", seconds_to_time<TIME>(REPO_TIMER));
+	shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME, TIME, TIME>("reposition_timer", seconds_to_time<TIME>(REPO_TIMER), seconds_to_time<TIME>(UPD_TIMER));
 
 	//Define the inputs to the Landing Point Reposition coupled model.
 	dynamic::modeling::Ports iports = {

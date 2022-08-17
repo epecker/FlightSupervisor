@@ -63,12 +63,13 @@ int main() {
 		Reposition_Timer<TIME>::States initial_state = Reposition_Timer<TIME>::stringToEnum(initial_state_string);
 
 		TIME repo_time = seconds_to_time<TIME>(REPO_TIMER);
+		TIME upd_time = seconds_to_time<TIME>(UPD_TIMER);
 
 		// Create the output location
 		filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME, TIME, Reposition_Timer<TIME>::States>("reposition_timer", std::move(repo_time), std::move(initial_state));
+		shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME, TIME, TIME, Reposition_Timer<TIME>::States>("reposition_timer", std::move(repo_time), std::move(upd_time), std::move(initial_state));
 
 		// Instantiate the input readers.
 		// One for each input
