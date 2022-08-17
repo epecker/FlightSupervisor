@@ -51,7 +51,7 @@ int main() {
 
         // Instantiate the atomic model to test
         std::shared_ptr<dynamic::modeling::model> rudp_output = dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>(
-                "rudp_output", "192.168.101.106", 24000, 1000, 100);
+                "rudp_output", HOST, 24000, 1000, 100);
 
         // Instantiate the input readers.
         // One for each input
@@ -123,7 +123,7 @@ int main() {
         using info = logger::logger<logger::logger_info, dynamic::logger::formatter<TIME>, oss_sink_info>;
         using logger_top = logger::multilogger<state, log_messages, global_time_mes, global_time_sta, info>;
 
-        auto start = hclock::now(); //to measure simulation execution time
+        auto start = hclock::now(); // To measure simulation execution time
 
         cadmium::dynamic::engine::runner<NDTime, logger_top> r(test_driver, {TIME("00:00:00:000:000")});
         r.run_until_passivate();
@@ -147,6 +147,5 @@ int main() {
     } else {
         cout << "\nPython is not installed!\n";
     }
-
     return 0;
 }
