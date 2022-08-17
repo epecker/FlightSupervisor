@@ -22,6 +22,7 @@
 #define REPO_TIMER 60.0f //sec, timer to do reposition to new LP
 #define ORBIT_TIMER 120.0 //sec, timer for orbiting
 #define LP_ACCEPT_TIMER 120.0 //sec, timer to accept new LPs
+#define UPD_TIMER 20.0 //sec, timer to wait for updated valid LPs
 
 // Those settings will be commanded to the FCC
 #define DEFAULT_ORBIT_RADIUS 30.0 //m, this is to send to FCC to do orbit

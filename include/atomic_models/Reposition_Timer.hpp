@@ -38,6 +38,8 @@ public:
     DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
         (IDLE)
         (WAIT_NEW_LP)
+        (NOTIFY_UPDATE)
+        (UPDATE_LP)
         (LP_REPO)
         (NEW_LP_REPO)
         (REQUEST_LAND)
@@ -90,21 +92,24 @@ public:
     // Default constructor
     Reposition_Timer() {
         state.current_state = States::IDLE;
-        repo_time = TIME(LP_REPOSITION_TIME);
+        repo_time = seconds_to_time<TIME>(REPO_TIMER);
+		upd_time = seconds_to_time<TIME>(UPD_TIMER);
         landing_point = message_landing_point_t();
     }
 
     // Constructor with timer parameter
-    explicit Reposition_Timer(TIME i_repo_time) {
+    explicit Reposition_Timer(TIME i_repo_time, TIME i_upd_time) {
         state.current_state = States::IDLE;
         repo_time = i_repo_time;
+        upd_time = i_upd_time;
         landing_point = message_landing_point_t();
     }
 
     // Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
-    Reposition_Timer(TIME i_repo_time, States initial_state) {
+    Reposition_Timer(TIME i_repo_time, TIME i_upd_time, States initial_state) {
         state.current_state = initial_state;
         repo_time = i_repo_time;
+		upd_time = i_upd_time;
         landing_point = message_landing_point_t();
     }
 
@@ -113,6 +118,12 @@ public:
     // (required for the simulator)
     void internal_transition() {
         switch (state.current_state) {
+            case States::NOTIFY_UPDATE:
+                state.current_state = States::UPDATE_LP;
+                break;
+            case States::UPDATE_LP:
+                state.current_state = States::NEW_LP_REPO;
+                break;
             case States::NEW_LP_REPO:
                 state.current_state = States::LP_REPO;
                 break;
@@ -148,6 +159,8 @@ public:
             return;
         }
 
+		update_upd_time(e);
+
         switch (state.current_state) {
             case States::WAIT_NEW_LP:
                 received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
@@ -155,7 +168,16 @@ public:
                     vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
-                    state.current_state = States::NEW_LP_REPO;
+                    state.current_state = States::NOTIFY_UPDATE;
+                }
+                break;
+            case States::UPDATE_LP:
+                received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
+                if (received_lp_new) {
+                    vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    // Get the most recent landing point input (found at the back of the vector of inputs)
+                    landing_point = new_landing_points.back();
+                    state.current_state = States::UPDATE_LP;
                 }
                 break;
             case States::LP_REPO:
@@ -199,6 +221,14 @@ public:
         vector<message_update_gcs_t> gcs_messages;
 
         switch (state.current_state) {
+            case States::NOTIFY_UPDATE:
+				{
+					message_boss_mission_update_t temp_boss = message_boss_mission_update_t();
+					strncpy(temp_boss.description, "LP UPD", 10);
+					boss_messages.push_back(temp_boss);
+					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;				
+				}
+                break;
             case States::REQUEST_LAND:
                 bag_port_out.push_back(LAND_OUTPUT);
                 get_messages<typename Reposition_Timer::defs::o_land>(bags) = bag_port_out;
@@ -242,9 +272,13 @@ public:
             case States::LANDING_ROUTINE:
                 next_internal = numeric_limits<TIME>::infinity();
                 break;
+            case States::UPDATE_LP:
+                next_internal = upd_time;
+                break;
             case States::LP_REPO:
                 next_internal = repo_time;
                 break;
+            case States::NOTIFY_UPDATE:
             case States::NEW_LP_REPO:
             case States::REQUEST_LAND:
                 next_internal = TIME(TA_ZERO);
@@ -264,11 +298,23 @@ public:
 private:
     message_landing_point_t landing_point;
     TIME repo_time;
+	TIME upd_time;
 
     void reset_state() {
         repo_time = TIME(LP_REPOSITION_TIME);
         landing_point = message_landing_point_t();
+		upd_time = seconds_to_time<TIME>(UPD_TIMER);
     }
+
+	void update_upd_time(TIME e) {
+        if (state.current_state == States::UPDATE_LP) {
+            upd_time = upd_time - e;
+            if (upd_time <= TIME(TA_ZERO)) {
+                upd_time = TIME(TA_ZERO);
+            }
+        }
+    }
+
 };
 
 #endif // REPOSITION_TIMER_HPP
