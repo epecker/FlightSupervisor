@@ -1,6 +1,6 @@
 /**
  *	\brief		A coupled model representing the total of the Supervisor behaviour.
- *	\details	This header file define the Supervisor model as a coupled model for use 
+ *	\details	This header file define the Supervisor model as a coupled model for use
  				in the Cadmium DEVS simulation software.
  *	\author		James Horner
  */
@@ -177,7 +177,8 @@ public:
 
 	//Define the internal takeoff_instance internal couplings.
 	dynamic::modeling::ICs ics = {
-		dynamic::translate::make_IC<Takeoff::defs::o_start_mission, On_Route_defs::i_start_mission>("takeoff", "on_route")
+		dynamic::translate::make_IC<Takeoff::defs::o_start_mission, On_Route_defs::i_start_mission>("takeoff", "on_route"),
+		dynamic::translate::make_IC<Takeoff::defs::o_start_mission, Landing::defs::i_start_mission>("takeoff", "landing")
 	};
 };
 

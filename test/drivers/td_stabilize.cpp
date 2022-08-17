@@ -20,17 +20,11 @@
 //Atomic model headers
 #include "atomic_models/Stabilize.hpp"
 
-using namespace std;
 using namespace cadmium;
 using namespace cadmium::basic_models::pdevs;
 
 using TIME = NDTime;
 
-/**
-* ==========================================================
-* MAIN METHOD
-* ==========================================================
-*/
 int main() {
 	int test_set_enumeration = 0;
 
@@ -44,6 +38,7 @@ int main() {
 		string input_file_aircraft_state = input_dir + string("/aircraft_state.txt");
 		string input_file_cancel_hover = input_dir + string("/cancel_hover.txt");
 		string input_file_stabilize = input_dir + string("/stabilize.txt");
+		string input_file_start_mission = input_dir + string("/start_mission.txt");
 
 		// Output locations
 		string out_directory = o_base_dir + to_string(test_set_enumeration);
@@ -53,20 +48,20 @@ int main() {
 		if (!filesystem::exists(input_file_initial_state) ||
 			!filesystem::exists(input_file_aircraft_state) ||
 			!filesystem::exists(input_file_cancel_hover) ||
-			!filesystem::exists(input_file_stabilize)
-			) {
+			!filesystem::exists(input_file_stabilize) ||
+			!filesystem::exists(input_file_start_mission)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
 
 		// Read the initial state of the model.
-		string initial_state_string;
 		fstream f;
 		f.open(input_file_initial_state, ios::in);
 		if (!f.is_open()) {
 			printf("Failed to open initial_state file\n");
 			return 1;
 		}
+		string initial_state_string;
 		getline(f, initial_state_string);
 		f.close();
 
@@ -86,13 +81,16 @@ int main() {
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_cancel_hover", input_file_cancel_hover.c_str());
 		shared_ptr<dynamic::modeling::model> ir_stabilize =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Hover_Criteria, TIME, const char* >("ir_stabilize", input_file_stabilize.c_str());
+        shared_ptr<dynamic::modeling::model> ir_start_mission =
+                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 
-		// The models to be included in this coupled model 
+		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 			ir_aircraft_state,
 			ir_cancel_hover,
 			ir_stabilize,
+            ir_start_mission,
 			stabilize
 		};
 
@@ -109,7 +107,8 @@ int main() {
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Stabilize<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "stabilize"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize<TIME>::defs::i_cancel_hover>("ir_cancel_hover", "stabilize"),
-			dynamic::translate::make_IC<iestream_input_defs<message_hover_criteria_t>::out,Stabilize<TIME>::defs::i_stabilize>("ir_stabilize", "stabilize")
+			dynamic::translate::make_IC<iestream_input_defs<message_hover_criteria_t>::out,Stabilize<TIME>::defs::i_stabilize>("ir_stabilize", "stabilize"),
+			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize<TIME>::defs::i_start_mission>("ir_start_mission", "stabilize")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
