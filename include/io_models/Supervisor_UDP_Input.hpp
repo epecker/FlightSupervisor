@@ -162,45 +162,35 @@ public:
 	// Output function
 	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
-		vector<message_start_supervisor_t> start_supervisor_out;
-		vector<bool> perception_status_out;
-		vector<message_fcc_command_t> waypoint_out;
-		vector<message_landing_point_t> lp_recv_out;
-		vector<message_landing_point_t> plp_ach_out;
 
 		if (state.current_state == States::INPUT) {
 			//If the lock is free and there are messages, send the messages.
 			unique_lock<mutex> mutexLock(input_mutex, defer_lock);
 			if (state.has_messages && mutexLock.try_lock()) {
-				for (auto msg : message_start_supervisor) {
-					start_supervisor_out.push_back(msg);
+				if (message_start_supervisor.size() > 0) {
+					get_messages<typename Supervisor_UDP_Input_defs::o_start_supervisor>(bags) = message_start_supervisor;
+					message_start_supervisor.clear();
 				}
-				message_start_supervisor.clear();
-				get_messages<typename Supervisor_UDP_Input_defs::o_start_supervisor>(bags) = start_supervisor_out;
 
-				for (auto msg : message_perception_status) {
-					perception_status_out.push_back(msg);
+				if (message_perception_status.size() > 0) {
+					get_messages<typename Supervisor_UDP_Input_defs::o_perception_status>(bags) = message_perception_status;
+					message_perception_status.clear();
 				}
-				message_perception_status.clear();
-				get_messages<typename Supervisor_UDP_Input_defs::o_perception_status>(bags) = perception_status_out;
 				
-				for (auto msg : message_waypoint) {
-					waypoint_out.push_back(msg);
+				if (message_waypoint.size() > 0) {
+					get_messages<typename Supervisor_UDP_Input_defs::o_waypoint>(bags) = message_waypoint;
+					message_waypoint.clear();
 				}
-				message_waypoint.clear();
-				get_messages<typename Supervisor_UDP_Input_defs::o_waypoint>(bags) = waypoint_out;
 
-				for (auto msg : message_lp_recv) {
-					lp_recv_out.push_back(msg);
+				if (message_lp_recv.size() > 0) {
+					get_messages<typename Supervisor_UDP_Input_defs::o_lp_recv>(bags) = message_lp_recv;
+					message_lp_recv.clear();
 				}
-				message_lp_recv.clear();
-				get_messages<typename Supervisor_UDP_Input_defs::o_lp_recv>(bags) = lp_recv_out;
 								
-				for (auto msg : message_plp_ach) {
-					plp_ach_out.push_back(msg);
+				if (message_plp_ach.size() > 0) {
+					get_messages<typename Supervisor_UDP_Input_defs::o_plp_ach>(bags) = message_plp_ach;
+					message_plp_ach.clear();
 				}
-				message_plp_ach.clear();
-				get_messages<typename Supervisor_UDP_Input_defs::o_plp_ach>(bags) = plp_ach_out;
 			}
 		}
 		return bags;
