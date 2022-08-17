@@ -33,7 +33,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(MISSION_STARTED)
+		(WAIT_LAND_REQUEST)
 		(REQUEST_LAND)
 		(LANDING)
 		(NOTIFY_LANDED)
@@ -116,14 +116,14 @@ public:
 
         bool received_start_mission = !get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
-            state.current_state = States::MISSION_STARTED;
+            state.current_state = States::WAIT_LAND_REQUEST;
             return;
         }
 
         bool received_land;
         bool received_landing_achieved;
         switch (state.current_state) {
-            case States::MISSION_STARTED:
+            case States::WAIT_LAND_REQUEST:
                 received_land = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).size() >= 1;
                 if (received_land) {
                     state.current_state = States::REQUEST_LAND;
@@ -209,7 +209,7 @@ public:
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
-			case States::MISSION_STARTED:
+			case States::WAIT_LAND_REQUEST:
             case States::LANDING:
             case States::LANDED:
             case States::PILOT_CONTROL:

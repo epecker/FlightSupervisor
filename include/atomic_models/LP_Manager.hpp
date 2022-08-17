@@ -36,7 +36,7 @@ public:
 	// Enum of the automata-like states of the atomic model.
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(MISSION_STARTED)
+		(WAIT_LP_PLP)
 		(REQUEST_STATE_PLP)
 		(GET_STATE_PLP)
 		(REQUEST_STATE_LP)
@@ -166,14 +166,14 @@ public:
         bool received_start_mission = !get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
-            state.current_state = States::MISSION_STARTED;
+            state.current_state = States::WAIT_LP_PLP;
             return;
         }
 
         update_lp_accept_time(e);
 
         switch (state.current_state) {
-            case States::MISSION_STARTED: {
+            case States::WAIT_LP_PLP: {
                 bool received_lp = !get_messages<typename defs::i_lp_recv>(mbs).empty();
                 bool received_plp_ach = !get_messages<typename defs::i_plp_ach>(mbs).empty();
                 if (received_lp) {
@@ -384,7 +384,7 @@ public:
 
 		switch (state.current_state) {
             case States::IDLE:
-            case States::MISSION_STARTED:
+            case States::WAIT_LP_PLP:
             case States::GET_STATE_PLP:
             case States::GET_STATE_LP:
             case States::HANDOVER_CONTROL:

@@ -37,7 +37,7 @@ public:
     // (not required for the simulator)
     DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
         (IDLE)
-        (MISSION_STARTED)
+        (WAIT_NEW_LP)
         (LP_REPO)
         (NEW_LP_REPO)
         (REQUEST_LAND)
@@ -144,12 +144,12 @@ public:
         bool received_start_mission = !get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
-            state.current_state = States::MISSION_STARTED;
+            state.current_state = States::WAIT_NEW_LP;
             return;
         }
 
         switch (state.current_state) {
-            case States::MISSION_STARTED:
+            case States::WAIT_NEW_LP:
                 received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
                 if (received_lp_new) {
                     vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
@@ -236,7 +236,7 @@ public:
 
         switch(state.current_state) {
             case States::IDLE:
-            case States::MISSION_STARTED:
+            case States::WAIT_NEW_LP:
             case States::HANDOVER_CTRL:
             case States::PILOT_CONTROL:
             case States::LANDING_ROUTINE:

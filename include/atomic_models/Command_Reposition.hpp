@@ -38,7 +38,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(MISSION_STARTED)
+		(WAIT_REQUEST_REPOSITION)
 		(REQUEST_STATE)
 		(GET_STATE)
 		(COMMAND_VEL)
@@ -150,7 +150,7 @@ public:
         bool received_start_mission = !get_messages<typename Command_Reposition::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
-            state.current_state = States::MISSION_STARTED;
+            state.current_state = States::WAIT_REQUEST_REPOSITION;
             return;
         }
 
@@ -164,7 +164,7 @@ public:
         bool received_hover_criteria_met;
         bool received_request_reposition;
         switch (state.current_state) {
-            case States::MISSION_STARTED:
+            case States::WAIT_REQUEST_REPOSITION:
                 received_request_reposition = !get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
 
                 if (received_request_reposition) {
@@ -331,7 +331,7 @@ public:
 		TIME next_internal;
 		switch (state.current_state) {
 			case States::IDLE:
-			case States::MISSION_STARTED:
+			case States::WAIT_REQUEST_REPOSITION:
 			case States::GET_STATE:
 			case States::STABILIZING:
 			case States::LANDING:

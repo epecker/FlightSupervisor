@@ -33,7 +33,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(MISSION_STARTED)
+		(WAIT_PILOT_HANDOVER)
 		(HOVER)
 		(STABILIZING)
 		(NOTIFY_PILOT)
@@ -122,14 +122,14 @@ public:
 
         bool received_start_mission = !get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
-            state.current_state = States::MISSION_STARTED;
+            state.current_state = States::WAIT_PILOT_HANDOVER;
             return;
         }
 
         bool received_pilot_handover;
 		bool received_hover_crit_met;
 		switch (state.current_state) {
-			case States::MISSION_STARTED:
+			case States::WAIT_PILOT_HANDOVER:
 				received_pilot_handover = !get_messages<typename defs::i_pilot_handover>(mbs).empty();
 				if (received_pilot_handover) {
 					// Set the hover location to the newest input (found at the back of the vector of inputs)
@@ -214,7 +214,7 @@ public:
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
-			case States::MISSION_STARTED:
+			case States::WAIT_PILOT_HANDOVER:
             case States::STABILIZING:
             case States::WAIT_FOR_PILOT:
             case States::PILOT_CONTROL:

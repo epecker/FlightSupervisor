@@ -36,7 +36,7 @@ public:
 	// (not required for the simulator)
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
-		(MISSION_STARTED)
+		(WAIT_STABILIZE)
 		(REQUEST_AIRCRAFT_STATE)
 		(GET_AIRCRAFT_STATE)
 		(INIT_HOVER)
@@ -151,7 +151,7 @@ public:
 				break;
 			case States::HOVER:
                 reset_state();
-				state.current_state = States::MISSION_STARTED;
+				state.current_state = States::WAIT_STABILIZE;
 				break;
 			default:
 				break;
@@ -166,14 +166,14 @@ public:
 		bool received_start_mission = !get_messages<typename Stabilize::defs::i_start_mission>(mbs).empty();
 		if (received_cancel_hover || received_start_mission) {
 			reset_state();
-            state.current_state = States::MISSION_STARTED;
+            state.current_state = States::WAIT_STABILIZE;
 			return;
 		}
 
         bool received_aircraft_state;
         bool received_stabilize;
 		switch (state.current_state) {
-			case States::MISSION_STARTED:
+			case States::WAIT_STABILIZE:
 				received_stabilize = !get_messages<typename Stabilize::defs::i_stabilize>(mbs).empty();
 				if (received_stabilize) {
 					// Get the most recent hover criteria input (found at the back of the vector of inputs)
@@ -271,7 +271,7 @@ public:
 		TIME next_internal;
 		switch (state.current_state) {
 			case States::IDLE:
-			case States::MISSION_STARTED:
+			case States::WAIT_STABILIZE:
 			case States::GET_AIRCRAFT_STATE:
 			case States::CHECK_STATE:
 				next_internal = numeric_limits<TIME>::infinity();
