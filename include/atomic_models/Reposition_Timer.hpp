@@ -57,7 +57,7 @@ public:
         struct i_start_mission : public in_port<bool> {};
 
         struct o_cancel_hover : public out_port<bool> {};
-        struct o_land : public out_port<bool> {};
+        struct o_land : public out_port<message_landing_point_t> {};
         struct o_pilot_handover : public out_port<message_landing_point_t> {};
         struct o_request_reposition : public out_port<message_landing_point_t> {};
         struct o_update_boss : public out_port<message_boss_mission_update_t> {};
@@ -221,18 +221,17 @@ public:
         vector<message_update_gcs_t> gcs_messages;
 
         switch (state.current_state) {
-            case States::NOTIFY_UPDATE:
-				{
+            case States::NOTIFY_UPDATE: {
 					message_boss_mission_update_t temp_boss{};
                     temp_boss.update_message("LP UPD", true);
 					boss_messages.push_back(temp_boss);
 					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
 				}
                 break;
-            case States::REQUEST_LAND:
-                bag_port_out.push_back(LAND_OUTPUT);
-                get_messages<typename Reposition_Timer::defs::o_land>(bags) = bag_port_out;
+            case States::REQUEST_LAND: {
+                get_messages<typename Reposition_Timer::defs::o_land>(bags).push_back(landing_point);
                 break;
+            }
             case States::LP_REPO:
             {
                 message_boss_mission_update_t temp_boss{};
