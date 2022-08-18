@@ -17,7 +17,7 @@ configure_file("${CMAKE_SOURCE_DIR}/include/SupervisorConfig.hpp.in" "${CMAKE_SO
 #####################################
 # Cadmium
 add_compile_definitions(CADMIUM_EXECUTE_CONCURRENT) # Allows for parallel execution
-add_compile_definitions(MISSED_DEADLINE_TOLERANCE=10000) # Sets the deadline tolerance in microseconds; must not be -1
+add_compile_definitions(MISSED_DEADLINE_TOLERANCE=50000) # Sets the deadline tolerance in microseconds; must not be -1
 
 # Boost
 # Enables thread pools
