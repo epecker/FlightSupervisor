@@ -17,8 +17,9 @@
 #include <cassert>
 #include <string>
 
-#include "message_structures/message_fcc_command_t.hpp"
 #include "message_structures/message_boss_mission_update_t.hpp"
+#include "message_structures/message_fcc_command_t.hpp"
+#include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_update_gcs_t.hpp"
 
 #include "enum_string_conversion.hpp"
@@ -43,7 +44,7 @@ public:
 
 	// Input and output port definition
 	struct defs {
-		struct i_land : public in_port<bool> {};
+		struct i_land : public in_port<message_landing_point_t> {};
 		struct i_landing_achieved : public in_port<bool> {};
 		struct i_pilot_takeover : public in_port<bool> {};
 		struct i_start_mission : public in_port<bool> {};
@@ -80,12 +81,14 @@ public:
 
 	// Default constructor
 	Landing_Routine() {
+        landing_point = message_landing_point_t();
 		state.current_state = States::IDLE;
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
 	explicit Landing_Routine(States initial_state) {
-		state.current_state = initial_state;
+        landing_point = message_landing_point_t();
+        state.current_state = initial_state;
 	}
 
 	// Internal transitions
@@ -124,19 +127,20 @@ public:
         bool received_landing_achieved;
         switch (state.current_state) {
             case States::WAIT_LAND_REQUEST:
-                received_land = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).size() >= 1;
+                received_land = !get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).empty();
                 if (received_land) {
+                    landing_point = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).back();
                     state.current_state = States::REQUEST_LAND;
                 }
                 break;
             case States::LANDING:
-                received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
+                received_landing_achieved = !get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {
                     state.current_state = States::NOTIFY_LANDED;
                 }
                 break;
             case States::PILOT_CONTROL:
-                received_landing_achieved = get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).size() >= 1;
+                received_landing_achieved = !get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {
                     state.current_state = States::NOTIFY_LANDED;
                 }
@@ -169,13 +173,19 @@ public:
 					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
 					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
 
-					message_boss_mission_update_t temp_boss_update{};
-                    temp_boss_update.update_message("LAND", true);
+					message_boss_mission_update_t temp_boss{};
+                    temp_boss.update_landing_point(
+                            landing_point.id,
+                            landing_point.lat,
+                            landing_point.lon,
+                            landing_point.alt,
+                            landing_point.hdg,
+                            "LAND");
 
 					message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					fcc_messages.push_back(temp_fcc_command);
-					boss_messages.push_back(temp_boss_update);
+					boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
 
 					get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags) = fcc_messages;
@@ -226,6 +236,9 @@ public:
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
+
+private:
+    message_landing_point_t landing_point;
 };
 
 #endif // LANDING_ROUTING_HPP
