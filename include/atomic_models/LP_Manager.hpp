@@ -324,29 +324,10 @@ public:
 			case States::NOTIFY_LP:
 				{
 					if (lp_count == 0) {
-						message_update_gcs_t temp_gcs_update_1;
-						message_update_gcs_t temp_gcs_update_2;
-
-						temp_gcs_update_1.text = "LP timer started";
-						temp_gcs_update_1.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
-
-						temp_gcs_update_2.text = "LP found. Holding";
-						temp_gcs_update_2.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
-
-						gcs_messages.push_back(temp_gcs_update_1);
-						gcs_messages.push_back(temp_gcs_update_2);
-
-						get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
+						message_update_gcs_t temp_gcs_update{"LP timer started", Mav_Severities_E::MAV_SEVERITY_INFO};
+						get_messages<typename defs::o_update_gcs>(bags).push_back(temp_gcs_update);
 					}
-
-					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_landing_point(lp_count, lp.lat, lp.lon, lp.alt, lp.hdg, "LP UPD");
-
-					boss_messages.push_back(temp_boss);
-					lp_messages.push_back(lp);
-
-					get_messages<typename defs::o_update_boss>(bags) = boss_messages;
-					get_messages<typename defs::o_lp_new>(bags) = lp_messages;
+					get_messages<typename defs::o_lp_new>(bags).push_back(lp);
 				}
 				break;
 			case States::LP_APPROACH:

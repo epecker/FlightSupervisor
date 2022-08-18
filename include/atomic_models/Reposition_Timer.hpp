@@ -92,6 +92,7 @@ public:
     // Default constructor
     Reposition_Timer() {
         state.current_state = States::IDLE;
+        mission_number = 0;
         repo_time = seconds_to_time<TIME>(REPO_TIMER);
 		upd_time = seconds_to_time<TIME>(UPD_TIMER);
         landing_point = message_landing_point_t();
@@ -100,6 +101,7 @@ public:
     // Constructor with timer parameter
     explicit Reposition_Timer(TIME i_repo_time, TIME i_upd_time) {
         state.current_state = States::IDLE;
+        mission_number = 0;
         repo_time = i_repo_time;
         upd_time = i_upd_time;
         landing_point = message_landing_point_t();
@@ -108,6 +110,7 @@ public:
     // Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
     Reposition_Timer(TIME i_repo_time, TIME i_upd_time, States initial_state) {
         state.current_state = initial_state;
+        mission_number = 0;
         repo_time = i_repo_time;
 		upd_time = i_upd_time;
         landing_point = message_landing_point_t();
@@ -159,8 +162,6 @@ public:
             return;
         }
 
-		update_upd_time(e);
-
         switch (state.current_state) {
             case States::WAIT_NEW_LP:
                 received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
@@ -168,6 +169,7 @@ public:
                     vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
+                    mission_number++;
                     state.current_state = States::NOTIFY_UPDATE;
                 }
                 break;
@@ -177,7 +179,8 @@ public:
                     vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
-                    state.current_state = States::UPDATE_LP;
+                    update_upd_time(e);
+                    state.current_state = States::NOTIFY_UPDATE;
                 }
                 break;
             case States::LP_REPO:
@@ -222,18 +225,29 @@ public:
 
         switch (state.current_state) {
             case States::NOTIFY_UPDATE: {
-					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_message("LP UPD", true);
-					boss_messages.push_back(temp_boss);
-					get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
-				}
+                message_boss_mission_update_t temp_boss{};
+                temp_boss.update_landing_point(
+                        landing_point.id,
+                        landing_point.lat,
+                        landing_point.lon,
+                        landing_point.alt,
+                        landing_point.hdg,
+                        "LP UPD");
+                temp_boss.missionNo = mission_number;
+                get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).push_back(temp_boss);
+
+                if (landing_point.id == 1) {
+                    std::string message = "LP found. Holding for " + std::to_string(upd_time.getSeconds()) + "s";
+                    message_update_gcs_t temp_gcs_update{message, Mav_Severities_E::MAV_SEVERITY_ALERT};
+                    get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).push_back(temp_gcs_update);
+                }
                 break;
+            }
             case States::REQUEST_LAND: {
                 get_messages<typename Reposition_Timer::defs::o_land>(bags).push_back(landing_point);
                 break;
             }
-            case States::LP_REPO:
-            {
+            case States::LP_REPO: {
                 message_boss_mission_update_t temp_boss{};
                 temp_boss.update_message("MAN CTRL", false);
 
@@ -246,8 +260,8 @@ public:
                 get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
                 get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags) = gcs_messages;
                 get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags) = bag_port_lp_out;
-            }
                 break;
+            }
             case States::NEW_LP_REPO:
                 bag_port_lp_out.push_back(landing_point);
                 get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags) = bag_port_lp_out;
@@ -297,21 +311,21 @@ public:
 
 private:
     message_landing_point_t landing_point;
+    int mission_number;
     TIME repo_time;
 	TIME upd_time;
 
     void reset_state() {
+        mission_number = 0;
         repo_time = TIME(LP_REPOSITION_TIME);
         landing_point = message_landing_point_t();
 		upd_time = seconds_to_time<TIME>(UPD_TIMER);
     }
 
 	void update_upd_time(TIME e) {
-        if (state.current_state == States::UPDATE_LP) {
-            upd_time = upd_time - e;
-            if (upd_time <= TIME(TA_ZERO)) {
-                upd_time = TIME(TA_ZERO);
-            }
+        upd_time = upd_time - e;
+        if (upd_time <= TIME(TA_ZERO)) {
+            upd_time = TIME(TA_ZERO);
         }
     }
 
