@@ -82,7 +82,24 @@ struct message_boss_mission_update_t {
             latNext[i] = i_latNext[i];
             lonNext[i] = i_lonNext[i];
         }
-        strcpy(description, i_description);
+        strncpy(description, i_description, 10);
+    }
+
+    void update_message(const std::string& msg, bool is_landing_phase) {
+        isMissionStarted = 1;
+        isLandingLeg = is_landing_phase? 1 : 0;
+        strncpy(description, msg.c_str(), 10);
+    }
+
+    void update_landing_point(int id, double latitude, double longitude, float altitude, float heading, const std::string& msg) {
+        lpNo = id;
+        lpLat = latitude;
+        lpLon = longitude;
+        isMissionStarted = 1;
+        isLandingLeg = 1;
+        alt = altitude;
+        yaw = heading;
+        strncpy(description, msg.c_str(), 10);
     }
 };
 #pragma pack(pop)
