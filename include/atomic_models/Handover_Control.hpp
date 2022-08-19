@@ -47,7 +47,7 @@ public:
         struct i_hover_criteria_met : public in_port<bool> {};
         struct i_pilot_handover : public in_port<message_landing_point_t> {};
         struct i_pilot_takeover : public in_port<bool> {};
-        struct i_start_mission : public in_port<bool> {};
+        struct i_start_mission : public in_port<int> {};
 
         struct o_notify_pilot : public out_port<bool> {};
         struct o_control_yielded : public out_port<bool> {};

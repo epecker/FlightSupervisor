@@ -55,7 +55,7 @@ public:
 		struct i_LP_recv : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
 		struct i_PLP_ach : public in_port<message_landing_point_t> {};
-		struct i_start_mission : public in_port<bool> {};
+		struct i_start_mission : public in_port<int> {};
 
 
 		/***** Define output ports for coupled model *****/

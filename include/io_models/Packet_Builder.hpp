@@ -223,6 +223,32 @@ private:
 };
 
 /**
+ * \brief   Packet_Builder_Int creates packets for use in output models
+ * \details Packet_Builder_Int adds a identification byte to the front of
+ *          the vector that it creates.
+ * \author	Tanner Trautrim
+ */
+template<typename TIME>
+class Packet_Builder_Int : public Packet_Builder<int, TIME> {
+public:
+    Packet_Builder_Int() = default;
+    explicit Packet_Builder_Int(uint8_t signal_id) {
+        this->state.current_state = Packet_Builder_Int::States::IDLE;
+        this->packet_sequence = 0;
+        this->signal_id = signal_id;
+    }
+
+    [[nodiscard]] virtual std::vector<char> generate_packet(int * data_point) const {
+        std::vector<char> packet(sizeof(*data_point) + 1);
+        packet[0] = signal_id;
+        std::memcpy(&packet[1], (char *)data_point, sizeof(*data_point));
+        return packet;
+    }
+private:
+    uint8_t signal_id{};
+};
+
+/**
  * \brief   Packet_Builder_Boss creates packets for use in output models
  * \details Packet_Builder_Boss uses the default implementation of
  *          generate_packet from Packet builder.
@@ -353,7 +379,7 @@ private:
 
         std::vector<char> packet(MAVLINK_CORE_HEADER_LEN + msg.len + 3); // 3 = checksum(2 bytes) + magic(1 byte)
 		create_packet((uint8_t *)packet.data(), &msg);
-		
+
 		return packet;
 	}
 };

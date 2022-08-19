@@ -110,7 +110,7 @@ int main() {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "reposition_timer"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Reposition_Timer<TIME>::defs::i_lp_crit_met>("ir_lp_crit_met", "reposition_timer"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer<TIME>::defs::i_control_yielded>("ir_control_yielded", "reposition_timer"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Reposition_Timer<TIME>::defs::i_start_mission>("ir_start_mission", "reposition_timer")
+			dynamic::translate::make_IC<iestream_input_defs<int>::out,Reposition_Timer<TIME>::defs::i_start_mission>("ir_start_mission", "reposition_timer")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(

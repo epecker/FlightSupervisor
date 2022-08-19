@@ -86,7 +86,7 @@ int main() {
 		// This will connect our outputs from our input reader to the file
 		dynamic::modeling::ICs ics_TestDriver = {
 				dynamic::translate::make_IC<iestream_input_defs<bool>::out,On_Route_defs::i_pilot_takeover>("ir_pilot_takeover", "on_route"),
-				dynamic::translate::make_IC<iestream_input_defs<bool>::out,On_Route_defs::i_start_mission>("ir_start_mission", "on_route"),
+				dynamic::translate::make_IC<iestream_input_defs<int>::out,On_Route_defs::i_start_mission>("ir_start_mission", "on_route"),
 				dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out,On_Route_defs::i_waypoint>("ir_waypoint", "on_route")
 		};
 

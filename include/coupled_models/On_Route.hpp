@@ -31,7 +31,7 @@ using namespace cadmium;
 // Input and output port definitions
 struct On_Route_defs {
 	struct i_pilot_takeover : public out_port<bool> {};
-	struct i_start_mission : public out_port<bool> {};
+	struct i_start_mission : public out_port<int> {};
 	struct i_waypoint : public out_port<message_fcc_command_t> {};
 
 	struct o_fcc_waypoint_update : public out_port<message_fcc_command_t> {};

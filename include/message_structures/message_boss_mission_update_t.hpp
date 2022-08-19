@@ -85,9 +85,10 @@ struct message_boss_mission_update_t {
         strncpy(description, i_description, 10);
     }
 
-    void update_message(const std::string& msg, bool is_landing_phase) {
+    void update_message(const std::string& msg, bool is_landing_phase, int mission_number) {
         isMissionStarted = 1;
         isLandingLeg = is_landing_phase? 1 : 0;
+        missionNo = mission_number;
         strncpy(description, msg.c_str(), 10);
     }
 

@@ -108,7 +108,7 @@ int main() {
 			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,Stabilize<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "stabilize"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize<TIME>::defs::i_cancel_hover>("ir_cancel_hover", "stabilize"),
 			dynamic::translate::make_IC<iestream_input_defs<message_hover_criteria_t>::out,Stabilize<TIME>::defs::i_stabilize>("ir_stabilize", "stabilize"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Stabilize<TIME>::defs::i_start_mission>("ir_start_mission", "stabilize")
+			dynamic::translate::make_IC<iestream_input_defs<int>::out,Stabilize<TIME>::defs::i_start_mission>("ir_start_mission", "stabilize")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

@@ -136,7 +136,7 @@ int main() {
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_control_yielded>("ir_control_yielded", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_start_mission>("ir_start_mission", "lp_manager")
+			dynamic::translate::make_IC<iestream_input_defs<int>::out,LP_Manager<TIME>::defs::i_start_mission>("ir_start_mission", "lp_manager")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(

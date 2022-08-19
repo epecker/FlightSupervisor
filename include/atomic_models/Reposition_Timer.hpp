@@ -54,7 +54,7 @@ public:
         struct i_lp_crit_met : public in_port<message_landing_point_t> {};
         struct i_lp_new : public in_port<message_landing_point_t> {};
         struct i_pilot_takeover : public in_port<bool> {};
-        struct i_start_mission : public in_port<bool> {};
+        struct i_start_mission : public in_port<int> {};
 
         struct o_cancel_hover : public out_port<bool> {};
         struct o_land : public out_port<message_landing_point_t> {};
@@ -158,6 +158,7 @@ public:
         bool received_start_mission = !get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
+            mission_number = get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_NEW_LP;
             return;
         }
@@ -169,7 +170,6 @@ public:
                     vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
-                    mission_number++;
                     state.current_state = States::NOTIFY_UPDATE;
                 }
                 break;
@@ -249,7 +249,7 @@ public:
             }
             case States::LP_REPO: {
                 message_boss_mission_update_t temp_boss{};
-                temp_boss.update_message("MAN CTRL", false);
+                temp_boss.update_message("MAN CTRL", false, mission_number);
 
                 message_update_gcs_t temp_gcs("Repo timer expired, hovering over the last LP", Mav_Severities_E::MAV_SEVERITY_ALERT);
                 boss_messages.push_back(temp_boss);

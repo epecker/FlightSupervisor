@@ -52,7 +52,7 @@ public:
 		struct i_landing_achieved : public in_port<bool> {};
 		struct i_lp_new : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
-		struct i_start_mission : public in_port<bool> {};
+		struct i_start_mission : public in_port<int> {};
 
 		/***** Define output ports for coupled model *****/
 		struct o_cancel_hover : public out_port<bool> {};
