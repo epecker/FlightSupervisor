@@ -101,8 +101,8 @@ int main() {
 		dynamic::modeling::ICs ics_TestDriver = {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_landing_achieved>("ir_landing_achieved", "landing_routine"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "landing_routine"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_land>("ir_land", "landing_routine"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Landing_Routine<TIME>::defs::i_start_mission>("ir_start_mission", "landing_routine")
+			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Landing_Routine<TIME>::defs::i_land>("ir_land", "landing_routine"),
+			dynamic::translate::make_IC<iestream_input_defs<int>::out,Landing_Routine<TIME>::defs::i_start_mission>("ir_start_mission", "landing_routine")
 		};
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(

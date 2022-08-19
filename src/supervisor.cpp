@@ -52,7 +52,7 @@ int main() {
 
     // Instantiate the Packet Builders.
     shared_ptr<dynamic::modeling::model> pb_bool_mission_complete = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_complete", SIG_ID_MISSION_COMPLETE);
-    shared_ptr<dynamic::modeling::model> pb_bool_mission_start = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_mission_start", SIG_ID_START_MISSION);
+    shared_ptr<dynamic::modeling::model> pb_int_mission_start = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Int, TIME, uint8_t>("pb_int_mission_start", SIG_ID_START_MISSION);
     shared_ptr<dynamic::modeling::model> pb_bool_update_mission_item = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Bool, TIME, uint8_t>("pb_bool_update_mission_item", SIG_ID_MISSION_ITEM_REACHED);
     shared_ptr<dynamic::modeling::model> pb_uint8_set_mission_monitor_status = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Uint8, TIME, uint8_t>("pb_uint8_set_mission_monitor_status", SIG_ID_SET_MISSION_MONITOR_STATUS);
 
@@ -66,7 +66,7 @@ int main() {
     shared_ptr<dynamic::modeling::model> udp_gcs = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_gcs", IPV4_GCS, PORT_GCS);
     shared_ptr<dynamic::modeling::model> rudp_mavnrc = dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>("rudp_mavnrc", IPV4_MAVNRC, PORT_MAVNRC, DEFAULT_TIMEOUT_MS, 10);
 
-	// The models to be included in this coupled model 
+	// The models to be included in this coupled model
 	// (accepts atomic and coupled models)
 	dynamic::modeling::Models submodels_TestDriver = {
             supervisor,
@@ -75,7 +75,7 @@ int main() {
             im_pilot_takeover,
             im_udp_interface,
             pb_bool_mission_complete,
-            pb_bool_mission_start,
+            pb_int_mission_start,
 			pb_bool_update_mission_item,
             pb_uint8_set_mission_monitor_status,
             pb_boss,
@@ -120,7 +120,7 @@ int main() {
 		// Output ICs
         dynamic::translate::make_IC<Supervisor_defs::o_LP_new, Packet_Builder_Landing_Point<TIME>::defs::i_data>("supervisor", "pb_landing_point"),
 
-        dynamic::translate::make_IC<Supervisor_defs::o_start_mission, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_start"),
+        dynamic::translate::make_IC<Supervisor_defs::o_start_mission, Packet_Builder_Int<TIME>::defs::i_data>("supervisor", "pb_int_mission_start"),
         dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_complete"),
         dynamic::translate::make_IC<Supervisor_defs::o_update_mission_item, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_update_mission_item"),
         dynamic::translate::make_IC<Supervisor_defs::o_set_mission_monitor_status, Packet_Builder_Uint8<TIME>::defs::i_data>("supervisor", "pb_uint8_set_mission_monitor_status"),
@@ -138,7 +138,7 @@ int main() {
         dynamic::translate::make_IC<Packet_Builder_Fcc<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_fcc", "udp_fcc"),
         dynamic::translate::make_IC<Packet_Builder_GCS<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_gcs", "udp_gcs"),
 
-        dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_bool_mission_start", "rudp_mavnrc"),
+        dynamic::translate::make_IC<Packet_Builder_Int<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_int_mission_start", "rudp_mavnrc"),
         dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_bool_mission_complete", "rudp_mavnrc"),
         dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_bool_update_mission_item", "rudp_mavnrc"),
         dynamic::translate::make_IC<Packet_Builder_Uint8<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_uint8_set_mission_monitor_status", "rudp_mavnrc"),

@@ -58,7 +58,7 @@ public:
 		struct i_lp_recv : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
 		struct i_plp_ach : public in_port<message_landing_point_t> {};
-		struct i_start_mission : public in_port<bool> {};
+		struct i_start_mission : public in_port<int> {};
 
 		struct o_fcc_command_orbit : public out_port<message_fcc_command_t> {};
 		struct o_lp_expired : public out_port<message_landing_point_t> {};
@@ -103,6 +103,7 @@ public:
 		lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
 		orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
 		lp_count = 0;
+        mission_number = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
 		aircraft_state = message_aircraft_state_t();
@@ -114,6 +115,7 @@ public:
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
 		lp_count = 0;
+        mission_number = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
 	}
@@ -124,6 +126,7 @@ public:
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
 		lp_count = 0;
+        mission_number = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
 	}
@@ -166,6 +169,7 @@ public:
         bool received_start_mission = !get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
+            mission_number = get_messages<typename defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_LP_PLP;
             return;
         }
@@ -291,7 +295,7 @@ public:
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 
 					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_message("LZ SCAN", false);
+                    temp_boss.update_message("LZ SCAN", false, mission_number);
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss);
@@ -310,7 +314,7 @@ public:
                                                          Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_message("PLP REP", false);
+                    temp_boss.update_message("PLP REP", false, mission_number);
 
                     boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
@@ -396,6 +400,7 @@ public:
 
 private:
     int lp_count;
+    int mission_number;
     message_landing_point_t lp;
     message_landing_point_t plp;
     message_aircraft_state_t aircraft_state;
@@ -445,6 +450,7 @@ private:
     void reset_state() {
         lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
         orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
+        mission_number = 0;
         lp_count = 0;
     }
 };

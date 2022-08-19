@@ -50,7 +50,7 @@ public:
 		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 		struct i_cancel_hover : public in_port<bool> {};
 		struct i_stabilize : public in_port<message_hover_criteria_t> {};
-		struct i_start_mission : public in_port<bool> {};
+		struct i_start_mission : public in_port<int> {};
 
 		struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
 		struct o_hover_criteria_met : public out_port<bool> {};

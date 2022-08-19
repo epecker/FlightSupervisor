@@ -51,7 +51,7 @@ public:
 		struct o_request_perception_status : public out_port<bool> {};
 		struct o_request_aircraft_state : public out_port<bool> {};
 		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
-		struct o_start_mission : public out_port<bool> {};
+		struct o_start_mission : public out_port<int> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
@@ -74,26 +74,22 @@ public:
 	// Tracks the state of the model
 	struct state_type {
 		States current_state;
-	};
-	state_type state;
+	} state;
 
-	bool mission_started;
-	bool autonomy_armed;
+    message_start_supervisor_t mission_data;
 	bool perception_healthy;
 	double aircraft_height;
 
 	Mission_Initialization() {
 		state.current_state = States::IDLE;
-		mission_started = false;
-		autonomy_armed = false;
+        mission_data = message_start_supervisor_t();
 		perception_healthy = false;
 		aircraft_height = 0.0;
 	}
 
 	explicit Mission_Initialization(States initial_state) {
 		state.current_state = initial_state;
-		mission_started = false;
-		autonomy_armed = false;
+        mission_data = message_start_supervisor_t();
 		perception_healthy = false;
 		aircraft_height = 0.0;
 	}
@@ -102,13 +98,13 @@ public:
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::MISSION_STATUS:
-				state.current_state = mission_started ? States::RESUME_MISSION: States::CHECK_AUTONOMY;
+				state.current_state = mission_data.mission_started ? States::RESUME_MISSION: States::CHECK_AUTONOMY;
 				break;
 			case States::RESUME_MISSION:
 				state.current_state = States::IDLE;
 				break;
 			case States::CHECK_AUTONOMY:
-				state.current_state = state.current_state = autonomy_armed ? States::CHECK_PERCEPTION_SYSTEM: States::IDLE;
+				state.current_state = state.current_state = mission_data.autonomy_armed ? States::CHECK_PERCEPTION_SYSTEM: States::IDLE;
 				break;
 			case States::OUTPUT_PERCEPTION_STATUS:
 				state.current_state = States::REQUEST_AIRCRAFT_STATE;
@@ -137,11 +133,8 @@ public:
 			case States::IDLE:
 				received_start_supervisor = !get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).empty();
 				if (received_start_supervisor) {
-					vector<message_start_supervisor_t> new_mission_data = get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs);
-					// Get the most recent start supervisor input (found at the back of the vector of inputs) 
-					message_start_supervisor_t latest_start_supervisor = new_mission_data.back();
-					mission_started = latest_start_supervisor.mission_started;
-					autonomy_armed = latest_start_supervisor.autonomy_armed;
+					// Get the most recent start supervisor input (found at the back of the vector of inputs)
+					mission_data = get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).back();
 					state.current_state = States::MISSION_STATUS;
 				}
 				break;
@@ -186,7 +179,7 @@ public:
 		switch (state.current_state) {
 			case States::CHECK_AUTONOMY:
 				{
-					if (autonomy_armed) {
+					if (mission_data.autonomy_armed) {
 						bool_port_out.push_back(true);
 						get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags) = bool_port_out;
 					}
@@ -227,8 +220,7 @@ public:
 				break;
 			case States::START_MISSION:
 				{
-					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization::defs::o_start_mission>(bags) = bool_port_out;
+					get_messages<typename Mission_Initialization::defs::o_start_mission>(bags).push_back(mission_data.mission_number);
 				}
 				break;
 			default:

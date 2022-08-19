@@ -1,6 +1,6 @@
 /**
  *	\brief		A coupled model representing the takeoff phase of the Supervisor behaviour.
- *	\details	This header file define the Takeoff Phase model as a coupled model for use 
+ *	\details	This header file define the Takeoff Phase model as a coupled model for use
  				in the Cadmium DEVS simulation software.
  *	\author		James Horner
  */
@@ -63,7 +63,7 @@ public:
 		/***** Define output ports for coupled model *****/
 		struct o_request_aircraft_state : public out_port<bool> {};
 		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
-		struct o_start_mission : public out_port<bool> {};
+		struct o_start_mission : public out_port<int> {};
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 

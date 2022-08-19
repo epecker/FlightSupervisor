@@ -47,7 +47,7 @@ public:
 		struct i_land : public in_port<message_landing_point_t> {};
 		struct i_landing_achieved : public in_port<bool> {};
 		struct i_pilot_takeover : public in_port<bool> {};
-		struct i_start_mission : public in_port<bool> {};
+		struct i_start_mission : public in_port<int> {};
 
 		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
 		struct o_mission_complete : public out_port<bool> {};
@@ -82,16 +82,18 @@ public:
 	// Default constructor
 	Landing_Routine() {
         landing_point = message_landing_point_t();
-		state.current_state = States::IDLE;
+        mission_number = 0;
+        state.current_state = States::IDLE;
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
 	explicit Landing_Routine(States initial_state) {
         landing_point = message_landing_point_t();
+        mission_number = 0;
         state.current_state = initial_state;
 	}
 
-	// Internal transitions
+    // Internal transitions
 	// These are transitions occurring from internal inputs
 	// (required for the simulator)
 	void internal_transition() {
@@ -119,6 +121,7 @@ public:
 
         bool received_start_mission = !get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
+            mission_number = get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_LAND_REQUEST;
             return;
         }
@@ -181,7 +184,7 @@ public:
                             landing_point.alt,
                             landing_point.hdg,
                             "LAND");
-
+                    temp_boss.missionNo = mission_number;
 					message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					fcc_messages.push_back(temp_fcc_command);
@@ -239,6 +242,7 @@ public:
 
 private:
     message_landing_point_t landing_point;
+    int mission_number;
 };
 
 #endif // LANDING_ROUTING_HPP

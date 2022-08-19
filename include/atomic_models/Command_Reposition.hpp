@@ -58,7 +58,7 @@ public:
 		struct i_pilot_handover : public in_port<message_landing_point_t> {};
 		struct i_pilot_takeover : public in_port<bool> {};
 		struct i_request_reposition : public in_port<message_landing_point_t> {};
-		struct i_start_mission : public in_port<bool> {};
+		struct i_start_mission : public in_port<int> {};
 
 		struct o_cancel_hover : public out_port<bool> {};
 		struct o_fcc_command_velocity : public out_port<message_fcc_command_t> {};
@@ -103,6 +103,7 @@ public:
 		state.current_state = States::IDLE;
 		aircraft_state = message_aircraft_state_t();
 		landing_point = message_landing_point_t();
+        mission_number = 0;
 	}
 
 	// Constructor with initial state parameter for debugging or partial execution startup.
@@ -110,6 +111,7 @@ public:
 		state.current_state = initial_state;
 		aircraft_state = message_aircraft_state_t();
 		landing_point = message_landing_point_t();
+        mission_number = 0;
 	}
 
 	// Internal transitions
@@ -150,6 +152,7 @@ public:
         bool received_start_mission = !get_messages<typename Command_Reposition::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
+            mission_number = get_messages<typename Command_Reposition::defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_REQUEST_REPOSITION;
             return;
         }
@@ -296,7 +299,7 @@ public:
                         landing_point.hdg,
                         "LP REP"
                         );
-
+                temp_boss_update.missionNo = mission_number;
 				bag_port_hover_out.push_back(mhc);
 
 				mission_monitor_messages.emplace_back(0);
@@ -359,10 +362,12 @@ public:
 private:
 	message_landing_point_t landing_point;
 	message_aircraft_state_t aircraft_state;
+    int mission_number;
 
     void reset_state() {
         aircraft_state = message_aircraft_state_t();
         landing_point = message_landing_point_t();
+        mission_number = 0;
     }
 };
 

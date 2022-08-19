@@ -117,7 +117,7 @@ int main() {
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control<TIME>::defs::i_hover_criteria_met>("ir_hover_criteria_met", "handover_control"),
 			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,Handover_Control<TIME>::defs::i_pilot_handover>("ir_pilot_handover", "handover_control"),
 			dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "handover_control"),
-            dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handover_Control<TIME>::defs::i_start_mission>("ir_start_mission", "handover_control")
+            dynamic::translate::make_IC<iestream_input_defs<int>::out,Handover_Control<TIME>::defs::i_start_mission>("ir_start_mission", "handover_control")
         };
 
 		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
