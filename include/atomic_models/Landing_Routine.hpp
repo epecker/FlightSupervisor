@@ -181,7 +181,7 @@ public:
                             landing_point.id,
                             landing_point.lat,
                             landing_point.lon,
-                            landing_point.alt * 0.3048,
+                            landing_point.alt * FT_TO_METERS,
                             landing_point.hdg,
                             "LAND");
                     temp_boss.missionNo = mission_number;

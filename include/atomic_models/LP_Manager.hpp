@@ -284,7 +284,7 @@ public:
 						aircraft_state.gps_time,
 						plp.lat * (1E7),
 						plp.lon * (1E7),
-						plp.alt * 0.3048,
+						plp.alt * FT_TO_METERS,
 						DEFAULT_ORBIT_RADIUS,
 						DEFAULT_ORBIT_VELOCITY,
 						DEFAULT_ORBIT_YAW_BEHAVIOUR

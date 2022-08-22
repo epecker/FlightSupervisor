@@ -240,7 +240,7 @@ public:
 						aircraft_state.gps_time,
 						hover_criteria.desiredLat * (1E7),
 						hover_criteria.desiredLon * (1E7),
-						hover_criteria.desiredAltMSL * 0.3048
+						hover_criteria.desiredAltMSL * FT_TO_METERS
 						);
 				message_fcc_out.push_back(mfc);
 				get_messages<typename Stabilize::defs::o_fcc_command_hover>(bags) = message_fcc_out;

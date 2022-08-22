@@ -42,6 +42,7 @@
 #define MAX_REPO_VEL 10.0 // Max speed in knots to reposition at
 #define KTS_TO_MPS 0.514444 // Convert knots to m/s
 #define METERS_TO_FT 3.281
+#define FT_TO_METERS 0.3048
 #define DEFAULT_LAND_CRITERIA_HOR_DIST 16.40
 #define DEFAULT_LAND_CRITERIA_VERT_DIST 5.0
 #define DEFAULT_LAND_CRITERIA_VEL 3.0
