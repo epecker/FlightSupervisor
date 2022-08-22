@@ -295,11 +295,12 @@ public:
                         landing_point.id,
                         landing_point.lat,
                         landing_point.lon,
-                        landing_point.alt,
+                        landing_point.alt * 0.3048,
                         landing_point.hdg,
                         "LP REP"
                         );
                 temp_boss_update.missionNo = mission_number;
+                temp_boss_update.missionItemNo = landing_point.missionItemNo;
 				bag_port_hover_out.push_back(mhc);
 
 				mission_monitor_messages.emplace_back(0);
