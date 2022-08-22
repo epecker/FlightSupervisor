@@ -23,13 +23,20 @@ struct message_landing_point_t{
 	message_landing_point_t(int i_id, double i_lat, double i_lon, double i_alt, double i_hdg)
 		:id(i_id), lat(i_lat), lon(i_lon), alt(i_alt), hdg(i_hdg) {}
 };
+#pragma pack(pop)
 
 /***************************************************/
 /************* Output stream ************************/
 /***************************************************/
 
 ostream& operator<<(ostream& os, const message_landing_point_t& msg) {
-	os << msg.id << " " << msg.lat << " " << msg.lon << " " << msg.alt << " " << msg.hdg;
+    os  << msg.id << " "
+        << std::fixed << std::setprecision(7)
+        << msg.lat << " "
+        << msg.lon << " "
+        << std::fixed << std::setprecision(2)
+        << msg.alt << " "
+        << msg.hdg;
 	return os;
 }
 
@@ -45,6 +52,5 @@ istream& operator>> (istream& is, message_landing_point_t& msg) {
 	is >> msg.hdg;
 	return is;
 }
-#pragma pack(pop)
 
 #endif // BOOST_SIMULATION_PLP_MESSAGE_HPP

@@ -24,7 +24,7 @@ struct message_aircraft_state_t {
 		alt_AGL(0.0),
 		alt_MSL(0.0),
 		hdg_Deg(0.0),
-		vel_Kts(0.0) 
+		vel_Kts(0.0)
 	{}
 
 	message_aircraft_state_t(
@@ -50,13 +50,16 @@ struct message_aircraft_state_t {
 /***************************************************/
 
 ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
-	os << msg.gps_time << " "
-		<< msg.lat << " "
-		<< msg.lon << " "
-		<< msg.alt_AGL << " "
-		<< msg.alt_MSL << " "
-		<< msg.hdg_Deg << " "
-		<< msg.vel_Kts;
+    os  << std::fixed << std::setprecision(2)
+        << msg.gps_time << " "
+        << std::fixed << std::setprecision(7)
+        << msg.lat << " "
+        << msg.lon << " "
+        << std::fixed << std::setprecision(2)
+        << msg.alt_AGL << " "
+        << msg.alt_MSL << " "
+        << msg.hdg_Deg << " "
+        << msg.vel_Kts;
 	return os;
 }
 
@@ -74,7 +77,5 @@ istream& operator>> (istream& is, message_aircraft_state_t& msg) {
 	is >> msg.vel_Kts;
 	return is;
 }
-
-
 
 #endif // AIRCRAFT_STATE_MESSAGE_HPP

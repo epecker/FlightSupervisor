@@ -110,21 +110,24 @@ struct message_boss_mission_update_t {
 /***************************************************/
 
 std::ostream &operator<<(std::ostream &os, const message_boss_mission_update_t &msg) {
-    os << msg.lpNo << " "
-       << msg.lpLat << " "
-       << msg.lpLon << " "
-       << msg.missionNo << " "
-       << msg.missionItemNo << " "
-       << msg.isMissionStarted << " "
-       << msg.isLandingLeg << " "
-       << msg.lat << " "
-       << msg.lon << " "
-       << msg.alt << " "
-       << msg.yaw << " "
-       << msg.speed << " "
-       << msg.horzAcceptRadiusM << " "
-       << msg.vertAcceptRadiusM << " "
-       << msg.previewLength << " ";
+    os  << msg.lpNo << " "
+        << std::fixed << std::setprecision(7)
+        << msg.lpLat << " "
+        << msg.lpLon << " "
+        << msg.missionNo << " "
+        << msg.missionItemNo << " "
+        << msg.isMissionStarted << " "
+        << msg.isLandingLeg << " "
+        << msg.lat << " "
+        << msg.lon << " "
+        << std::fixed << std::setprecision(2)
+        << msg.alt << " "
+        << msg.yaw << " "
+        << msg.speed << " "
+        << msg.horzAcceptRadiusM << " "
+        << msg.vertAcceptRadiusM << " "
+        << msg.previewLength << " "
+        << std::fixed << std::setprecision(7);
     for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
         os << msg.latNext[i] << " "
            << msg.lonNext[i] << " ";
