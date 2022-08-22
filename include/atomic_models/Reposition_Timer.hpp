@@ -96,6 +96,7 @@ public:
         repo_time = seconds_to_time<TIME>(REPO_TIMER);
 		upd_time = seconds_to_time<TIME>(UPD_TIMER);
         landing_point = message_landing_point_t();
+        last_lp = 0;
     }
 
     // Constructor with timer parameter
@@ -105,6 +106,7 @@ public:
         repo_time = i_repo_time;
         upd_time = i_upd_time;
         landing_point = message_landing_point_t();
+        last_lp = 0;
     }
 
     // Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
@@ -114,6 +116,7 @@ public:
         repo_time = i_repo_time;
 		upd_time = i_upd_time;
         landing_point = message_landing_point_t();
+        last_lp = 0;
     }
 
     // Internal transitions
@@ -225,22 +228,26 @@ public:
 
         switch (state.current_state) {
             case States::NOTIFY_UPDATE: {
-                message_boss_mission_update_t temp_boss{};
-                temp_boss.update_landing_point(
-                        landing_point.id,
-                        landing_point.lat,
-                        landing_point.lon,
-                        landing_point.alt,
-                        landing_point.hdg,
-                        "LP UPD");
-                temp_boss.missionNo = mission_number;
-                get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).push_back(temp_boss);
-
-                if (landing_point.id == 1) {
+                if (last_lp == 0) {
                     std::string message = "LP found. Holding for " + std::to_string(upd_time.getSeconds()) + "s";
                     message_update_gcs_t temp_gcs_update{message, Mav_Severities_E::MAV_SEVERITY_ALERT};
                     get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).push_back(temp_gcs_update);
                 }
+
+                if (landing_point.id != last_lp) {
+                    message_boss_mission_update_t temp_boss{};
+                    temp_boss.update_landing_point(
+                            landing_point.id,
+                            landing_point.lat,
+                            landing_point.lon,
+                            landing_point.alt,
+                            landing_point.hdg,
+                            "LP UPD");
+                    temp_boss.missionNo = mission_number;
+                    get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).push_back(temp_boss);
+                    last_lp = landing_point.id;
+                }
+
                 break;
             }
             case States::REQUEST_LAND: {
@@ -314,12 +321,14 @@ private:
     int mission_number;
     TIME repo_time;
 	TIME upd_time;
+    mutable int last_lp;
 
     void reset_state() {
         mission_number = 0;
         repo_time = TIME(LP_REPOSITION_TIME);
         landing_point = message_landing_point_t();
 		upd_time = seconds_to_time<TIME>(UPD_TIMER);
+        last_lp = 0;
     }
 
 	void update_upd_time(TIME e) {
