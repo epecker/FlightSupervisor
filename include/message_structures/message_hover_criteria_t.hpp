@@ -18,9 +18,9 @@ struct message_hover_criteria_t {
 	double  velTolKts;			        // Kts, tolerance for velocity  - horizontal
 	double  hdgToleranceDeg;            // Heading tolerance
 	double  timeTol;			        // Seconds, time it supposed to hover to say that criteria is met
-	double  timeCritFirstMet;           // System time at which criteria was first met, to start counting. 
+	double  timeCritFirstMet;           // System time at which criteria was first met, to start counting.
 	double  hoverCompleted;             // Flag that hover is completed
-	int     manCtrlRequiredAfterCritMet;// Allows supervisor to flag display system that MAN CTRL needed – pilot in control
+	int     manCtrlRequiredAfterCritMet;// Allows supervisor to flag display system that MAN CTRL is needed
 
 	message_hover_criteria_t() :
 		desiredLat(0.0),
@@ -69,18 +69,20 @@ struct message_hover_criteria_t {
 /***************************************************/
 
 ostream& operator<<(ostream& os, const message_hover_criteria_t& msg) {
-	os << msg.desiredLat << " ";
-	os << msg.desiredLon << " ";
-	os << msg.desiredAltMSL << " ";
-	os << msg.desiredHdgDeg << " ";
-	os << msg.horDistTolFt << " ";
-	os << msg.vertDistTolFt << " ";
-	os << msg.velTolKts << " ";
-	os << msg.hdgToleranceDeg << " ";
-	os << msg.timeTol << " ";
-	os << msg.timeCritFirstMet << " ";
-	os << msg.hoverCompleted << " ";
-	os << msg.manCtrlRequiredAfterCritMet << " ";
+    os  << std::fixed << std::setprecision(7)
+        << msg.desiredLat << " "
+        << msg.desiredLon << " "
+        << std::fixed << std::setprecision(2)
+        << msg.desiredAltMSL << " "
+        << msg.desiredHdgDeg << " "
+        << msg.horDistTolFt << " "
+        << msg.vertDistTolFt << " "
+        << msg.velTolKts << " "
+        << msg.hdgToleranceDeg << " "
+        << msg.timeTol << " "
+        << msg.timeCritFirstMet << " "
+        << msg.hoverCompleted << " "
+        << msg.manCtrlRequiredAfterCritMet << " ";
 	return os;
 }
 
@@ -103,7 +105,5 @@ istream& operator>> (istream& is, message_hover_criteria_t& msg) {
 	is >> msg.manCtrlRequiredAfterCritMet;
 	return is;
 }
-
-
 
 #endif // HOVER_CRITERIA_MESSAGE_HPP
