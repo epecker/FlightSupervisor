@@ -181,11 +181,12 @@ public:
                             landing_point.id,
                             landing_point.lat,
                             landing_point.lon,
-                            landing_point.alt,
+                            landing_point.alt * FT_TO_METERS,
                             landing_point.hdg,
                             "LAND");
                     temp_boss.missionNo = mission_number;
-					message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
+                    temp_boss.missionItemNo = landing_point.missionItemNo;
+                    message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss);

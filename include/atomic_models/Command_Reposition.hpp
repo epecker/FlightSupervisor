@@ -262,7 +262,7 @@ public:
 			{
 				message_fcc_command_t mfc = message_fcc_command_t();
 				float distance, altitude;
-				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon, aircraft_state.alt_MSL * 0.3048, landing_point.lat, landing_point.lon, landing_point.alt * METERS_TO_FT, &distance, &altitude);
+				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon, aircraft_state.alt_MSL * FT_TO_METERS, landing_point.lat, landing_point.lon, landing_point.alt * METERS_TO_FT, &distance, &altitude);
 				float velocity = distance / (REPO_TIMER - 2.0f);
 				if (velocity > MAX_REPO_VEL * KTS_TO_MPS) {
 					velocity = MAX_REPO_VEL * KTS_TO_MPS;
@@ -295,11 +295,12 @@ public:
                         landing_point.id,
                         landing_point.lat,
                         landing_point.lon,
-                        landing_point.alt,
+                        landing_point.alt * FT_TO_METERS,
                         landing_point.hdg,
                         "LP REP"
                         );
                 temp_boss_update.missionNo = mission_number;
+                temp_boss_update.missionItemNo = landing_point.missionItemNo;
 				bag_port_hover_out.push_back(mhc);
 
 				mission_monitor_messages.emplace_back(0);
