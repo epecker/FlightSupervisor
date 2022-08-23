@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> cache_input = dynamic::translate::make_dynamic_atomic_model<Cache_Input_LP, TIME, message_landing_point_t>("cache_input", message_landing_point_t(0, 45.0, -75.0, 100.0, 5.0));
+		std::shared_ptr<dynamic::modeling::model> cache_input = dynamic::translate::make_dynamic_atomic_model<Cache_Input_LP, TIME, message_landing_point_t>("cache_input", message_landing_point_t(0, 10, 45.0, -75.0, 100.0, 5.0));
 
 		// Instantiate the input readers.
 		// One for each input
