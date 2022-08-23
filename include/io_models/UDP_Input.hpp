@@ -128,7 +128,7 @@ public:
 	}
 
 	// Handler for signals.
-	static void handle_signal(int signal_number) {
+    void handle_signal(int signal_number) {
 		shutdown();
 	}
 

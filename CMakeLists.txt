@@ -11,7 +11,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 ############################
 configure_file("${CMAKE_SOURCE_DIR}/include/SupervisorConfig.hpp.in" "${CMAKE_SOURCE_DIR}/include/SupervisorConfig.hpp")
 
-
 #####################################
 ###  Global Compiler Definitions  ###
 #####################################
@@ -42,6 +41,12 @@ set(MavNRC_GEO 	"${CMAKE_SOURCE_DIR}/deps/mavNRC/geo.cpp")
 set(SHARED_MEM 	"${CMAKE_SOURCE_DIR}/deps/sharedmemorymodel/SharedMemoryModel.cpp")
 set(RUDP 		"${CMAKE_SOURCE_DIR}/deps/RUDP/src/ConnectionController.cpp" "${CMAKE_SOURCE_DIR}/deps/RUDP/src/Connection.cpp")
 
+####################################
+###  Global Library Directories  ###
+####################################
+if (APPLE)
+    link_directories("/usr/local/opt/icu4c/lib")
+endif ()
 
 ########################
 ###  Subdirectories  ###
