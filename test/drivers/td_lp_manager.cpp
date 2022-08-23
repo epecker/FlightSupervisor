@@ -104,7 +104,7 @@ int main() {
 		shared_ptr<dynamic::modeling::model> ir_control_yielded =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_control_yielded", input_file_control_yielded.c_str());
         shared_ptr<dynamic::modeling::model> ir_start_mission =
-                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
+                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)

@@ -71,7 +71,7 @@ int main() {
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
 				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
 		shared_ptr<dynamic::modeling::model> ir_start_mission =
-				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
+				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 		shared_ptr<dynamic::modeling::model> ir_waypoint =
 				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", input_file_waypoint.c_str());
 
