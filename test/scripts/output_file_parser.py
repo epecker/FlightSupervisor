@@ -169,7 +169,7 @@ def create_state_and_message_table(state_table, state_headers, message_table, me
                 current_foundation = i
     for i in reversed(items_to_remove):
         table.pop(i)
-        
+
     viewed_times = {}
     for i, value in enumerate(table):
         if i == 0: continue

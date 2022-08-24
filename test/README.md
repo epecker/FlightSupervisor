@@ -38,7 +38,7 @@ To use these drivers simply run the .EXE and follow the instructions on the cons
 
 ## The Command Line Landing Test Driver
 The command line Landing test driver (td_landing_command_line.exe) is a user driven method of testing the Landing phase in real-time. The driver works by receiving port value pairs from the user on the command line and forwarding them as event messages to the Landing Model's input ports. The user will continually be prompted for input until 'q' is entered. To send a message to a certain port on the Landing model, akin to how it will receive messages via a network, the user specifies which port the message should be sent to:
-	
+
 	0. The landing achieved port which takes a single boolean (0/1) value.
 	1. The aircraft state port which takes an aircraft state structure as a value.
 	2. The pilot takeover port which takes a single boolean (0/1) value.
@@ -47,7 +47,7 @@ The command line Landing test driver (td_landing_command_line.exe) is a user dri
 
 The description of each of the ports can be found in the port description document. The members of each of the structures can be found in either the source code or on the terminal during test execution.
 Example test cases can be found here [Command Line Landing Test Driver Example Test Cases](input_data/landing_command_line/README.md)
-	
+
 ## Preparing the test outputs for review
 
 ### Prerequisites
@@ -55,7 +55,7 @@ Example test cases can be found here [Command Line Landing Test Driver Example T
 * Install python 3
 * Install tabulate for python 3
   * pip install tabulate
-  * python3 -m pip install tabulate 
+  * python3 -m pip install tabulate
 * Add python to your system environment path
 
 ### Perform the Tests
@@ -71,4 +71,4 @@ Example test cases can be found here [Command Line Landing Test Driver Example T
 	```
 	python ./test/scripts/simulation_cleanup.py ./<simulation_results>
 	```
-5. The output can be found in `<Project_Directory>/test/simulation_results/<Model_Name>.md` 
+5. The output can be found in `<Project_Directory>/test/simulation_results/<Model_Name>.md`

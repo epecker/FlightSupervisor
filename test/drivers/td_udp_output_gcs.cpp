@@ -55,14 +55,14 @@ int main() {
 		// Instantiate the atomic model to test
 		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char*, const unsigned short>("udp_output", IPV4_GCS, 14550);
 
-		// Instantiate the input readers.	
+		// Instantiate the input readers.
 		// One for each input
 		std::shared_ptr<dynamic::modeling::model> ir_message =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Update_GCS, TIME, const char* >("ir_message", input_file_in.c_str());
 		std::shared_ptr<dynamic::modeling::model> packet_builder =
 			dynamic::translate::make_dynamic_atomic_model<Packet_Builder_GCS, TIME>("packet_builder");
 
-		// The models to be included in this coupled model 
+		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 			udp_output,

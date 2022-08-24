@@ -35,7 +35,7 @@ def parse_directory(path):
             file.close
 
 def main():
-    if len(sys.argv) == 2: 
+    if len(sys.argv) == 2:
         parse_directory(sys.argv[1])
     else: print("Too few or too many arguments")
 

@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 		std::shared_ptr<dynamic::modeling::model> ir_message =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", std::move(input_file_in.c_str()));
 
-		// The models to be included in this coupled model 
+		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 			shared_memory_output,

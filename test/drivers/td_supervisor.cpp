@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<dynamic::modeling::model> ir_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_pilot_takeover.c_str()));
 		shared_ptr<dynamic::modeling::model> ir_PLP_ach = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_PLP_ach", move(input_PLP_ach.c_str()));
 
-		// The models to be included in this coupled model 
+		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 				supervisor,

@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<dynamic::modeling::model> ir_in =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_in", move(input_file_in.c_str()));
 
-		// The models to be included in this coupled model 
+		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
 		dynamic::modeling::Models submodels_TestDriver = {
 			blocking_input,
