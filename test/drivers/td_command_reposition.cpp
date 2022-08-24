@@ -83,7 +83,7 @@ int main() {
 		shared_ptr<dynamic::modeling::model> ir_request_reposition =
 			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_request_reposition", input_file_request_reposition.c_str());
         shared_ptr<dynamic::modeling::model> ir_start_mission =
-                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
+                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
