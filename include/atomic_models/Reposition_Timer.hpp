@@ -258,6 +258,7 @@ public:
             case States::LP_REPO: {
                 message_boss_mission_update_t temp_boss{};
                 temp_boss.update_message("MAN CTRL", false, mission_number);
+				temp_boss.alt = landing_point.alt * FT_TO_METERS;
 
                 message_update_gcs_t temp_gcs("Repo timer expired, hovering over the last LP", Mav_Severities_E::MAV_SEVERITY_ALERT);
                 boss_messages.push_back(temp_boss);

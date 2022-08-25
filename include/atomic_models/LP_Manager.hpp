@@ -296,6 +296,7 @@ public:
 
 					message_boss_mission_update_t temp_boss{};
                     temp_boss.update_message("LZ SCAN", false, mission_number);
+					temp_boss.alt = plp.alt * FT_TO_METERS;
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss);
@@ -315,6 +316,7 @@ public:
 
 					message_boss_mission_update_t temp_boss{};
                     temp_boss.update_message("PLP REP", false, mission_number);
+					temp_boss.alt = plp.alt * FT_TO_METERS;
 
                     boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
