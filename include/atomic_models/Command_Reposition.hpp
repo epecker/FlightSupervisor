@@ -103,6 +103,7 @@ public:
 		state.current_state = States::IDLE;
 		aircraft_state = message_aircraft_state_t();
 		landing_point = message_landing_point_t();
+        velocity = 0;
         mission_number = 0;
 	}
 
@@ -111,6 +112,7 @@ public:
 		state.current_state = initial_state;
 		aircraft_state = message_aircraft_state_t();
 		landing_point = message_landing_point_t();
+        velocity = 0;
         mission_number = 0;
 	}
 
@@ -263,10 +265,14 @@ public:
 				message_fcc_command_t mfc = message_fcc_command_t();
 				float distance, altitude;
 				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon, aircraft_state.alt_MSL * FT_TO_METERS, landing_point.lat, landing_point.lon, landing_point.alt * METERS_TO_FT, &distance, &altitude);
-				float velocity = distance / (REPO_TIMER - 2.0f);
+				velocity = distance / REPO_TRANSIT_TIME;
+
 				if (velocity > MAX_REPO_VEL * KTS_TO_MPS) {
 					velocity = MAX_REPO_VEL * KTS_TO_MPS;
-				}
+				} else if (velocity < MIN_REPO_VEL * KTS_TO_MPS) {
+                    velocity = MIN_REPO_VEL * KTS_TO_MPS;
+                }
+
 				mfc.change_velocity(velocity, aircraft_state.gps_time);
 				bag_port_fcc_out.push_back(mfc);
 				get_messages<typename Command_Reposition::defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
@@ -301,6 +307,7 @@ public:
                         );
                 temp_boss_update.missionNo = mission_number;
                 temp_boss_update.missionItemNo = landing_point.missionItemNo;
+                temp_boss_update.speed = velocity * MPS_TO_KTS;
 				bag_port_hover_out.push_back(mhc);
 
 				mission_monitor_messages.emplace_back(0);
@@ -363,11 +370,13 @@ public:
 private:
 	message_landing_point_t landing_point;
 	message_aircraft_state_t aircraft_state;
+    mutable float velocity;
     int mission_number;
 
     void reset_state() {
         aircraft_state = message_aircraft_state_t();
         landing_point = message_landing_point_t();
+        velocity = 0;
         mission_number = 0;
     }
 };

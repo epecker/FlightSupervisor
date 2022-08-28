@@ -35,12 +35,13 @@
 #define DEFAULT_LAND_CRITERIA_HOR_DIST 16.40 // feet, to meet landing criteria
 #define DEFAULT_LAND_CRITERIA_VERT_DIST 5.0  // feet , to meet landing criteria
 #define DEFAULT_LAND_CRITERIA_VEL 3.0 //knots, velocity to meet landing criteria
-#define DEFAULT_LAND_CRITERIA_HDG 15.0 // to meet heading criteria for landing 
-#define MAX_REPO_VEL 10.0 //knots, max velocity to do reposition, used to command to the FCC
+#define DEFAULT_LAND_CRITERIA_HDG 15.0 // to meet heading criteria for landing
+#define MAX_REPO_VEL 5.0 //knots -- This matches the FCC value
+#define MIN_REPO_VEL  1.0 //knots
+#define REPO_TRANSIT_TIME 10.0f
 
-// Used in Command_Reposition. This is temporary remove when intergrating.
-#define MAX_REPO_VEL 10.0 // Max speed in knots to reposition at
 #define KTS_TO_MPS 0.514444 // Convert knots to m/s
+#define MPS_TO_KTS 1/KTS_TO_MPS // Convert m/s to knots
 #define METERS_TO_FT 3.281
 #define FT_TO_METERS 0.3048
 #define DEFAULT_LAND_CRITERIA_HOR_DIST 16.40
