@@ -21,6 +21,7 @@
 #include "io_models/Packet_Builder.hpp"
 #include "io_models/UDP_Output.hpp"
 #include "io_models/RUDP_Output.hpp"
+#include "io_models/GPS_Time.h"
 
 //Coupled model headers
 #include "coupled_models/Supervisor.hpp"
@@ -66,7 +67,10 @@ int main() {
     shared_ptr<dynamic::modeling::model> udp_gcs = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_gcs", IPV4_GCS, PORT_GCS);
     shared_ptr<dynamic::modeling::model> rudp_mavnrc = dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>("rudp_mavnrc", IPV4_MAVNRC, PORT_MAVNRC, DEFAULT_TIMEOUT_MS, 10);
 
-	// The models to be included in this coupled model
+    // Instantiate GPS time logger
+    shared_ptr<dynamic::modeling::model> gps_time = dynamic::translate::make_dynamic_atomic_model<GPS_Time, TIME>("a_gps_time");
+
+    // The models to be included in this coupled model
 	// (accepts atomic and coupled models)
 	dynamic::modeling::Models submodels_TestDriver = {
             supervisor,
@@ -85,6 +89,7 @@ int main() {
             udp_boss,
             udp_fcc,
             udp_gcs,
+            gps_time,
             rudp_mavnrc
 	};
 
