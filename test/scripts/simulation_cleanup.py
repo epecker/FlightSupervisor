@@ -2,10 +2,12 @@ import output_file_parser
 import sys
 import os
 
+
 def table_maker(test_path):
     state_table, state_headers = output_file_parser.create_state_table(test_path + "output_state.txt")
     message_table, message_header = output_file_parser.create_message_table(test_path + "output_messages.txt")
     return output_file_parser.create_state_and_message_table(state_table, state_headers, message_table, message_header)
+
 
 def parse_directory(path):
     if not os.path.isdir(path):
@@ -32,12 +34,15 @@ def parse_directory(path):
                 print(val)
                 print()
             sys.stdout = original_stdout
-            file.close
+            file.close()
+
 
 def main():
     if len(sys.argv) == 2:
         parse_directory(sys.argv[1])
-    else: print("Too few or too many arguments")
+    else:
+        print("Too few or too many arguments")
+
 
 if __name__ == "__main__":
     main()
