@@ -1,6 +1,6 @@
 // C++ headers
 #include <string>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 // Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
@@ -41,12 +41,12 @@ int main() {
 		string out_messages_file			= out_directory + string("/output_messages.txt");
 		string out_state_file				= out_directory + string("/output_state.txt");
 
-		if (!filesystem::exists(input_file_initial_state) ||
-			!filesystem::exists(input_file_lp_new) ||
-			!filesystem::exists(input_file_pilot_takeover) ||
-			!filesystem::exists(input_file_lp_criteria_met) ||
-			!filesystem::exists(input_file_control_yielded) ||
-			!filesystem::exists(input_file_start_mission)) {
+		if (!boost::filesystem::exists(input_file_initial_state) ||
+			!boost::filesystem::exists(input_file_lp_new) ||
+			!boost::filesystem::exists(input_file_pilot_takeover) ||
+			!boost::filesystem::exists(input_file_lp_criteria_met) ||
+			!boost::filesystem::exists(input_file_control_yielded) ||
+			!boost::filesystem::exists(input_file_start_mission)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
@@ -66,7 +66,7 @@ int main() {
 		TIME upd_time = seconds_to_time<TIME>(UPD_TIMER);
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str());
+		boost::filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
 		shared_ptr<dynamic::modeling::model> reposition_timer = dynamic::translate::make_dynamic_atomic_model<Reposition_Timer, TIME, TIME, TIME, Reposition_Timer<TIME>::States>("reposition_timer", std::move(repo_time), std::move(upd_time), std::move(initial_state));
@@ -146,7 +146,7 @@ int main() {
 
 		r.run_until_passivate();
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");

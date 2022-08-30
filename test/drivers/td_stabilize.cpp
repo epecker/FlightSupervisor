@@ -1,6 +1,6 @@
 // C++ headers
 #include <string>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 // Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
@@ -45,11 +45,11 @@ int main() {
 		string out_messages_file = out_directory + string("/output_messages.txt");
 		string out_state_file = out_directory + string("/output_state.txt");
 
-		if (!filesystem::exists(input_file_initial_state) ||
-			!filesystem::exists(input_file_aircraft_state) ||
-			!filesystem::exists(input_file_cancel_hover) ||
-			!filesystem::exists(input_file_stabilize) ||
-			!filesystem::exists(input_file_start_mission)) {
+		if (!boost::filesystem::exists(input_file_initial_state) ||
+			!boost::filesystem::exists(input_file_aircraft_state) ||
+			!boost::filesystem::exists(input_file_cancel_hover) ||
+			!boost::filesystem::exists(input_file_stabilize) ||
+			!boost::filesystem::exists(input_file_start_mission)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
@@ -68,7 +68,7 @@ int main() {
 		Stabilize<TIME>::States initial_state = Stabilize<TIME>::stringToEnum(initial_state_string);
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
+		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
 		shared_ptr<dynamic::modeling::model> stabilize = dynamic::translate::make_dynamic_atomic_model<Stabilize, TIME, Stabilize<TIME>::States>("stabilize", move(initial_state));
@@ -144,7 +144,7 @@ int main() {
 
 		r.run_until(TIME("00:02:00:000"));
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");

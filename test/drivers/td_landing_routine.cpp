@@ -1,6 +1,6 @@
 // C++ headers
 #include <string>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 // Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
@@ -38,11 +38,11 @@ int main() {
 		string out_messages_file = out_directory + string("/output_messages.txt");
 		string out_state_file = out_directory + string("/output_state.txt");
 
-		if (!filesystem::exists(input_file_initial_state) ||
-			!filesystem::exists(input_file_landing_achieved) ||
-			!filesystem::exists(input_file_pilot_takeover) ||
-			!filesystem::exists(input_file_start_mission) ||
-			!filesystem::exists(input_file_land)
+		if (!boost::filesystem::exists(input_file_initial_state) ||
+			!boost::filesystem::exists(input_file_landing_achieved) ||
+			!boost::filesystem::exists(input_file_pilot_takeover) ||
+			!boost::filesystem::exists(input_file_start_mission) ||
+			!boost::filesystem::exists(input_file_land)
 			) {
 			printf("One of the input files do not exist\n");
 			return 1;
@@ -62,7 +62,7 @@ int main() {
 		Landing_Routine<TIME>::States initial_state = Landing_Routine<TIME>::stringToEnum(initial_state_string);
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str());
+		boost::filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
 		shared_ptr<dynamic::modeling::model> landing_routine = dynamic::translate::make_dynamic_atomic_model<Landing_Routine, TIME, Landing_Routine<TIME>::States>("landing_routine", std::move(initial_state));
@@ -137,7 +137,7 @@ int main() {
 
 		r.run_until_passivate();
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");

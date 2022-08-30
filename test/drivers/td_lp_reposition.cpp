@@ -1,6 +1,6 @@
 // C++ headers
 #include <string>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 // Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
@@ -40,19 +40,19 @@ int main() {
 		string out_messages_file = out_directory + string("/output_messages.txt");
 		string out_state_file = out_directory + string("/output_state.txt");
 
-		if (!filesystem::exists(input_file_aircraft_state) ||
-			!filesystem::exists(input_file_control_yielded) ||
-			!filesystem::exists(input_file_hover_criteria_met) ||
-			!filesystem::exists(input_file_landing_achieved) ||
-			!filesystem::exists(input_file_lp_new) ||
-			!filesystem::exists(input_file_pilot_takeover) ||
-			!filesystem::exists(input_file_start_mission)) {
+		if (!boost::filesystem::exists(input_file_aircraft_state) ||
+			!boost::filesystem::exists(input_file_control_yielded) ||
+			!boost::filesystem::exists(input_file_hover_criteria_met) ||
+			!boost::filesystem::exists(input_file_landing_achieved) ||
+			!boost::filesystem::exists(input_file_lp_new) ||
+			!boost::filesystem::exists(input_file_pilot_takeover) ||
+			!boost::filesystem::exists(input_file_start_mission)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str());
+		boost::filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
 		LP_Reposition lpr = LP_Reposition();
@@ -141,7 +141,7 @@ int main() {
 
 		r.run_until_passivate();
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");

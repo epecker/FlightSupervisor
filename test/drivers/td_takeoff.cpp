@@ -1,6 +1,6 @@
 // C++ headers
 #include <string>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 // Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
@@ -39,15 +39,15 @@ int main() {
 		string out_messages_file				= out_directory + std::string("/output_messages.txt");
 		string out_state_file					= out_directory + std::string("/output_state.txt");
 
-		if (!filesystem::exists(input_file_aircraft_state) ||
-			!filesystem::exists(input_file_perception_status) ||
-			!filesystem::exists(input_file_start_supervisor)) {
+		if (!boost::filesystem::exists(input_file_aircraft_state) ||
+			!boost::filesystem::exists(input_file_perception_status) ||
+			!boost::filesystem::exists(input_file_start_supervisor)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str());
+		boost::filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the coupled model to test
 		Takeoff t = Takeoff();
@@ -117,7 +117,7 @@ int main() {
 
 		r.run_until_passivate();
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + std::string("/test/scripts/simulation_cleanup.py");

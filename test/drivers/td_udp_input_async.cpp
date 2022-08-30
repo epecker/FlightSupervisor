@@ -1,7 +1,7 @@
 //C++ headers
 #include <chrono>
 #include <string>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
@@ -56,14 +56,14 @@ int main() {
         string out_state_file = out_directory + string("/output_state.txt");
         string out_info_file = out_directory + string("/output_info.txt");
 
-        if (!filesystem::exists(input_file_message) ||
-            !filesystem::exists(input_file_quit)) {
+        if (!boost::filesystem::exists(input_file_message) ||
+            !boost::filesystem::exists(input_file_quit)) {
             printf("One of the input files do not exist\n");
             return 1;
         }
 
         // Create the output location
-        filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
+        boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
         // Instantiate the atomic model to test
         std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char*, const unsigned short>("udp_output", "127.0.0.1", 23000);
@@ -153,7 +153,7 @@ int main() {
         cout << "\nSimulation took: " << elapsed << " seconds" << endl;
 
         test_set_enumeration++;
-    } while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+    } while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
     fflush(nullptr);
     string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
