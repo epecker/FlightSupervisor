@@ -6,20 +6,19 @@
 //Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
 //Messages structures
-#include "message_structures/message_landing_point_t.hpp"
+#include "../../src/message_structures/message_landing_point_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "SupervisorConfig.hpp"
-#include "input_readers.hpp" // Input Reader Definitions.
+#include "../../src/SupervisorConfig.hpp"
+#include "../../src/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "coupled_models/Landing.hpp"
+#include "../../src/coupled_models/Landing.hpp"
 
 using namespace cadmium;
 using namespace cadmium::basic_models::pdevs;

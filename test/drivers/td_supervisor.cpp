@@ -1,47 +1,37 @@
 //C++ headers
-#include <chrono>
-#include <algorithm>
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
 //Messages structures
-#include "message_structures/message_landing_point_t.hpp"
-#include "message_structures/message_fcc_command_t.hpp"
+#include "../../src/message_structures/message_landing_point_t.hpp"
+#include "../../src/message_structures/message_fcc_command_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "SupervisorConfig.hpp"
-#include "input_readers.hpp" // Input Reader Definitions.
+#include "../../src/SupervisorConfig.hpp"
+#include "../../src/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "coupled_models/Supervisor.hpp"
+#include "../../src/coupled_models/Supervisor.hpp"
 
-using namespace std;
 using namespace cadmium;
 using namespace cadmium::basic_models::pdevs;
 
 using TIME = NDTime;
-
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
 
 /**
 * ==========================================================
 * MAIN METHOD
 * ==========================================================
 */
-int main(int argc, char* argv[]) {
+int main() {
 	int test_set_enumeration = 0;
 
 	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/supervisor_test_driver/");
@@ -85,14 +75,14 @@ int main(int argc, char* argv[]) {
 
 		// Instantiate the input readers.
 		// One for each input
-		shared_ptr<dynamic::modeling::model> ir_aircraft_state = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", move(input_aircraft_state.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_perception_status = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_perception_status", move(input_perception_status.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_start_supervisor = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Start_Supervisor, TIME, const char* >("ir_start_supervisor", move(input_start_supervisor.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_waypoint = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", move(input_waypoint.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_landing_achieved = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", move(input_landing_achieved.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_LP_recv = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_LP_recv", move(input_LP_recv.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", move(input_pilot_takeover.c_str()));
-		shared_ptr<dynamic::modeling::model> ir_PLP_ach = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_PLP_ach", move(input_PLP_ach.c_str()));
+		shared_ptr<dynamic::modeling::model> ir_aircraft_state = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", input_aircraft_state.c_str());
+		shared_ptr<dynamic::modeling::model> ir_perception_status = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_perception_status", input_perception_status.c_str());
+		shared_ptr<dynamic::modeling::model> ir_start_supervisor = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Start_Supervisor, TIME, const char* >("ir_start_supervisor", input_start_supervisor.c_str());
+		shared_ptr<dynamic::modeling::model> ir_waypoint = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", input_waypoint.c_str());
+		shared_ptr<dynamic::modeling::model> ir_landing_achieved = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_landing_achieved", input_landing_achieved.c_str());
+		shared_ptr<dynamic::modeling::model> ir_LP_recv = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_LP_recv", input_LP_recv.c_str());
+		shared_ptr<dynamic::modeling::model> ir_pilot_takeover = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_pilot_takeover.c_str());
+		shared_ptr<dynamic::modeling::model> ir_PLP_ach = dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_PLP_ach", input_PLP_ach.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
@@ -134,6 +124,9 @@ int main(int argc, char* argv[]) {
 		);
 
 		/*************** Loggers *******************/
+        static ofstream out_messages;
+        static ofstream out_state;
+
 		out_messages = ofstream(out_messages_file);
 		struct oss_sink_messages {
 			static ostream& sink() {
@@ -161,7 +154,7 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
-	fflush(NULL);
+	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
 	if (system("python3 --version") == 0) {

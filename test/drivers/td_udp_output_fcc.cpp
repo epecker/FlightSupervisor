@@ -5,23 +5,21 @@
 //Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
 //Messages structures
-#include "message_structures/message_fcc_command_t.hpp"
+#include "../../src/message_structures/message_fcc_command_t.hpp"
 
 // Project information headers this is created by cmake at generation time!!!!
-#include "SupervisorConfig.hpp"
-#include "input_readers.hpp" // Input Reader Definitions.
+#include "../../src/SupervisorConfig.hpp"
+#include "../../src/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "io_models/Packet_Builder.hpp"
-#include "io_models/UDP_Output.hpp"
+#include "../../src/io_models/Packet_Builder.hpp"
+#include "../../src/io_models/UDP_Output.hpp"
 
-using namespace std;
 using namespace cadmium;
 
 using hclock = std::chrono::high_resolution_clock;
