@@ -1,45 +1,28 @@
 //C++ headers
 #include <chrono>
-#include <algorithm>
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
-
-//Real-Time Headers
-#include <cadmium/basic_model/pdevs/generator.hpp>
-#include <cadmium/modeling/coupling.hpp>
-#include <cadmium/concept/coupled_model_assert.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
-//Messages structures
-
 // Project information headers this is created by cmake at generation time!!!!
-#include "SupervisorConfig.hpp"
-#include "input_readers.hpp" // Input Reader Definitions.
+#include "../../src/SupervisorConfig.hpp"
+#include "../../src/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "io_models/Shared_Memory_Input.hpp"
-#include "io_models/Shared_Memory_Output.hpp"
+#include "../../src/io_models/Shared_Memory_Input.hpp"
+#include "../../src/io_models/Shared_Memory_Output.hpp"
 
-using namespace std;
 using namespace cadmium;
 
 using hclock = std::chrono::high_resolution_clock;
 using TIME = NDTime;
-
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
-ofstream out_info;
 
 // Define output ports to be used for logging purposes
 struct out : public out_port<message_aircraft_state_t> {};
@@ -55,10 +38,10 @@ template<typename T>
 class Shared_Memory_Output_LP : public Shared_Memory_Output<message_landing_point_t, T> {
 public:
     Shared_Memory_Output_LP() = default;
-    Shared_Memory_Output_LP(string name) : Shared_Memory_Output<message_landing_point_t, T>(name){}
+    explicit Shared_Memory_Output_LP(string name) : Shared_Memory_Output<message_landing_point_t, T>(name){}
 };
 
-int main(int argc, char* argv[]) {
+int main() {
 	int test_set_enumeration = 0;
 
 	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/shared_memory_input/");
@@ -86,15 +69,15 @@ int main(int argc, char* argv[]) {
 		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> shared_memory_output = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Output_LP, TIME, const char*>("shared_memory_output", std::move(DEFAULT_SHARED_MEMORY_NAME));
-		std::shared_ptr<dynamic::modeling::model> shared_memory_input = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Input_LP, TIME, TIME, const char*>("shared_memory_input", std::move(TIME("00:00:00:100")), std::move(DEFAULT_SHARED_MEMORY_NAME));
+		std::shared_ptr<dynamic::modeling::model> shared_memory_output = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Output_LP, TIME, const char*>("shared_memory_output", DEFAULT_SHARED_MEMORY_NAME);
+		std::shared_ptr<dynamic::modeling::model> shared_memory_input = dynamic::translate::make_dynamic_atomic_model<Shared_Memory_Input_LP, TIME, TIME, const char*>("shared_memory_input", std::move(TIME("00:00:00:100")), DEFAULT_SHARED_MEMORY_NAME);
 
 		// Instantiate the input readers.
 		// One for each input
 		std::shared_ptr<dynamic::modeling::model> ir_message =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", std::move(input_file_message.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_message", input_file_message.c_str());
 		std::shared_ptr<dynamic::modeling::model> ir_quit =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", std::move(input_file_quit.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", input_file_quit.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
@@ -127,6 +110,10 @@ int main(int argc, char* argv[]) {
 		);
 
 		/*************** Loggers *******************/
+        static ofstream out_messages;
+        static ofstream out_state;
+        static ofstream out_info;
+
 		out_messages = ofstream(out_messages_file);
 		struct oss_sink_messages {
 			static ostream& sink() {
@@ -166,7 +153,7 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
-	fflush(NULL);
+	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
 	if (std::system("python3 --version") == 0) {

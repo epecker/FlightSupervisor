@@ -5,36 +5,25 @@
 #include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 #include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
-//Messages structures
-
 // Project information headers this is created by cmake at generation time!!!!
-#include "SupervisorConfig.hpp"
-#include "input_readers.hpp" // Input Reader Definitions.
+#include "../../src/SupervisorConfig.hpp"
+#include "../../src/input_readers.hpp" // Input Reader Definitions.
 
 //Coupled model headers
-#include "io_models/UDP_Output.hpp"
-#include "io_models/UDP_Input.hpp"
-#include "io_models/Packet_Builder.hpp"
+#include "../../src/io_models/UDP_Output.hpp"
+#include "../../src/io_models/UDP_Input.hpp"
+#include "../../src/io_models/Packet_Builder.hpp"
 
-using namespace std;
 using namespace cadmium;
 
 using hclock = std::chrono::high_resolution_clock;
 using TIME = NDTime;
-
-// Used for oss_sink_state and oss_sink_messages
-ofstream out_messages;
-ofstream out_state;
-ofstream out_info;
 
 // Define output ports to be used for logging purposes
 struct out : public out_port<message_fcc_command_t> {};
@@ -46,7 +35,7 @@ public:
     UDP_Input_Fcc(TIME poll_rate, bool ack_required, string port) : UDP_Input<message_fcc_command_t, TIME>(poll_rate, ack_required, port){}
 };
 
-int main(int argc, char* argv[]) {
+int main() {
 	int test_set_enumeration = 0;
 
 	const string i_base_dir = string(PROJECT_DIRECTORY) + string("/test/input_data/udp_input/");
@@ -84,7 +73,7 @@ int main(int argc, char* argv[]) {
         std::shared_ptr<dynamic::modeling::model> packet_builder =
                 dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Fcc, TIME>("packet_builder");
 		std::shared_ptr<dynamic::modeling::model> ir_quit =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", std::move(input_file_quit.c_str()));
+			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_quit", input_file_quit.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
@@ -120,6 +109,10 @@ int main(int argc, char* argv[]) {
 		);
 
 		/*************** Loggers *******************/
+        static ofstream out_messages;
+        static ofstream out_state;
+        static ofstream out_info;
+
 		out_messages = ofstream(out_messages_file);
 		struct oss_sink_messages {
 			static ostream& sink() {
@@ -159,7 +152,7 @@ int main(int argc, char* argv[]) {
 		test_set_enumeration++;
 	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
-	fflush(NULL);
+	fflush(nullptr);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");
 	string path_to_simulation_results = PROJECT_DIRECTORY + string("/test/simulation_results");
 	if (std::system("python3 --version") == 0) {
