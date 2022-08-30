@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/ports.hpp>
@@ -64,20 +64,20 @@ int main(int argc, char* argv[]) {
 		string out_messages_file = out_directory + string("/output_messages.txt");
 		string out_state_file = out_directory + string("/output_state.txt");
 
-		if (!filesystem::exists(input_aircraft_state) ||
-			!filesystem::exists(input_perception_status) ||
-			!filesystem::exists(input_start_supervisor) ||
-			!filesystem::exists(input_waypoint) ||
-			!filesystem::exists(input_landing_achieved) ||
-			!filesystem::exists(input_LP_recv) ||
-			!filesystem::exists(input_pilot_takeover) ||
-			!filesystem::exists(input_PLP_ach)) {
+		if (!boost::filesystem::exists(input_aircraft_state) ||
+			!boost::filesystem::exists(input_perception_status) ||
+			!boost::filesystem::exists(input_start_supervisor) ||
+			!boost::filesystem::exists(input_waypoint) ||
+			!boost::filesystem::exists(input_landing_achieved) ||
+			!boost::filesystem::exists(input_LP_recv) ||
+			!boost::filesystem::exists(input_pilot_takeover) ||
+			!boost::filesystem::exists(input_PLP_ach)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
+		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the coupled model to test
 		Supervisor spr = Supervisor();
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
 
 		r.run_until_passivate();
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(NULL);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");

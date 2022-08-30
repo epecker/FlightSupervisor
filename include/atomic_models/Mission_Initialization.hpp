@@ -165,7 +165,7 @@ public:
 	// (required for the simulator)
 	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		internal_transition();
-		external_transition(TIME(), move(mbs));
+		external_transition(TIME(), std::move(mbs));
 	}
 
 	// Creates output messages (required for the simulator)

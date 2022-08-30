@@ -10,24 +10,13 @@
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
 
 //Time class header
 #include <NDTime.hpp>
 
-//Constants
-#include "Constants.hpp"
-
-//Utility functions
-
 //Messages structures
 #include "message_structures/message_aircraft_state_t.hpp"
-#include "message_structures/message_fcc_command_t.hpp"
-#include "message_structures/message_hover_criteria_t.hpp"
-#include "message_structures/message_landing_point_t.hpp"
 #include "message_structures/message_start_supervisor_t.hpp"
 #include "message_structures/message_update_gcs_t.hpp"
 
@@ -40,14 +29,6 @@
 //Project information headers this is created by cmake at generation time!!!!
 #include "SupervisorConfig.hpp"
 
-//C++ headers
-#include <chrono>
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <filesystem>
-
-using namespace std;
 using namespace cadmium;
 
 using TIME = NDTime;

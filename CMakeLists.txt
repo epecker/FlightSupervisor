@@ -41,12 +41,16 @@ set(MavNRC_GEO 	"${CMAKE_SOURCE_DIR}/deps/mavNRC/geo.cpp")
 set(SHARED_MEM 	"${CMAKE_SOURCE_DIR}/deps/sharedmemorymodel/SharedMemoryModel.cpp")
 set(RUDP 		"${CMAKE_SOURCE_DIR}/deps/RUDP/src/ConnectionController.cpp" "${CMAKE_SOURCE_DIR}/deps/RUDP/src/Connection.cpp")
 
-####################################
-###  Global Library Directories  ###
-####################################
+#################################
+###  Compiler Specific Fixes  ###
+#################################
 if (APPLE)
     link_directories("/usr/local/opt/icu4c/lib")
-endif ()
+
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11.0.0")
+        configure_file("${CMAKE_SOURCE_DIR}/deps/cadmium/message_box.hpp" "${PROJECT_BINARY_DIR}/_deps/cadmium-src/include/cadmium/modeling/message_box.hpp" COPYONLY)
+    endif()
+endif()
 
 ########################
 ###  Subdirectories  ###

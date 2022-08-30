@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/ports.hpp>
@@ -56,14 +56,14 @@ int main(int argc, char* argv[]) {
 		string out_state_file = out_directory + string("/output_state.txt");
 		string out_info_file = out_directory + string("/output_info.txt");
 
-		if (!filesystem::exists(input_file_start) ||
-			!filesystem::exists(input_file_quit)) {
+		if (!boost::filesystem::exists(input_file_start) ||
+			!boost::filesystem::exists(input_file_quit)) {
 			printf("One of the input files do not exist\n");
 			return 1;
 		}
 
 		// Create the output location
-		filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
+		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
 		std::shared_ptr<dynamic::modeling::model> polling_condition_input_takeover = dynamic::translate::make_dynamic_atomic_model<Polling_Condition_Input_Pilot_Takeover, TIME, TIME>("polling_condition_input_takeover", std::move(TIME("00:00:00:100")));
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 		cout << "\nSimulation took: " << elapsed << " seconds" << endl;
 
 		test_set_enumeration++;
-	} while (filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
+	} while (boost::filesystem::exists(i_base_dir + std::to_string(test_set_enumeration)));
 
 	fflush(NULL);
 	string path_to_script = PROJECT_DIRECTORY + string("/test/scripts/simulation_cleanup.py");

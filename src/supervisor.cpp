@@ -2,7 +2,7 @@
 #include <chrono>
 #include <string>
 #include <iostream>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 //Cadmium Simulator headers
 #include <cadmium/modeling/dynamic_model.hpp>
@@ -39,8 +39,8 @@ int main() {
 	string out_info_file = out_directory + string("/output_info.txt");
 
 	// Create the output location
-	filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
-
+	boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
+    
 	// Instantiate the coupled model
 	Supervisor supervisor_instance = Supervisor();
 	shared_ptr<dynamic::modeling::coupled<TIME>> supervisor = make_shared<dynamic::modeling::coupled<TIME>>("supervisor", supervisor_instance.submodels, supervisor_instance.iports, supervisor_instance.oports, supervisor_instance.eics, supervisor_instance.eocs, supervisor_instance.ics);
