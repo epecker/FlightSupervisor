@@ -315,7 +315,7 @@ public:
                                                          Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_message("PLP REP", false, mission_number);
+                    temp_boss.update_message("MAN CTL", false, mission_number);
 					temp_boss.alt = plp.alt * FT_TO_METERS;
 
                     boss_messages.push_back(temp_boss);
