@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-project(supervisor)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+project(supervisor)
 
 ############################
 ###  Configured Headers  ###
@@ -45,6 +44,7 @@ set(RUDP 		"${CMAKE_SOURCE_DIR}/deps/RUDP/src/ConnectionController.cpp" "${CMAKE
 ###  Compiler Specific Fixes  ###
 #################################
 if (APPLE AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11.0.0"))
+    link_directories("/usr/local/opt/icu4c/lib")
     configure_file("${CMAKE_SOURCE_DIR}/deps/cadmium/message_box.hpp" "${PROJECT_BINARY_DIR}/_deps/cadmium-src/include/cadmium/modeling/message_box.hpp" COPYONLY)
 endif()
 

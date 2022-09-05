@@ -31,6 +31,7 @@ add_executable(td_udp_input                         "td_udp_input.cpp")
 add_executable(td_udp_output_boss                   "td_udp_output_boss.cpp")
 add_executable(td_udp_output_fcc                    "td_udp_output_fcc.cpp")
 add_executable(td_udp_output_gcs                    "td_udp_output_gcs.cpp")
+add_executable(td_udp_output_gcs_macos10            "td_udp_output_gcs_macos10.cpp")
 
 target_compile_definitions(td_aircraft_state_input              PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_asra_shared_memory_input          PUBLIC RT_LINUX RT_DEVS)
@@ -46,6 +47,7 @@ target_compile_definitions(td_udp_input                         PUBLIC RT_LINUX 
 target_compile_definitions(td_udp_output_boss                   PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_udp_output_fcc                    PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_udp_output_gcs                    PUBLIC RT_LINUX RT_DEVS)
+target_compile_definitions(td_udp_output_gcs_macos10            PUBLIC RT_LINUX RT_DEVS)
 
 target_sources(td_aircraft_state_input              PRIVATE "${CMAKE_SOURCE_DIR}/src" "${SHARED_MEM}")
 target_sources(td_asra_shared_memory_input          PRIVATE "${CMAKE_SOURCE_DIR}/src" "${SHARED_MEM}")
@@ -80,6 +82,7 @@ target_sources(td_udp_input                         PRIVATE "${CMAKE_SOURCE_DIR}
 target_sources(td_udp_output_boss                   PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_udp_output_fcc                    PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_udp_output_gcs                    PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_sources(td_udp_output_gcs_macos10            PRIVATE "${CMAKE_SOURCE_DIR}/src")
 
 target_include_directories(td_aircraft_state_input              PUBLIC ${includes_list})
 target_include_directories(td_asra_shared_memory_input          PUBLIC ${includes_list})
@@ -114,6 +117,7 @@ target_include_directories(td_udp_input                         PUBLIC ${include
 target_include_directories(td_udp_output_boss                   PUBLIC ${includes_list})
 target_include_directories(td_udp_output_fcc                    PUBLIC ${includes_list})
 target_include_directories(td_udp_output_gcs                    PUBLIC ${includes_list})
+target_include_directories(td_udp_output_gcs_macos10            PUBLIC ${includes_list})
 
 target_link_libraries(td_aircraft_state_input               ${Boost_LIBRARIES})
 target_link_libraries(td_asra_shared_memory_input           ${Boost_LIBRARIES})
@@ -148,6 +152,7 @@ target_link_libraries(td_udp_input_async                    ${Boost_LIBRARIES})
 target_link_libraries(td_udp_output_boss                    ${Boost_LIBRARIES})
 target_link_libraries(td_udp_output_fcc                     ${Boost_LIBRARIES})
 target_link_libraries(td_udp_output_gcs                     ${Boost_LIBRARIES})
+target_link_libraries(td_udp_output_gcs_macos10             ${Boost_LIBRARIES})
 
 if (UNIX AND NOT APPLE)
     target_link_libraries(td_aircraft_state_input               -lrt)
