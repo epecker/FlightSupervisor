@@ -2,25 +2,27 @@
 
 ## Contents
 
-* [About the Project](#about-the-project)
-* [Built With](#built-with)
-* [prerequisites](#prerequisites)
-  * [GNU/Linux - Ubuntu](#gnulinux---ubuntu)
-  * [MacOS - XCode with Homebrew](#macos---xcode-with-homebrew)
-  * [Windows 10 - Visual Studio Community](#windows-10---visual-studio-community)
-* [Build Guide](#build-guide)
-  * [GNU/Linux - Ubuntu](#gnulinux---ubuntu-1)
-  * [MacOS - XCode with Homebrew](#macos---xcode-with-homebrew-1)
-  * [Windows 10 - Visual Studio Community](#windows-10---visual-studio-community-1)
-* [Testing](test/README.md)
-* [Contact](#contact)
-* [Acknowledgements](#acknowledgements)
+<!-- TOC -->
+* [CVLAD Supervisory Controller](#cvlad-supervisory-controller)
+  * [Contents](#contents)
+  * [About The Project](#about-the-project)
+  * [Built With](#built-with)
+  * [Prerequisites](#prerequisites)
+    * [GNU/Linux - Ubuntu](#gnulinux---ubuntu)
+    * [MacOS - XCode with Homebrew](#macos---xcode-with-homebrew)
+    * [Windows 10 - Visual Studio Community](#windows-10---visual-studio-community)
+  * [Build Guide](#build-guide)
+    * [GNU/Linux - Ubuntu](#gnulinux---ubuntu)
+    * [MacOS - XCode with Homebrew](#macos---xcode-with-homebrew)
+    * [Windows 10 - Visual Studio Community](#windows-10---visual-studio-community)
+  * [Contact](#contact)
+  * [Acknowledgements](#acknowledgements)
+<!-- TOC -->
 
 ## About The Project
 
-We will be creating a simulation of a Supervisory Controller modelled using
-DEVS that can be deployed onto the Bell-412 as part of the closed-loop autonomy systems used by
-CVLAD.
+Supervisory Controller modelled using DEVS that can be deployed onto the Bell-412 as part of the
+closed-loop autonomy systems used by CVLAD.
 
 ## Built With
 
@@ -31,7 +33,10 @@ CVLAD.
 
 ## Prerequisites
 
-Note: CMake version 3.22 support up to Boost version 1.75. Do not install a version of boost newer than 1.75.
+Note: For CMake to automatically find boost, the version of Boost used must be listed in the variable 
+_Boost_KNOWN_VERSIONS in CMake's FindBoost.cmake file. For example, CMake 3.24.1 supports up to Boost version 1.79.0.
+For CMake 3.24.1, this information can be found at [https://github.com/Kitware/CMake/blob/v3.24.1/Modules/FindBoost.cmake](https://github.com/Kitware/CMake/blob/v3.24.1/Modules/FindBoost.cmake).
+Where v3.24.1 can be swapped to your version of cmake.
 
 ### GNU/Linux - Ubuntu
 
@@ -39,37 +44,37 @@ Using a terminal perform the following.
 
 * Update the Ubuntu repositories
 
-	```
+	```bash
 	apt update
 	```
 
 * Upgrade the Ubuntu System
 
-	```
+	```bash
 	apt upgrade
 	```
 
 * Install the ubuntu development tools
 
-	```
+	```bash
 	apt install build-essential
 	```
 
-* Install Boost version 1.74
+* Install Boost
 
-	```
-	apt install libboost1.74-all-dev
+	```bash
+	apt install libboost-all-dev
 	```
 
 * Install CMake via snap
 
-	```
+	```bash
 	snap install cmake –classic
 	```
 
 * Install Git
 
-	```
+	```bash
 	apt install git
 	```
 
@@ -78,25 +83,14 @@ Using a terminal perform the following.
 Using a terminal perform the following.
 
 * Install cmake
-	```
+	```bash
 	brew install cmake
 	```
 
-* Find a version of boost up to and including version 1.75
+* Install boost
+	```bash
+	brew install boost
 	```
-	brew search boost
-	```
-
-* Install a suitable version of boost. Replace 1.75 with a version listed above that is version 1.75 or lower.
-	```
-	brew search boost@1.75
-	```
-
-* XCode bundles the git binary.
-	* If Git is not in the path you can install Git anyways using
-		```
-		brew install git
-		```
 
 ### Windows 10 - Visual Studio Community
 
@@ -125,22 +119,24 @@ Installing Boost
 
 ## Build Guide
 
+Using the terminal perform the following.
+
 * Navigate your repository folder
 
-	```
+	```bash
 	cd /path/to/repositories
 	```
 
 * Clone the FlightSupervisor repository using one of the following methods
 	* https: `https://github.com/SimulationEverywhere-Models/FlightSupervisor.git`
 
-		```
+		```bash
 		git clone https://github.com/SimulationEverywhere-Models/FlightSupervisor.git
 		```
 
 	* ssh: `git@github.com:SimulationEverywhere-Models/FlightSupervisor.git`
 
-		```
+		```bash
 		git clone git@github.com:SimulationEverywhere-Models/FlightSupervisor.git
 		```
 
@@ -150,65 +146,73 @@ Installing Boost
 
 Using the terminal perform the following.
 
-* Create a build directory
+* Navigate to the repository
 
-	```
-	mkdir ./FlightSupervisor/build
-	```
-
-* Navigate to the build directory
-
-	```
-	cd ./FlightSupervisor/build
+	```bash
+	cd ./FlightSupervisor
 	```
 
-* Generate the build files
+* Execute the setup script
 
+	```bash
+	./setup.sh -ibm
 	```
-	cmake ..
-	```
+   * i - initialize the submodules
+   * b - build the submodules
+   * m - Generate the build files
 
-* Build the executables
+* Navigate to the build files
 
+	```bash
+	./build/make
 	```
-	make
-	```
+ 
+* Build the supervisor
 
-* You can now run the project executables
-* If you make any changes to the **CMakeLists.txt** file you will need to run `cmake ..` in the build folder to generate updated make files.
+  ```bash
+  make supervisor
+  ```
+
+* You can now run the supervisor executable
+* If you make any changes to the **CMakeLists.txt** you have two options to regenerate the make files
+  1. Run `cmake ../..` while within the make folder
+  2. Run `./setup.sh -m` while within the FlightSupervisor folder
 
 ### MacOS - XCode with Homebrew
 
 Using the terminal perform the following.
 
-* Create a build directory
+* Navigate to the repository
 
-	```
-	mkdir ./FlightSupervisor/build
-	```
+  ```bash
+  cd ./FlightSupervisor
+  ```
 
-* Navigate to the build directory
+* Reset the Xcode tool paths
+  ```bash
+  xcode-select --reset
+  ```
 
-	```
-	cd ./FlightSupervisor/build
-	```
+* Execute the setup script
 
-* Generate the build files
+  ```bash
+  ./setup.sh -ibx
+  ```
+	* i - initialize the submodules
+	* b - build the submodules
+	* x - Generate the Xcode solution files
 
-	```
-	cmake -G Xcode ..
-	```
+* Open the Xcode solution file using Xcode
+  * The solution is located in 
 
-	* If the above cmake command did not work you can try resetting your XCode path then running cmake again.
+    ```bash
+    ./build/xcode
+    ```
 
-		```
-		xcode-select --reset
-		cmake -G Xcode ..
-		```
-
-* Open XCode using the project solution that cmake created in the build folder
-* You can now build and run the project using XCode's internal tools
-* If you make any changes to the **CMakeLists.txt** file you will need to run `cmake -G Xcode` in the build folder to generate a updated project solution.
+* You can now build and run the project using Xcode
+* If you make any changes to the **CMakeLists.txt** you have two options to regenerate the Xcode solution
+  1. Run `cmake -G Xcode ../..` from within the xcode folder
+  2. Run `./setup.sh -m` while within the FlightSupervisor folder
 
 ### Windows 10 - Visual Studio Community
 

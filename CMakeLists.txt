@@ -38,7 +38,7 @@ include(deps/boost.cmake) 		# Searches system for Boost and sets up variables fo
 set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/deps" "${CMAKE_SOURCE_DIR}/deps/RUDP/include")
 set(MavNRC_GEO 	"${CMAKE_SOURCE_DIR}/deps/mavNRC/geo.cpp")
 set(SHARED_MEM 	"${CMAKE_SOURCE_DIR}/deps/sharedmemorymodel/SharedMemoryModel.cpp")
-set(RUDP 		"${CMAKE_SOURCE_DIR}/deps/RUDP/src/ConnectionController.cpp" "${CMAKE_SOURCE_DIR}/deps/RUDP/src/Connection.cpp")
+set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/librudp.a")
 
 #################################
 ###  Compiler Specific Fixes  ###
