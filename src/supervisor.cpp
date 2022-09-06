@@ -61,9 +61,9 @@ int main() {
     shared_ptr<dynamic::modeling::model> pb_gcs = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_GCS, TIME>("pb_gcs");
     shared_ptr<dynamic::modeling::model> pb_landing_point = dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Landing_Point, TIME>("pb_landing_point");
 
-    shared_ptr<dynamic::modeling::model> udp_boss = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_boss", IPV4_BOSS, PORT_BOSS);
-    shared_ptr<dynamic::modeling::model> udp_fcc = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_fcc", IPV4_FCC, PORT_FCC);
-    shared_ptr<dynamic::modeling::model> udp_gcs = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short>("udp_gcs", IPV4_GCS, PORT_GCS);
+    shared_ptr<dynamic::modeling::model> udp_boss = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_boss", IPV4_BOSS, PORT_BOSS, false);
+    shared_ptr<dynamic::modeling::model> udp_fcc = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_fcc", IPV4_FCC, PORT_FCC, false);
+    shared_ptr<dynamic::modeling::model> udp_gcs = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_gcs", IPV4_GCS, PORT_GCS, true);
     shared_ptr<dynamic::modeling::model> rudp_mavnrc = dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>("rudp_mavnrc", IPV4_MAVNRC, PORT_MAVNRC, DEFAULT_TIMEOUT_MS, 10);
 
     // Instantiate GPS time logger

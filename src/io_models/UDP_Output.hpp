@@ -24,6 +24,7 @@ using namespace cadmium;
 template<typename TIME>
 class UDP_Output {
 protected:
+	bool broadcast;
     boost::asio::ip::udp::endpoint network_endpoint;
 
 public:
@@ -42,13 +43,20 @@ public:
     // Default constructor
     UDP_Output() {
         state.current_state = States::IDLE;
-        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(PEREGRINE_IP), MAVLINK_OVER_UDP_PORT);
+		broadcast = true;
+        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::broadcast(), MAVLINK_OVER_UDP_PORT);
     }
 
     // Constructor with polling rate parameter
-    UDP_Output(const string& address, unsigned short port) {
+    UDP_Output(const string& address, unsigned short port, bool broadcast) {
         state.current_state = States::IDLE;
-        network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port);
+		this->broadcast = broadcast;
+		if (broadcast) {
+        	network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::broadcast(), port);
+		}
+		else {
+        	network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port);
+		}
     }
 
 	// This is used to track the state of the atomic model.
@@ -132,14 +140,23 @@ private:
         boost::asio::ip::udp::socket socket(io_service);
         boost::system::error_code err;
 
+		socket.open(boost::asio::ip::udp::v4(), err);
+		if (err) {
+			std::cout << "[UDP Output] (ERROR) Error opening socket in UDP Output model: " << err.message() << std::endl;
+		}
+		if (broadcast) {
+			socket.set_option(boost::asio::socket_base::broadcast(true), err);
+			if (err) {
+				std::cout << "[UDP Output] (ERROR) Error setting socket option in UDP Output model: " << err.message() << std::endl;
+			}
+		}
         for (vector<char> m : state.messages) {
-            socket.open(boost::asio::ip::udp::v4());
             socket.send_to(boost::asio::buffer(m.data(), m.size()), network_endpoint, 0, err);
-            socket.close();
-            if (err) {
+			if (err) {
                 std::cout << "[UDP Output] (ERROR) Error sending packet using UDP Output model: " << err.message() << std::endl;
             }
         }
+		socket.close();
     }
 };
 
