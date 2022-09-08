@@ -1,8 +1,8 @@
 /**
- *	\brief		An atomic model representing the Command Reposition model.
- *	\details	This header file define the Command Reposition model as
-				an atomic model for use in the Cadmium DEVS
-				simulation software.
+ *	\brief		Definition of the Command Repostions atomic model.
+ *	\details	This header file defines the Landing coupled model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				repositioning to a landing point.
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -10,18 +10,7 @@
 #ifndef COMMAND_REPOSITION_HPP
 #define COMMAND_REPOSITION_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits> // Used to set the time advance to infinity
-#include <cassert> // Used to check values and stop the simulation
-#include <string>
-
- // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../enum_string_conversion.hpp"
-#include "mavNRC/geo.h"
-
-// Data structures that are used in message transport
+// Messages structures
 #include "../message_structures/message_aircraft_state_t.hpp"
 #include "../message_structures/message_hover_criteria_t.hpp"
 #include "../message_structures/message_landing_point_t.hpp"
@@ -29,13 +18,32 @@
 #include "../message_structures/message_boss_mission_update_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 
-using namespace cadmium;
+// Utility functions
+#include "../enum_string_conversion.hpp"
+#include <mavNRC/geo.h>
 
-// Atomic Model
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits> // Used to set the time advance to infinity
+#include <cassert>
+#include <string>
+
+/**
+ *	\class		Command_Reposition
+ *	\brief		Definition of the Command Repostions atomic model.
+ *	\details	This class defines the Landing coupled model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				repositioning to a landing point.
+ */
 template<typename TIME> class Command_Reposition {
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_REQUEST_REPOSITION)
@@ -51,7 +59,12 @@ public:
 		(PILOT_CONTROL)
 	);
 
-	// Input and output port definitions
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
 	struct defs {
 		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
 		struct i_hover_criteria_met : public in_port<bool> {};
@@ -70,7 +83,22 @@ public:
 		struct o_update_gcs : public out_port<message_update_gcs_t> {};
 	};
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var 	i_aircraft_state [input] 
+	 * 	Port for
+	 * 	\var 	i_hover_criteria_met [input] 
+	 * 	Port for
+	 * 	\var 	i_pilot_handover [input] 
+	 * 	Port for
+	 * 	\var 	i_pilot_takeover [input] 
+	 * 	Port for
+	 * 	\var 	i_request_reposition [input] 
+	 * 	Port for
+	 * 	\var 	i_start_mission [input] 
+	 * 	Port for
+	 */
 	using input_ports = tuple<
 		typename Command_Reposition::defs::i_aircraft_state,
 		typename Command_Reposition::defs::i_hover_criteria_met,
@@ -80,7 +108,26 @@ public:
 		typename Command_Reposition::defs::i_start_mission
 	>;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_cancel_hover 
+	 * 	[output] Port for
+	 * 	\var	o_fcc_command_velocity 
+	 * 	[output] Port for
+	 * 	\var	o_lp_criteria_met 
+	 * 	[output] Port for
+	 * 	\var	o_request_aircraft_state 
+	 * 	[output] Port for
+	 * 	\var	o_set_mission_monitor_status 
+	 * 	[output] Port for
+	 * 	\var	o_stabilize 
+	 * 	[output] Port for
+	 * 	\var	o_update_boss 
+	 * 	[output] Port for
+	 * 	\var	o_update_gcs 
+	 * 	[output] Port for
+	 */
 	using output_ports = tuple<
 		typename Command_Reposition::defs::o_cancel_hover,
 		typename Command_Reposition::defs::o_fcc_command_velocity,
@@ -92,13 +139,19 @@ public:
 		typename Command_Reposition::defs::o_update_gcs
 	>;
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state
+	 * 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
-	// Default constructor
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Command_Reposition() {
 		state.current_state = States::IDLE;
 		aircraft_state = message_aircraft_state_t();
@@ -107,7 +160,11 @@ public:
         mission_number = 0;
 	}
 
-	// Constructor with initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter 
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model. 
+	 */
 	explicit Command_Reposition(States initial_state) {
 		state.current_state = initial_state;
 		aircraft_state = message_aircraft_state_t();
@@ -116,9 +173,7 @@ public:
         mission_number = 0;
 	}
 
-	// Internal transitions
-	// These are transitions occurring from internal inputs
-	// (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::REQUEST_STATE:
@@ -141,9 +196,7 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occurring from external inputs
-	// (required for the simulator)
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
         bool received_pilot_takeover = !get_messages<typename Command_Reposition::defs::i_pilot_takeover>(mbs).empty();
         if (received_pilot_takeover) {
@@ -236,13 +289,12 @@ public:
         }
 	}
 
-	// confluence transition
-	// Used to call set call order
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	// output function
+	/// Function for generating output from the model after internal transitions.
 	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
 		typename make_message_bags<output_ports>::type bags;
 		vector<bool> bag_port_out;
@@ -335,8 +387,7 @@ public:
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
@@ -362,17 +413,26 @@ public:
 		return next_internal;
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend ostringstream& operator<<(ostringstream& os, const typename Command_Reposition<TIME>::state_type& i) {
 		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
 		return os;
 	}
 
 private:
+	/// Varible for storing the current landing points being repositioned to.
 	message_landing_point_t landing_point;
+	/// Varible for storing aircraft state when scheduling repostion velocities.
 	message_aircraft_state_t aircraft_state;
+	/// Variable for storing the reposition velocity.
     mutable float velocity;
+    /// Variable for storing the number of the mission for updating BOSS.
     int mission_number;
 
+    /// Function for resetting private variables.
     void reset_state() {
         aircraft_state = message_aircraft_state_t();
         landing_point = message_landing_point_t();

@@ -27,7 +27,6 @@
 
 
 using namespace cadmium;
-using namespace std;
 
 // Input and output port definitions
 struct Aircraft_State_Input_defs {

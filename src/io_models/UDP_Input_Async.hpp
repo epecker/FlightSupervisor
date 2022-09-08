@@ -36,7 +36,6 @@
 #ifdef RT_LINUX
 
 using namespace cadmium;
-using namespace std;
 
 // Input and output port definitions
 template<typename MSG>

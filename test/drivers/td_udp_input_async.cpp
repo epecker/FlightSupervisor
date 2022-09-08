@@ -19,7 +19,6 @@
 #include "../../src/io_models/UDP_Output.hpp"
 #include "../../src/io_models/Packet_Builder.hpp"
 
-using namespace std;
 using namespace cadmium;
 
 using hclock = std::chrono::high_resolution_clock;

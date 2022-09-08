@@ -29,7 +29,6 @@
 #ifdef RT_LINUX
 
 using namespace cadmium;
-using namespace std;
 
 chrono::time_point<chrono::high_resolution_clock> start;
 void get_user_input(mutex *lock, string *input);

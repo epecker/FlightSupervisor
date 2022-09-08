@@ -44,7 +44,6 @@
 #ifdef RT_LINUX
 
 using namespace cadmium;
-using namespace std;
 
 // Input and output port definitions
 struct Supervisor_UDP_Input_defs {
