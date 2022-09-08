@@ -1,38 +1,47 @@
 /**
- *	\brief		An atomic model representing the Handle_Waypoint model.
- *	\details	This header file define the Handle_Waypoint model as
-				an atomic model for use in the Cadmium DEVS. It handles
-				the on-route behaviour of the aircraft.
-				simulation software.
+ * 	\file 		Handle_Waypoint.hpp
+ *	\brief		Definition of the Handle Waypoint atomic model.
+ *	\details	This header file defines the Handle Waypoint atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				a waypoint is met while on-route.
  *	\author		Tanner Trautrim
+ *	\author		James Horner
  */
 
 #ifndef HANDLE_WAYPOINT_HPP
 #define HANDLE_WAYPOINT_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits>
-#include <string>
-
+// Messages structures
 #include "../message_structures/message_fcc_command_t.hpp"
 
+// Utility functions
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-// Input and output port definitions
-struct Handle_Waypoint_defs {
-	struct i_pilot_takeover : public cadmium::out_port<bool> {};
-	struct i_start_mission : public cadmium::out_port<int> {};
-	struct i_waypoint : public cadmium::out_port<message_fcc_command_t> {};
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
 
-	struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
-};
+// System Libraries
+#include <limits>
+#include <string>
 
+/**
+ * 	\class 		Handle_Waypoint
+ *	\brief		Definition of the Handle Waypoint atomic model.
+ *	\details	This class defines the Handle Waypoint atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				a waypoint is met while on-route.
+ *	\author		Tanner Trautrim
+ *	\author		James Horner
+ */
 template<typename TIME>
 class Handle_Waypoint {
 public:
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_FOR_WAYPOINT)
@@ -40,34 +49,68 @@ public:
 		(UPDATE_FCC)
 	);
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
+	struct defs {
+		struct i_pilot_takeover : public cadmium::out_port<bool> {};
+		struct i_start_mission : public cadmium::out_port<int> {};
+		struct i_waypoint : public cadmium::out_port<message_fcc_command_t> {};
+
+		struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
+	};
+
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var	i_pilot_takeover	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\var	i_start_mission		[input] Port for receiving signal indicating the mission has started.
+	 * 	\var	i_waypoint			[input] Port for receiving new waypoints during the on-route phase.
+	 */
 	using input_ports = std::tuple<
-			typename Handle_Waypoint_defs::i_pilot_takeover,
-			typename Handle_Waypoint_defs::i_start_mission,
-			typename Handle_Waypoint_defs::i_waypoint
+			typename defs::i_pilot_takeover,
+			typename defs::i_start_mission,
+			typename defs::i_waypoint
 	>;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_fcc_waypoint_update	[output] Port for sending waypoint commands to the FCC.
+	 */
 	using output_ports = std::tuple<
-			typename Handle_Waypoint_defs::o_fcc_waypoint_update
+			typename defs::o_fcc_waypoint_update
 	>;
 
-	// Tracks the state of the model
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
-
-
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Handle_Waypoint() {
 		state.current_state = States::IDLE;
 	}
 
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	explicit Handle_Waypoint(States initial_state) {
 		state.current_state = initial_state;
 	}
 
-	// Internal transitions (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::UPDATE_FCC:
@@ -78,13 +121,13 @@ public:
 		}
 	}
 
-	// External transitions (required for the simulator)
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_pilot_takeover;
 		bool received_start_mission;
 		bool received_waypoint;
 
-		received_pilot_takeover = !cadmium::get_messages<typename Handle_Waypoint_defs::i_pilot_takeover>(mbs).empty();
+		received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_TAKEOVER;
 			return;
@@ -92,15 +135,15 @@ public:
 
 		switch (state.current_state) {
 			case States::IDLE:
-				received_start_mission = !cadmium::get_messages<typename Handle_Waypoint_defs::i_start_mission>(mbs).empty();
+				received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
 				if (received_start_mission) {
 					state.current_state = States::WAIT_FOR_WAYPOINT;
 				}
 				break;
 			case States::WAIT_FOR_WAYPOINT:
-				received_waypoint = !cadmium::get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs).empty();
+				received_waypoint = !cadmium::get_messages<typename defs::i_waypoint>(mbs).empty();
 				if (received_waypoint) {
-					next_waypoint = cadmium::get_messages<typename Handle_Waypoint_defs::i_waypoint>(mbs);
+					next_waypoint = cadmium::get_messages<typename defs::i_waypoint>(mbs);
 					state.current_state = States::UPDATE_FCC;
 				}
 				break;
@@ -109,30 +152,27 @@ public:
 		}
 	}
 
-	// Confluence transition sets the internal/external precedence
-	// Triggered when a message is received at the same time as an internal transition.
-	// (required for the simulator)
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	// Creates output messages (required for the simulator)
-	[[nodiscard]]
-	typename cadmium::make_message_bags<output_ports>::type output() const {
+	/// Function for generating output from the model after internal transitions.
+	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 
 		if (state.current_state == States::UPDATE_FCC) {
             for (message_fcc_command_t & waypoint : next_waypoint) {
                 waypoint.set_supervisor_status(Control_Mode_E::MAV_COMMAND);
             }
-			cadmium::get_messages<typename Handle_Waypoint_defs::o_fcc_waypoint_update>(bags) = next_waypoint;
+			cadmium::get_messages<typename defs::o_fcc_waypoint_update>(bags) = next_waypoint;
 		}
 
 		return bags;
 	}
 
-	// Time advance sets the wait time of the current state (required for the simulator)
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
@@ -151,13 +191,17 @@ public:
 		return next_internal;
 	}
 
-	// Used for logging outputs the state's name. (required for the simulator)
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Handle_Waypoint<TIME>::state_type& i) {
 		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 
 private:
+    /// Variable for storing the next waypoints for forwarding as FCC commands.
     mutable std::vector<message_fcc_command_t> next_waypoint;
 };
 

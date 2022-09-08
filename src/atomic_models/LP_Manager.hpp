@@ -1,37 +1,54 @@
 /**
- *	\brief		An atomic model representing the landing point manager model.
- *	\details	This header file defines the landing point manager model as
-				an atomic model for use in the Cadmium DEVS
-				simulation software.
- *	\author		James Horner
+ * 	\file		LP_Manager.hpp
+ *	\brief		Definition of the LP Manager atomic model.
+ *	\details	This header file defines the Landing Point Manager atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor at the start
+				of the landing phase, when either the planned landing point is achieved or a landing point
+				is received.
  *	\author		Tanner Trautrim
+ *	\author		James Horner
  */
 
 #ifndef LP_MANAGER_HPP
 #define LP_MANAGER_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits>
-#include <cassert>
-#include <string>
-
+// Messages structures
 #include "../message_structures/message_landing_point_t.hpp"
 #include "../message_structures/message_aircraft_state_t.hpp"
 #include "../message_structures/message_boss_mission_update_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 #include "../message_structures/message_fcc_command_t.hpp"
 
+// Utility functions
 #include "../enum_string_conversion.hpp"
-#include "../Constants.hpp"
 #include "../time_conversion.hpp"
-#include "mavNRC/geo.h"
+#include <mavNRC/geo.h>
+#include "../Constants.hpp"
 
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits> // Used to set the time advance to infinity
+#include <cassert>
+#include <string>
+
+/**
+ * 	\class		LP_Manager
+ *	\brief		Definition of the LP Manager atomic model.
+ *	\details	This header file defines the Landing Point Manager atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor at the start
+				of the landing phase, when either the planned landing point is achieved or a landing point
+				is received.
+ */
 template<typename TIME>
 class LP_Manager {
 public:
-	// Enum of the automata-like states of the atomic model.
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_LP_PLP)
@@ -48,7 +65,12 @@ public:
 		(LP_ACCEPT_EXP)
 	);
 
-	//Port definition
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
 	struct defs {
 		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
 		struct i_control_yielded : public cadmium::in_port<bool> {};
@@ -68,7 +90,17 @@ public:
 		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
 	};
 
-	// ports definition
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var 	i_aircraft_state 	[input] Port for receiving the current state of the aircraft.
+	 * 	\var	i_control_yielded	[input] Port for receiving signal indicating control has been handed over to the pilot
+	 * 	\var	i_fcc_command_land	[input] Port for receiving notification that a landing will be attempted.
+	 * 	\var	i_lp_recv			[input] Port for receiving landing points from the perception system.
+	 * 	\var 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\var	i_plp_ach			[input] Port for receiving signal indicating that the planned landing point has been achieved.
+	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 */
 	using input_ports = std::tuple<
 		typename defs::i_aircraft_state,
 		typename defs::i_control_yielded,
@@ -79,6 +111,18 @@ public:
 		typename defs::i_start_mission
 	>;
 
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_fcc_command_orbit				[output] Port for sending orbit commands to the FCC.
+	 * 	\var	o_lp_expired					[output] Port for sending notifcation that the LP accept timer has expired.
+	 * 	\var	o_lp_new						[output] Port for sending new valid landing points.
+	 * 	\var	o_pilot_handover				[output] Port for requesting that control be handed over to the pilot.
+	 * 	\var	o_request_aircraft_state 		[output] Port for requesting the current aircraft state.
+	 * 	\var	o_set_mission_monitor_status 	[output] Port for telling the mission monitor to stop monitoring mission progress.
+	 * 	\var	o_update_boss 					[output] Port for sending updates to BOSS.
+	 * 	\var	o_update_gcs 					[output] Port for sending updates to the GCS.
+	 */
 	using output_ports = std::tuple<
 		typename defs::o_fcc_command_orbit,
 		typename defs::o_lp_expired,
@@ -90,12 +134,18 @@ public:
 		typename defs::o_update_gcs
 	>;
 
-	// state definition
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
-	// Default constructor
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	LP_Manager() {
 		state.current_state = States::IDLE;
 		lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
@@ -107,7 +157,11 @@ public:
 		aircraft_state = message_aircraft_state_t();
 	}
 
-	// Constructor with timer parameter
+	/**
+	 * \brief 	Constructor for the model with parameters for the length of the accept and orbit timers.
+	 * \param	i_lp_accept_time	TIME length of the LP accept timer.
+	 * \param	i_orbit_time		TIME length of the orbit timer.
+	 */
 	LP_Manager(TIME i_lp_accept_time, TIME i_orbit_time) {
 		state.current_state = States::IDLE;
 		lp_accept_time_prev = i_lp_accept_time;
@@ -118,7 +172,13 @@ public:
 		plp = message_landing_point_t();
 	}
 
-	// Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	i_lp_accept_time	TIME length of the LP accept timer.
+	 * \param	i_orbit_time		TIME length of the orbit timer.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	LP_Manager(TIME i_lp_accept_time, TIME i_orbit_time, States initial_state) {
 		state.current_state = initial_state;
 		lp_accept_time_prev = i_lp_accept_time;
@@ -129,7 +189,7 @@ public:
 		plp = message_landing_point_t();
 	}
 
-	// internal transition
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::START_LZE_SCAN:
@@ -155,7 +215,7 @@ public:
 		}
 	}
 
-	// external transition
+	/// External transitions of the model
 	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		//If we get any messages on the pilot takeover port in any state (apart from HANDOVER_CONTROL), immediately transition into the pilot in control state.
         bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
@@ -250,7 +310,7 @@ public:
         }
 	}
 
-	// confluence transition
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		//If the external input is a pilot takeover message,
 		if (cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).size() >= 1) {
@@ -263,7 +323,7 @@ public:
 		}
 	}
 
-	// output function
+	/// Function for generating output from the model after internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<message_landing_point_t> lp_messages;
@@ -359,7 +419,7 @@ public:
 		return bags;
 	}
 
-	// time_advance function
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		TIME next_internal;
 
@@ -393,20 +453,38 @@ public:
 		return next_internal;
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename LP_Manager<TIME>::state_type& i) {
 		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 
 private:
+    /// Variable to count the number of valid LPs that have been sent.
     int lp_count;
+    /// Variable for storing the number of the mission for updating BOSS.
     int mission_number;
+    /// Variable for storing the location of the current valid landing point.
     message_landing_point_t lp;
+    /// Variable for storing the location of the planned landing point.
     message_landing_point_t plp;
+    /// Variable for storing the current aircraft state.
     message_aircraft_state_t aircraft_state;
+    /// Variable to store the remaining amount of time on the LP accept timer for decrementing upon new LP received.
     TIME lp_accept_time_prev;
+	/// Variable to store the length of the orbit timer.
     TIME orbit_time;
 
+	/**
+	 *	\brief 		Function set_lp_if_valid is used to set the current valid landing point.
+	 *	\details	The function checks if any landing points have been received, if none have the most 
+	 * 				recent is selected. If there have been multiple valid LPs, the most recent valid LP is 
+	 * 				chosen. An LP is considered valid if it has a large enough separation from the previous LP.
+	 * 	\param		mbs	Bag of messages received on the input ports received from Cadmium simulation engine.
+	 */
     void set_lp_if_valid(typename cadmium::make_message_bags<input_ports>::type * mbs) {
         std::vector<message_landing_point_t> landing_points = cadmium::get_messages<typename defs::i_lp_recv>(*mbs);
 
@@ -435,6 +513,9 @@ private:
         }
     }
 
+	/**
+	 *	\brief 	Function update_lp_accept_time is used to update the LP accept timer based on the current state and an elapsed time.
+	 */
     void update_lp_accept_time(TIME e) {
         if (state.current_state == States::REQUEST_STATE_LP ||
             state.current_state == States::GET_STATE_LP ||
@@ -447,6 +528,7 @@ private:
         }
     }
 
+    /// Function reset_state resets the private variables to a default value.
     void reset_state() {
         lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
         orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);

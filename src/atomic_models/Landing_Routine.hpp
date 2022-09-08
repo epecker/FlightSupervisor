@@ -1,8 +1,9 @@
 /**
- *	\brief		An atomic model representing the landing routine model.
- *	\details	This header file define the handover control model as
-				an atomic model for use in the Cadmium DEVS
-				simulation software.
+ * 	\file		Landing_Routine.hpp
+ *	\brief		Definition of the Landing Routine atomic model.
+ *	\details	This header file defines the Landing Routine atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				performing a landing after coming to a hover over a landing point.
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -10,26 +11,41 @@
 #ifndef LANDING_ROUTING_HPP
 #define LANDING_ROUTING_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits>
-#include <cassert>
-#include <string>
-
+// Messages structures
 #include "../message_structures/message_boss_mission_update_t.hpp"
 #include "../message_structures/message_fcc_command_t.hpp"
 #include "../message_structures/message_landing_point_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 
+// Utility functions
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-// Atomic Model
-template<typename TIME> class Landing_Routine {
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits>
+#include <cassert>
+#include <string>
+
+/**
+ * 	\class		Landing_Routine
+ *	\brief		Definition of the Landing Routine atomic model.
+*	\details	This class defines the Landing Routine atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				performing a landing after coming to a hover over a landing point.
+*	\author		Tanner Trautrim
+*	\author		James Horner
+*/
+template<typename TIME> 
+class Landing_Routine {
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_LAND_REQUEST)
@@ -40,7 +56,12 @@ public:
 		(PILOT_CONTROL)
 	);
 
-	// Input and output port definition
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
 	struct defs {
 		struct i_land : public cadmium::in_port<message_landing_point_t> {};
 		struct i_landing_achieved : public cadmium::in_port<bool> {};
@@ -54,7 +75,14 @@ public:
 		struct o_update_mission_item : public cadmium::out_port<bool> {};
 	};
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var	i_land				[input] Port for receiving a request to land at a landing point.
+	 * 	\var	i_landing_achieved	[input] Port for receiving signal indicating that the aircraft has successfully landed.
+	 * 	\var 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 */
 	using input_ports = std::tuple<
 		typename Landing_Routine<TIME>::defs::i_land,
 		typename Landing_Routine<TIME>::defs::i_landing_achieved,
@@ -62,7 +90,15 @@ public:
 		typename Landing_Routine<TIME>::defs::i_start_mission
 	>;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_fcc_command_land		[output] Port for sending land commands to the FCC.
+	 * 	\var	o_mission_complete		[output] Port for declaring the mission as being complete after landing.
+	 * 	\var	o_update_boss 			[output] Port for sending updates to BOSS.
+	 * 	\var	o_update_gcs 			[output] Port for sending updates to the GCS.
+	 * 	\var	o_update_mission_item	[output] Port for updating the mission manager that the last mission item has been reached.
+	 */
 	using output_ports = std::tuple<
 		typename Landing_Routine<TIME>::defs::o_fcc_command_land,
 		typename Landing_Routine<TIME>::defs::o_mission_complete,
@@ -71,29 +107,36 @@ public:
 		typename Landing_Routine<TIME>::defs::o_update_mission_item
 	>;
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
-	// Default constructor
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Landing_Routine() {
         landing_point = message_landing_point_t();
         mission_number = 0;
         state.current_state = States::IDLE;
 	}
 
-	// Constructor with initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	explicit Landing_Routine(States initial_state) {
         landing_point = message_landing_point_t();
         mission_number = 0;
         state.current_state = initial_state;
 	}
 
-    // Internal transitions
-	// These are transitions occurring from internal inputs
-	// (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::REQUEST_LAND:
@@ -107,9 +150,7 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occurring from external inputs
-	// (required for the simulator)
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         bool received_pilot_takeover = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover) {
@@ -152,14 +193,13 @@ public:
 
 	}
 
-	// confluence transition
-	// Used to call set call precedent
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	// output function
+	/// Function for generating output from the model after internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> mission_complete_messages;
@@ -215,8 +255,7 @@ public:
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
@@ -233,13 +272,19 @@ public:
 		}
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Landing_Routine<TIME>::state_type& i) {
 		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 
 private:
+    /// Variable for storing the landing point that the helicopter will land at.
     message_landing_point_t landing_point;
+    /// Variable for storing the number of the mission for updating BOSS.
     int mission_number;
 };
 

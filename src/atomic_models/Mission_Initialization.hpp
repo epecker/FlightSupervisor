@@ -1,31 +1,47 @@
 /**
- *	\brief		An atomic model representing the Mission_Initialization model.
- *	\details	This header file defines the Mission_Initialization model as
-				an atomic model for use in the Cadmium DEVS. It handles
-				the startup behaviour of the aircraft.
-				simulation software.
+ * 	\file		Mission_Initialization.hpp
+ *	\brief		Definition of the Mission Initialization atomic model.
+ *	\details	This header file defines the Mission Initialization atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor at the beginning
+				of the mission when the autonomy system is being initialized.
  *	\author		Tanner Trautrim
  */
 
 #ifndef  MISSION_INITIALIZATION_HPP
 #define  MISSION_INITIALIZATION_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits>
-#include <string>
-
+// Messages structures
 #include "../message_structures/message_aircraft_state_t.hpp"
 #include "../message_structures/message_start_supervisor_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 
+// Utility functions
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits> // Used to set the time advance to infinity
+#include <string>
+
+/**
+ * 	\class		Mission_Initialization
+ *	\brief		Definition of the Mission Initialization atomic model.
+ *	\details	This class defines the Mission Initialization atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor at the beginning
+				of the mission when the autonomy system is being initialized.
+ *	\author		Tanner Trautrim
+ */
 template<typename TIME>
 class Mission_Initialization {
 public:
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(MISSION_STATUS)
@@ -40,7 +56,12 @@ public:
 		(START_MISSION)
 	);
 
-	// Input and output port definitions
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
 	struct defs {
 		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
 		struct i_perception_status : public cadmium::in_port<bool> {};
@@ -53,31 +74,49 @@ public:
 		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
 	};
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var 	i_aircraft_state 	[input] Port for receiving the current state of the aircraft.
+	 * 	\var	i_perception_status	[input]	Port for receiving the status of the perception system.
+	 * 	\var 	i_start_mission 	[input] Port for receiving signal to start the supervisor.
+	 */
 	using input_ports = std::tuple<
-			typename Mission_Initialization::defs::i_aircraft_state,
-			typename Mission_Initialization::defs::i_perception_status,
-			typename Mission_Initialization::defs::i_start_supervisor
-			>;
+		typename Mission_Initialization::defs::i_aircraft_state,
+		typename Mission_Initialization::defs::i_perception_status,
+		typename Mission_Initialization::defs::i_start_supervisor
+	>;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_request_perception_status		[output] Port for requesting the current state of the perception system.
+	 * 	\var	o_request_aircraft_state 		[output] Port for requesting the current aircraft state.
+	 * 	\var	o_set_mission_monitor_status 	[output] Port for telling the mission monitor to stop monitoring mission progress.
+	 *	\var	o_start_mission					[output] Port for sending a notification that the mission has started.
+	 * 	\var	o_update_gcs 					[output] Port for sending updates to the GCS.
+	 */
 	using output_ports = std::tuple<
-			typename Mission_Initialization::defs::o_request_perception_status,
-			typename Mission_Initialization::defs::o_request_aircraft_state,
-			typename Mission_Initialization::defs::o_set_mission_monitor_status,
-			typename Mission_Initialization::defs::o_start_mission,
-			typename Mission_Initialization::defs::o_update_gcs
-			>;
+		typename Mission_Initialization::defs::o_request_perception_status,
+		typename Mission_Initialization::defs::o_request_aircraft_state,
+		typename Mission_Initialization::defs::o_set_mission_monitor_status,
+		typename Mission_Initialization::defs::o_start_mission,
+		typename Mission_Initialization::defs::o_update_gcs
+	>;
 
-	// Tracks the state of the model
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 	
+	 * 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
-    message_start_supervisor_t mission_data;
-	bool perception_healthy;
-	double aircraft_height;
-
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Mission_Initialization() {
 		state.current_state = States::IDLE;
         mission_data = message_start_supervisor_t();
@@ -85,6 +124,11 @@ public:
 		aircraft_height = 0.0;
 	}
 
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	explicit Mission_Initialization(States initial_state) {
 		state.current_state = initial_state;
         mission_data = message_start_supervisor_t();
@@ -92,7 +136,7 @@ public:
 		aircraft_height = 0.0;
 	}
 
-	// Internal transitions (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::MISSION_STATUS:
@@ -121,7 +165,7 @@ public:
 		}
 	}
 
-	// External transitions (required for the simulator)
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_start_supervisor;
 		bool received_perception_status;
@@ -158,17 +202,14 @@ public:
 		}
 	}
 
-	// Confluence transition sets the internal/external precedence
-	// Triggered when a message is received at the same time as an internal transition.
-	// (required for the simulator)
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	// Creates output messages (required for the simulator)
-	[[nodiscard]]
-	typename cadmium::make_message_bags<output_ports>::type output() const {
+	/// Function for generating output from the model after internal transitions.
+	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> bool_port_out;
 		std::vector<message_update_gcs_t> gcs_messages;
@@ -228,7 +269,7 @@ public:
 		return bags;
 	}
 
-	// Time advance sets the wait time of the current state (required for the simulator)
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
@@ -253,11 +294,22 @@ public:
 		return next_internal;
 	}
 
-	// Used for logging outputs the state's name. (required for the simulator)
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Mission_Initialization<TIME>::state_type& i) {
 		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
+
+private:
+    /// Variable for storing the startup data about the mission. 
+    message_start_supervisor_t mission_data;
+	/// Variable for storing whether the perception system is healthy or not.
+	bool perception_healthy;
+	/// Variable for storing the height of the aircraft in ft AGL to determine if the aircraft is starting on the ground.
+	double aircraft_height;
 };
 
 #endif // MISSION_INITIALIZATION_HPP

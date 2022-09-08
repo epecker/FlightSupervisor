@@ -1,7 +1,8 @@
 /**
- *	\brief		Definition of the Command Repostions atomic model.
- *	\details	This header file defines the Landing coupled model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when
+ * 	\file		Command_Reposition.hpp
+ *	\brief		Definition of the Command Repostion atomic model.
+ *	\details	This header file defines the Command Repostion atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
 				repositioning to a landing point.
  *	\author		Tanner Trautrim
  *	\author		James Horner
@@ -33,12 +34,13 @@
 
 /**
  *	\class		Command_Reposition
- *	\brief		Definition of the Command Repostions atomic model.
- *	\details	This class defines the Landing coupled model for use in the Cadmium DEVS
+ *	\brief		Definition of the Command Repostion atomic model.
+ *	\details	This class defines the Command Repostion coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when
 				repositioning to a landing point.
  */
-template<typename TIME> class Command_Reposition {
+template<typename TIME> 
+class Command_Reposition {
 public:
 	/**
 	 *	\enum	States
@@ -86,18 +88,12 @@ public:
 	/**
 	 *	\struct	input_ports
 	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var 	i_aircraft_state [input]
-	 * 	Port for
-	 * 	\var 	i_hover_criteria_met [input]
-	 * 	Port for
-	 * 	\var 	i_pilot_handover [input]
-	 * 	Port for
-	 * 	\var 	i_pilot_takeover [input]
-	 * 	Port for
-	 * 	\var 	i_request_reposition [input]
-	 * 	Port for
-	 * 	\var 	i_start_mission [input]
-	 * 	Port for
+	 * 	\var 	i_aircraft_state 		[input] Port for receiving the current state of the aircraft.
+	 * 	\var 	i_hover_criteria_met 	[input] Port for receiving updates on whether the previously commanded hover was achieved.
+	 * 	\var 	i_pilot_handover 		[input] Port for receiving signal indicating control should be handed over to the pilot.
+	 * 	\var 	i_pilot_takeover 		[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\var 	i_request_reposition 	[input] Port for receiving requests to reposition to landing points.
+	 * 	\var 	i_start_mission 		[input] Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
 		typename Command_Reposition::defs::i_aircraft_state,
@@ -111,22 +107,14 @@ public:
 	/**
 	 *	\struct	output_ports
 	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_cancel_hover
-	 * 	[output] Port for
-	 * 	\var	o_fcc_command_velocity
-	 * 	[output] Port for
-	 * 	\var	o_lp_criteria_met
-	 * 	[output] Port for
-	 * 	\var	o_request_aircraft_state
-	 * 	[output] Port for
-	 * 	\var	o_set_mission_monitor_status
-	 * 	[output] Port for
-	 * 	\var	o_stabilize
-	 * 	[output] Port for
-	 * 	\var	o_update_boss
-	 * 	[output] Port for
-	 * 	\var	o_update_gcs
-	 * 	[output] Port for
+	 * 	\var	o_cancel_hover 					[output] Port for cancelling a previously requested stabilization.
+	 * 	\var	o_fcc_command_velocity 			[output] Port for sending velocity commands to the FCC.
+	 * 	\var	o_lp_criteria_met 				[output] Port for notifying that the helicopter is now hovering over an LP.
+	 * 	\var	o_request_aircraft_state 		[output] Port for requesting the current aircraft state.
+	 * 	\var	o_set_mission_monitor_status 	[output] Port for telling the mission monitor to stop monitoring mission progress.
+	 * 	\var	o_stabilize 					[output] Port for requesting the helicopter hover at a specific location.
+	 * 	\var	o_update_boss 					[output] Port for sending updates to BOSS.
+	 * 	\var	o_update_gcs 					[output] Port for sending updates to the GCS.
 	 */
 	using output_ports = std::tuple<
 		typename Command_Reposition::defs::o_cancel_hover,
@@ -142,8 +130,7 @@ public:
 	/**
 	 *	\struct	state_type
 	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state
-	 * 	Current state of atomic model.
+	 * 	\var 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
 		States current_state;

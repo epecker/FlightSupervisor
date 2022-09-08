@@ -1,8 +1,9 @@
 /**
- *	\brief		An atomic model representing the handover control model.
- *	\details	This header file define the handover control model as
-				an atomic model for use in the Cadmium DEVS
-				simulation software.
+ * 	\file		Handover_Control.hpp
+ *	\brief		Definition of the Handover Control atomic model.
+ *	\details	This header file defines the Handover Control atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				control of the aircraft should be handed over to the pilot.
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -10,25 +11,37 @@
 #ifndef HANDOVER_CTRL_HPP
 #define HANDOVER_CTRL_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits> // Used to set the time advance to infinity
-#include <cassert> // Used to check values and stop the simulation
-#include <string>
-
- // Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../enum_string_conversion.hpp"
-#include "../Constants.hpp"
-
+// Messages structures
 #include "../message_structures/message_landing_point_t.hpp"
 #include "../message_structures/message_hover_criteria_t.hpp"
 
-// Atomic Model
-template<typename TIME> class Handover_Control {
+// Utility functions
+#include "../enum_string_conversion.hpp"
+#include "../Constants.hpp"
+
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits> // Used to set the time advance to infinity
+#include <cassert> 
+#include <string>
+
+/**
+ * 	\file		Handover_Control.hpp
+ *	\brief		Definition of the Handover Control atomic model.
+ *	\details	This class defines the Handover Control atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				control of the aircraft should be handed over to the pilot.
+*/
+template<typename TIME> 
+class Handover_Control {
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_PILOT_HANDOVER)
@@ -40,7 +53,12 @@ public:
 		(PILOT_CONTROL)
 	);
 
-    // Input and output port definition
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
     struct defs {
         struct i_hover_criteria_met : public cadmium::in_port<bool> {};
         struct i_pilot_handover : public cadmium::in_port<message_landing_point_t> {};
@@ -52,7 +70,14 @@ public:
         struct o_stabilize : public cadmium::out_port<message_hover_criteria_t> {};
     };
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var 	i_hover_criteria_met 	[input] Port for receiving updates on whether the previously commanded hover was achieved.
+	 * 	\var 	i_pilot_handover 		[input] Port for receiving signal indicating control should be handed over to the pilot.
+	 * 	\var 	i_pilot_takeover 		[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\var 	i_start_mission 		[input] Port for receiving signal indicating the mission has started.
+	 */
 	using input_ports = std::tuple<
 		typename defs::i_hover_criteria_met,
 		typename defs::i_pilot_handover,
@@ -60,37 +85,47 @@ public:
 		typename defs::i_start_mission
 	>;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_notify_pilot		[output] Port for notifying the pilot that they should take control of the aircraft.
+	 * 	\var	o_control_yielded	[output] Port for sending an acknowledgement that the supervisor has relinquished control of the aircraft.
+	 * 	\var	o_stabilize 		[output] Port for requesting the helicopter hover at a specific location.
+	 */
 	using output_ports = std::tuple<
 		typename defs::o_notify_pilot,
 		typename defs::o_control_yielded,
 		typename defs::o_stabilize
 	>;
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
-	// Public members of the class
-	message_landing_point_t hover_location;
-
-	// Default constructor
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Handover_Control() {
 		state.current_state = States::IDLE;
 		hover_location = message_landing_point_t();
 	}
 
-	// Constructor with initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	explicit Handover_Control(States initial_state) {
 		state.current_state = initial_state;
 		hover_location = message_landing_point_t();
 	}
 
-	// Internal transitions
-	// These are transitions occurring from internal inputs
-	// (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::HOVER:
@@ -107,9 +142,7 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occurring from external inputs
-	// (required for the simulator)
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 
         bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
@@ -152,8 +185,7 @@ public:
 		}
 	}
 
-	// confluence transition
-	// Used to call set call precedent
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 
@@ -166,7 +198,7 @@ public:
 		}
 	}
 
-	// output function
+	/// Function for generating output from the model after internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> bag_port_out;
@@ -207,8 +239,7 @@ public:
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
@@ -226,10 +257,19 @@ public:
 		}
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
 		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
+
+private:
+	/// Varible for storing the location at which the helicopter should hover at.
+	message_landing_point_t hover_location;
+
 };
 
 #endif // HANDOVER_CTRL_HPP
