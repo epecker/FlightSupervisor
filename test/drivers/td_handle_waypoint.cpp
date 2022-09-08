@@ -17,8 +17,8 @@
 
 using TIME = NDTime;
 
-struct o_fcc_waypoint_update : public out_port<message_fcc_command_t> {};
-struct o_request_gps_time : public out_port<bool> {};
+struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
+struct o_request_gps_time : public cadmium::out_port<bool> {};
 
 int main() {
 	int test_set_enumeration = 0;
@@ -64,48 +64,48 @@ int main() {
 		boost::filesystem::create_directories(out_directory.c_str());
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> handle_waypoint = dynamic::translate::make_dynamic_atomic_model<Handle_Waypoint, TIME, Handle_Waypoint<TIME>::States>("handle_waypoint", move(initial_state));
+		shared_ptr<cadmium::dynamic::modeling::model> handle_waypoint = cadmium::dynamic::translate::make_dynamic_atomic_model<Handle_Waypoint, TIME, Handle_Waypoint<TIME>::States>("handle_waypoint", move(initial_state));
 
 		// Instantiate the input readers.
 		// One for each input
-		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
-				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
-		shared_ptr<dynamic::modeling::model> ir_start_mission =
-				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
-		shared_ptr<dynamic::modeling::model> ir_waypoint =
-				dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", input_file_waypoint.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_pilot_takeover =
+				cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_start_mission =
+				cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_waypoint =
+				cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_waypoint", input_file_waypoint.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
-		dynamic::modeling::Models submodels_TestDriver = {
+		cadmium::dynamic::modeling::Models submodels_TestDriver = {
 				ir_pilot_takeover,
 				ir_start_mission,
 				ir_waypoint,
 				handle_waypoint
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		cadmium::dynamic::modeling::Ports iports_TestDriver = {	};
 
-		dynamic::modeling::Ports oports_TestDriver = {
+		cadmium::dynamic::modeling::Ports oports_TestDriver = {
 				typeid(o_fcc_waypoint_update),
 				typeid(o_request_gps_time)
 		};
 
-		dynamic::modeling::EICs eics_TestDriver = {	};
+		cadmium::dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-				dynamic::translate::make_EOC<Handle_Waypoint_defs::o_fcc_waypoint_update,o_fcc_waypoint_update>("handle_waypoint")
+		cadmium::dynamic::modeling::EOCs eocs_TestDriver = {
+				cadmium::dynamic::translate::make_EOC<Handle_Waypoint_defs::o_fcc_waypoint_update,o_fcc_waypoint_update>("handle_waypoint")
 		};
 
 		// This will connect our outputs from our input reader to the file
-		dynamic::modeling::ICs ics_TestDriver = {
-				dynamic::translate::make_IC<iestream_input_defs<bool>::out,Handle_Waypoint_defs::i_pilot_takeover>("ir_pilot_takeover", "handle_waypoint"),
-				dynamic::translate::make_IC<iestream_input_defs<int>::out,Handle_Waypoint_defs::i_start_mission>("ir_start_mission", "handle_waypoint"),
-				dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out,Handle_Waypoint_defs::i_waypoint>("ir_waypoint", "handle_waypoint")
+		cadmium::dynamic::modeling::ICs ics_TestDriver = {
+				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out,Handle_Waypoint_defs::i_pilot_takeover>("ir_pilot_takeover", "handle_waypoint"),
+				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<int>::out,Handle_Waypoint_defs::i_start_mission>("ir_start_mission", "handle_waypoint"),
+				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out,Handle_Waypoint_defs::i_waypoint>("ir_waypoint", "handle_waypoint")
 		};
 
-		shared_ptr<dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<dynamic::modeling::coupled<TIME>>(
+		shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<cadmium::dynamic::modeling::coupled<TIME>>(
 				"TEST_DRIVER", submodels_TestDriver, iports_TestDriver, oports_TestDriver, eics_TestDriver, eocs_TestDriver, ics_TestDriver
 		);
 
@@ -127,14 +127,14 @@ int main() {
 			}
 		};
 
-		using state = logger::logger<logger::logger_state, dynamic::logger::formatter<TIME>, oss_sink_state>;
-		using log_messages = logger::logger<logger::logger_messages, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-		using global_time_mes = logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-		using global_time_sta = logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_state>;
+		using state = cadmium::logger::logger<cadmium::logger::logger_state, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
+		using log_messages = cadmium::logger::logger<cadmium::logger::logger_messages, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
+		using global_time_mes = cadmium::logger::logger<cadmium::logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
+		using global_time_sta = cadmium::logger::logger<cadmium::logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
 
-		using logger_supervisor = logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
+		using logger_supervisor = cadmium::logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
-		dynamic::engine::runner<NDTime, logger_supervisor> r(TEST_DRIVER, { 0 });
+		cadmium::dynamic::engine::runner<NDTime, logger_supervisor> r(TEST_DRIVER, { 0 });
 
 		r.run_until_passivate();
 		test_set_enumeration++;

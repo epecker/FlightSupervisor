@@ -35,13 +35,11 @@
 
 #ifdef RT_LINUX
 
-using namespace cadmium;
-
 // Input and output port definitions
 template<typename MSG>
 struct UDP_Input_Async_defs {
-	struct o_message : public out_port<MSG> { };
-	struct i_quit : public in_port<bool> { };
+	struct o_message : public cadmium::out_port<MSG> { };
+	struct i_quit : public cadmium::in_port<bool> { };
 };
 
 // Atomic model
@@ -102,7 +100,7 @@ public:
 	}
 
 	//Constructor with address and port as well as whether acknowledgements are required.
-	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, string port) {
+	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, std::string port) {
 		//Initialise the current state
 		state.current_state = States::INPUT;
 		state.has_messages = !state.message.empty();
@@ -171,29 +169,29 @@ public:
 	// External transitions
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 		//If the thread has finished receiving input, change state if there are messages.
 		if (mutexLock.try_lock()) {
 			state.has_messages = !state.message.empty();
 		}
 
-		if (get_messages<typename UDP_Input_Async_defs<MSG>::i_quit>(mbs).size() >= 1) {
+		if (cadmium::get_messages<typename UDP_Input_Async_defs<MSG>::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
 	}
 
 	// Confluence transition
 	// Used to call set call precedence
-	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
 	// Output function
-	typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<MSG> message_out;
+	typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<MSG> message_out;
 		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 		if (state.current_state == States::INPUT) {
 			//If the lock is free and there are messages, send the messages.
@@ -202,7 +200,7 @@ public:
 					message_out.push_back(msg);
 				}
 				state.message.clear();
-				get_messages<typename UDP_Input_Async_defs<MSG>::o_message>(bags) = message_out;
+			 cadmium::get_messages<typename UDP_Input_Async_defs<MSG>::o_message>(bags) = message_out;
 			}
 		}
 		return bags;

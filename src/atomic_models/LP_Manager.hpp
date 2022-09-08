@@ -28,8 +28,6 @@
 #include "../time_conversion.hpp"
 #include "mavNRC/geo.h"
 
-using namespace cadmium;
-
 template<typename TIME>
 class LP_Manager {
 public:
@@ -52,26 +50,26 @@ public:
 
 	//Port definition
 	struct defs {
-		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-		struct i_control_yielded : public in_port<bool> {};
-		struct i_fcc_command_land : public in_port<message_fcc_command_t> {};
-		struct i_lp_recv : public in_port<message_landing_point_t> {};
-		struct i_pilot_takeover : public in_port<bool> {};
-		struct i_plp_ach : public in_port<message_landing_point_t> {};
-		struct i_start_mission : public in_port<int> {};
+		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
+		struct i_control_yielded : public cadmium::in_port<bool> {};
+		struct i_fcc_command_land : public cadmium::in_port<message_fcc_command_t> {};
+		struct i_lp_recv : public cadmium::in_port<message_landing_point_t> {};
+		struct i_pilot_takeover : public cadmium::in_port<bool> {};
+		struct i_plp_ach : public cadmium::in_port<message_landing_point_t> {};
+		struct i_start_mission : public cadmium::in_port<int> {};
 
-		struct o_fcc_command_orbit : public out_port<message_fcc_command_t> {};
-		struct o_lp_expired : public out_port<message_landing_point_t> {};
-		struct o_lp_new : public out_port<message_landing_point_t> {};
-		struct o_pilot_handover : public out_port<message_landing_point_t> {};
-		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
-		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
-		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_fcc_command_orbit : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_lp_expired : public cadmium::out_port<message_landing_point_t> {};
+		struct o_lp_new : public cadmium::out_port<message_landing_point_t> {};
+		struct o_pilot_handover : public cadmium::out_port<message_landing_point_t> {};
+		struct o_request_aircraft_state : public cadmium::out_port<bool> {};
+		struct o_set_mission_monitor_status : public cadmium::out_port<uint8_t> {};
+		struct o_update_boss : public cadmium::out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
 	};
 
 	// ports definition
-	using input_ports = tuple<
+	using input_ports = std::tuple<
 		typename defs::i_aircraft_state,
 		typename defs::i_control_yielded,
 		typename defs::i_fcc_command_land,
@@ -81,7 +79,7 @@ public:
 		typename defs::i_start_mission
 	>;
 
-	using output_ports = tuple<
+	using output_ports = std::tuple<
 		typename defs::o_fcc_command_orbit,
 		typename defs::o_lp_expired,
 		typename defs::o_lp_new,
@@ -158,18 +156,18 @@ public:
 	}
 
 	// external transition
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		//If we get any messages on the pilot takeover port in any state (apart from HANDOVER_CONTROL), immediately transition into the pilot in control state.
-        bool received_pilot_takeover = !get_messages<typename defs::i_pilot_takeover>(mbs).empty();
+        bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover && state.current_state != States::HANDOVER_CONTROL) {
 			state.current_state = States::PILOT_CONTROL;
             return;
         }
 
-        bool received_start_mission = !get_messages<typename defs::i_start_mission>(mbs).empty();
+        bool received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
-            mission_number = get_messages<typename defs::i_start_mission>(mbs).back();
+            mission_number = cadmium::get_messages<typename defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_LP_PLP;
             return;
         }
@@ -178,19 +176,19 @@ public:
 
         switch (state.current_state) {
             case States::WAIT_LP_PLP: {
-                bool received_lp = !get_messages<typename defs::i_lp_recv>(mbs).empty();
-                bool received_plp_ach = !get_messages<typename defs::i_plp_ach>(mbs).empty();
+                bool received_lp = !cadmium::get_messages<typename defs::i_lp_recv>(mbs).empty();
+                bool received_plp_ach = !cadmium::get_messages<typename defs::i_plp_ach>(mbs).empty();
                 if (received_lp) {
                     set_lp_if_valid(&mbs);
                     state.current_state = States::REQUEST_STATE_LP;
                 } else if (received_plp_ach) {
                     state.current_state = States::REQUEST_STATE_PLP;
-                    plp = get_messages<typename defs::i_plp_ach>(mbs)[0];
+                    plp = cadmium::get_messages<typename defs::i_plp_ach>(mbs)[0];
                 }
                 break;
             }
             case States::LZE_SCAN: {
-                bool received_lp = !get_messages<typename defs::i_lp_recv>(mbs).empty();
+                bool received_lp = !cadmium::get_messages<typename defs::i_lp_recv>(mbs).empty();
                 if (received_lp) {
                     set_lp_if_valid(&mbs);
                     state.current_state = States::REQUEST_STATE_LP;
@@ -198,10 +196,10 @@ public:
                 break;
             }
             case States::GET_STATE_PLP: {
-                bool received_aircraft_state = !get_messages<typename defs::i_aircraft_state>(mbs).empty();
+                bool received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 
                 if (received_aircraft_state) {
-                    vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename defs::i_aircraft_state>(
+                    std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(
                             mbs);
                     aircraft_state = new_aircraft_state[0];
                     if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
@@ -214,10 +212,10 @@ public:
                 break;
             }
             case States::GET_STATE_LP: {
-                bool received_aircraft_state = !get_messages<typename defs::i_aircraft_state>(mbs).empty();
+                bool received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 
                 if (received_aircraft_state) {
-                    vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename defs::i_aircraft_state>(
+                    std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(
                             mbs);
                     aircraft_state = new_aircraft_state[0];
                     if (aircraft_state.alt_AGL < DEFAULT_HOVER_ALTITUDE_AGL) {
@@ -230,15 +228,15 @@ public:
                 break;
             }
             case States::HANDOVER_CONTROL: {
-                bool received_control_yielded = !get_messages<typename defs::i_control_yielded>(mbs).empty();
+                bool received_control_yielded = !cadmium::get_messages<typename defs::i_control_yielded>(mbs).empty();
                 if (received_control_yielded) {
                     state.current_state = States::PILOT_CONTROL;
                 }
                 break;
             }
             case States::LP_APPROACH: {
-                bool received_command_land = !get_messages<typename defs::i_fcc_command_land>(mbs).empty();
-                bool received_lp = !get_messages<typename defs::i_lp_recv>(mbs).empty();
+                bool received_command_land = !cadmium::get_messages<typename defs::i_fcc_command_land>(mbs).empty();
+                bool received_lp = !cadmium::get_messages<typename defs::i_lp_recv>(mbs).empty();
                 if (received_command_land) {
                     state.current_state = States::LP_ACCEPT_EXP;
                 } else if (received_lp) {
@@ -253,9 +251,9 @@ public:
 	}
 
 	// confluence transition
-	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		//If the external input is a pilot takeover message,
-		if (get_messages<typename defs::i_pilot_takeover>(mbs).size() >= 1) {
+		if (cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).size() >= 1) {
 			//Execute the external transition first, then the internal.
 			external_transition(TIME(), std::move(mbs));
 			internal_transition();
@@ -266,15 +264,15 @@ public:
 	}
 
 	// output function
-	typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<message_landing_point_t> lp_messages;
-		vector<message_landing_point_t> plp_messages;
-		vector<bool> bool_messages;
-		vector<message_boss_mission_update_t> boss_messages;
-		vector<message_update_gcs_t> gcs_messages;
-		vector<uint8_t> mission_monitor_messages;
-		vector<message_fcc_command_t> fcc_messages;
+	typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<message_landing_point_t> lp_messages;
+		std::vector<message_landing_point_t> plp_messages;
+		std::vector<bool> bool_messages;
+		std::vector<message_boss_mission_update_t> boss_messages;
+		std::vector<message_update_gcs_t> gcs_messages;
+		std::vector<uint8_t> mission_monitor_messages;
+		std::vector<message_fcc_command_t> fcc_messages;
 
 		switch (state.current_state) {
 			case States::START_LZE_SCAN:
@@ -303,10 +301,10 @@ public:
 					gcs_messages.push_back(temp_gcs_update);
 					mission_monitor_messages.emplace_back(0);
 
-					get_messages<typename defs::o_fcc_command_orbit>(bags) = fcc_messages;
-					get_messages<typename defs::o_update_boss>(bags) = boss_messages;
-					get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
-					get_messages<typename defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
+					cadmium::get_messages<typename defs::o_fcc_command_orbit>(bags) = fcc_messages;
+					cadmium::get_messages<typename defs::o_update_boss>(bags) = boss_messages;
+					cadmium::get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
+					cadmium::get_messages<typename defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
 				}
 				break;
 			case States::LZE_SCAN:
@@ -321,9 +319,9 @@ public:
                     boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
 					plp_messages.push_back(plp);
-					get_messages<typename defs::o_update_boss>(bags) = boss_messages;
-					get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
-					get_messages<typename defs::o_pilot_handover>(bags) = plp_messages;
+					cadmium::get_messages<typename defs::o_update_boss>(bags) = boss_messages;
+					cadmium::get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
+					cadmium::get_messages<typename defs::o_pilot_handover>(bags) = plp_messages;
 
 				}
 				break;
@@ -331,9 +329,9 @@ public:
 				{
 					if (lp_count == 0) {
 						message_update_gcs_t temp_gcs_update{"LP timer started", Mav_Severities_E::MAV_SEVERITY_INFO};
-						get_messages<typename defs::o_update_gcs>(bags).push_back(temp_gcs_update);
+						cadmium::get_messages<typename defs::o_update_gcs>(bags).push_back(temp_gcs_update);
 					}
-					get_messages<typename defs::o_lp_new>(bags).push_back(lp);
+					cadmium::get_messages<typename defs::o_lp_new>(bags).push_back(lp);
 				}
 				break;
 			case States::LP_APPROACH:
@@ -343,14 +341,14 @@ public:
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
 					gcs_messages.push_back(temp_gcs_update);
 					lp_messages.push_back(lp);
-					get_messages<typename defs::o_lp_expired>(bags) = lp_messages;
-					get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
+					cadmium::get_messages<typename defs::o_lp_expired>(bags) = lp_messages;
+					cadmium::get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
 				}
 				break;
 			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
 				{
 					bool_messages.push_back(true);
-					get_messages<typename defs::o_request_aircraft_state>(bags) = bool_messages;
+					cadmium::get_messages<typename defs::o_request_aircraft_state>(bags) = bool_messages;
 				}
 				break;
 			default:
@@ -373,7 +371,7 @@ public:
             case States::HANDOVER_CONTROL:
             case States::PILOT_CONTROL:
             case States::LP_ACCEPT_EXP:
-				next_internal = numeric_limits<TIME>::infinity();
+				next_internal = std::numeric_limits<TIME>::infinity();
 				break;
             case States::START_LZE_SCAN:
             case States::NOTIFY_LP:
@@ -395,8 +393,8 @@ public:
 		return next_internal;
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename LP_Manager<TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename LP_Manager<TIME>::state_type& i) {
+		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 
@@ -409,8 +407,8 @@ private:
     TIME lp_accept_time_prev;
     TIME orbit_time;
 
-    void set_lp_if_valid(typename make_message_bags<input_ports>::type * mbs) {
-        vector<message_landing_point_t> landing_points = get_messages<typename defs::i_lp_recv>(*mbs);
+    void set_lp_if_valid(typename cadmium::make_message_bags<input_ports>::type * mbs) {
+        std::vector<message_landing_point_t> landing_points = cadmium::get_messages<typename defs::i_lp_recv>(*mbs);
 
         if (lp_count == 0) {
             lp = landing_points.back(); // Pick the newest landing point for the first new LP (found at the back of the vector of inputs)

@@ -24,8 +24,6 @@
 #include "../message_structures/message_landing_point_t.hpp"
 #include "../message_structures/message_hover_criteria_t.hpp"
 
-using namespace cadmium;
-
 // Atomic Model
 template<typename TIME> class Handover_Control {
 public:
@@ -44,18 +42,18 @@ public:
 
     // Input and output port definition
     struct defs {
-        struct i_hover_criteria_met : public in_port<bool> {};
-        struct i_pilot_handover : public in_port<message_landing_point_t> {};
-        struct i_pilot_takeover : public in_port<bool> {};
-        struct i_start_mission : public in_port<int> {};
+        struct i_hover_criteria_met : public cadmium::in_port<bool> {};
+        struct i_pilot_handover : public cadmium::in_port<message_landing_point_t> {};
+        struct i_pilot_takeover : public cadmium::in_port<bool> {};
+        struct i_start_mission : public cadmium::in_port<int> {};
 
-        struct o_notify_pilot : public out_port<bool> {};
-        struct o_control_yielded : public out_port<bool> {};
-        struct o_stabilize : public out_port<message_hover_criteria_t> {};
+        struct o_notify_pilot : public cadmium::out_port<bool> {};
+        struct o_control_yielded : public cadmium::out_port<bool> {};
+        struct o_stabilize : public cadmium::out_port<message_hover_criteria_t> {};
     };
 
 	// Create a tuple of input ports (required for the simulator)
-	using input_ports = tuple<
+	using input_ports = std::tuple<
 		typename defs::i_hover_criteria_met,
 		typename defs::i_pilot_handover,
 		typename defs::i_pilot_takeover,
@@ -63,7 +61,7 @@ public:
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = tuple<
+	using output_ports = std::tuple<
 		typename defs::o_notify_pilot,
 		typename defs::o_control_yielded,
 		typename defs::o_stabilize
@@ -112,15 +110,15 @@ public:
 	// External transitions
 	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 
-        bool received_pilot_takeover = !get_messages<typename defs::i_pilot_takeover>(mbs).empty();
+        bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
         if (received_pilot_takeover && state.current_state != States::WAIT_FOR_PILOT) {
             state.current_state = States::PILOT_CONTROL;
             return;
         }
 
-        bool received_start_mission = !get_messages<typename defs::i_start_mission>(mbs).empty();
+        bool received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             state.current_state = States::WAIT_PILOT_HANDOVER;
             return;
@@ -130,21 +128,21 @@ public:
 		bool received_hover_crit_met;
 		switch (state.current_state) {
 			case States::WAIT_PILOT_HANDOVER:
-				received_pilot_handover = !get_messages<typename defs::i_pilot_handover>(mbs).empty();
+				received_pilot_handover = !cadmium::get_messages<typename defs::i_pilot_handover>(mbs).empty();
 				if (received_pilot_handover) {
 					// Set the hover location to the newest input (found at the back of the vector of inputs)
-					hover_location = get_messages<typename defs::i_pilot_handover>(mbs).back();
+					hover_location = cadmium::get_messages<typename defs::i_pilot_handover>(mbs).back();
 					state.current_state = States::HOVER;
 				}
 				break;
 			case States::STABILIZING:
-				received_hover_crit_met = !get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
+				received_hover_crit_met = !cadmium::get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
                 if (received_hover_crit_met) {
 					state.current_state = States::NOTIFY_PILOT;
 				}
 				break;
 			case States::WAIT_FOR_PILOT:
-				received_pilot_takeover = !get_messages<typename defs::i_pilot_takeover>(mbs).empty();
+				received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 				if (received_pilot_takeover) {
 					state.current_state = States::YIELD_CONTROL;
 				}
@@ -156,8 +154,8 @@ public:
 
 	// confluence transition
 	// Used to call set call precedent
-	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_pilot_takeover = !get_messages<typename defs::i_pilot_takeover>(mbs).empty();
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 
 		if (received_pilot_takeover) {
 			external_transition(TIME(), std::move(mbs));
@@ -169,10 +167,10 @@ public:
 	}
 
 	// output function
-	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<bool> bag_port_out;
-		vector<message_hover_criteria_t> bag_port_hover_out;
+	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<bool> bag_port_out;
+		std::vector<message_hover_criteria_t> bag_port_hover_out;
 		message_hover_criteria_t hover_criteria;
 
 		switch (state.current_state) {
@@ -192,15 +190,15 @@ public:
 					0
 				);
 				bag_port_hover_out.push_back(hover_criteria);
-				get_messages<typename defs::o_stabilize>(bags) = bag_port_hover_out;
+				cadmium::get_messages<typename defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
 			case States::NOTIFY_PILOT:
 				bag_port_out.push_back(true);
-				get_messages<typename defs::o_notify_pilot>(bags) = bag_port_out;
+				cadmium::get_messages<typename defs::o_notify_pilot>(bags) = bag_port_out;
 				break;
 			case States::YIELD_CONTROL:
 				bag_port_out.push_back(true);
-				get_messages<typename defs::o_control_yielded>(bags) = bag_port_out;
+				cadmium::get_messages<typename defs::o_control_yielded>(bags) = bag_port_out;
 				break;
 			default:
 				break;
@@ -218,7 +216,7 @@ public:
             case States::STABILIZING:
             case States::WAIT_FOR_PILOT:
             case States::PILOT_CONTROL:
-				return numeric_limits<TIME>::infinity();
+				return std::numeric_limits<TIME>::infinity();
 			case States::HOVER:
 			case States::NOTIFY_PILOT:
 			case States::YIELD_CONTROL:
@@ -228,8 +226,8 @@ public:
 		}
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Handover_Control<TIME>::state_type& i) {
+		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 };

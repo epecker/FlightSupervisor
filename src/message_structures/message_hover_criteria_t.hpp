@@ -66,7 +66,7 @@ struct message_hover_criteria_t {
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const message_hover_criteria_t& msg) {
+std::ostream& operator<<(std::ostream& os, const message_hover_criteria_t& msg) {
     os  << std::fixed << std::setprecision(7)
         << msg.desiredLat << " "
         << msg.desiredLon << " "
@@ -88,7 +88,7 @@ ostream& operator<<(ostream& os, const message_hover_criteria_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, message_hover_criteria_t& msg) {
+std::istream& operator>> (std::istream& is, message_hover_criteria_t& msg) {
 	is >> msg.desiredLat;
 	is >> msg.desiredLon;
 	is >> msg.desiredAltMSL;

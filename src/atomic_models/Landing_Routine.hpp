@@ -25,8 +25,6 @@
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-using namespace cadmium;
-
 // Atomic Model
 template<typename TIME> class Landing_Routine {
 public:
@@ -44,20 +42,20 @@ public:
 
 	// Input and output port definition
 	struct defs {
-		struct i_land : public in_port<message_landing_point_t> {};
-		struct i_landing_achieved : public in_port<bool> {};
-		struct i_pilot_takeover : public in_port<bool> {};
-		struct i_start_mission : public in_port<int> {};
+		struct i_land : public cadmium::in_port<message_landing_point_t> {};
+		struct i_landing_achieved : public cadmium::in_port<bool> {};
+		struct i_pilot_takeover : public cadmium::in_port<bool> {};
+		struct i_start_mission : public cadmium::in_port<int> {};
 
-		struct o_fcc_command_land : public out_port<message_fcc_command_t> {};
-		struct o_mission_complete : public out_port<bool> {};
-		struct o_update_boss : public out_port<message_boss_mission_update_t> {};
-		struct o_update_gcs : public out_port<message_update_gcs_t> {};
-		struct o_update_mission_item : public out_port<bool> {};
+		struct o_fcc_command_land : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_mission_complete : public cadmium::out_port<bool> {};
+		struct o_update_boss : public cadmium::out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
+		struct o_update_mission_item : public cadmium::out_port<bool> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
-	using input_ports = tuple<
+	using input_ports = std::tuple<
 		typename Landing_Routine<TIME>::defs::i_land,
 		typename Landing_Routine<TIME>::defs::i_landing_achieved,
 		typename Landing_Routine<TIME>::defs::i_pilot_takeover,
@@ -65,7 +63,7 @@ public:
 	>;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = tuple<
+	using output_ports = std::tuple<
 		typename Landing_Routine<TIME>::defs::o_fcc_command_land,
 		typename Landing_Routine<TIME>::defs::o_mission_complete,
 		typename Landing_Routine<TIME>::defs::o_update_boss,
@@ -112,16 +110,16 @@ public:
 	// External transitions
 	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
-        bool received_pilot_takeover = !get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).empty();
+	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+        bool received_pilot_takeover = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
             return;
 		}
 
-        bool received_start_mission = !get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).empty();
+        bool received_start_mission = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
-            mission_number = get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).back();
+            mission_number = cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_LAND_REQUEST;
             return;
         }
@@ -130,20 +128,20 @@ public:
         bool received_landing_achieved;
         switch (state.current_state) {
             case States::WAIT_LAND_REQUEST:
-                received_land = !get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).empty();
+                received_land = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).empty();
                 if (received_land) {
-                    landing_point = get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).back();
+                    landing_point = cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).back();
                     state.current_state = States::REQUEST_LAND;
                 }
                 break;
             case States::LANDING:
-                received_landing_achieved = !get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
+                received_landing_achieved = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {
                     state.current_state = States::NOTIFY_LANDED;
                 }
                 break;
             case States::PILOT_CONTROL:
-                received_landing_achieved = !get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
+                received_landing_achieved = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {
                     state.current_state = States::NOTIFY_LANDED;
                 }
@@ -156,19 +154,19 @@ public:
 
 	// confluence transition
 	// Used to call set call precedent
-	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
 	// output function
-	typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<bool> mission_complete_messages;
-		vector<bool> mission_item_messages;
-		vector<message_fcc_command_t> fcc_messages;
-		vector<message_boss_mission_update_t> boss_messages;
-		vector<message_update_gcs_t> gcs_messages;
+	typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<bool> mission_complete_messages;
+		std::vector<bool> mission_item_messages;
+		std::vector<message_fcc_command_t> fcc_messages;
+		std::vector<message_boss_mission_update_t> boss_messages;
+		std::vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::REQUEST_LAND:
@@ -177,25 +175,24 @@ public:
 					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
 
 					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_landing_point(
-                            landing_point.id,
-                            landing_point.lat,
-                            landing_point.lon,
-                            landing_point.alt * FT_TO_METERS,
-                            landing_point.hdg,
-                            "LAND");
-                    temp_boss.missionNo = mission_number;
-                    temp_boss.missionItemNo = landing_point.missionItemNo;
-                    message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
+					temp_boss.update_landing_point(
+							landing_point.id,
+							landing_point.lat,
+							landing_point.lon,
+							landing_point.alt * FT_TO_METERS,
+							landing_point.hdg,
+							"LAND");
+					temp_boss.missionNo = mission_number;
+					temp_boss.missionItemNo = landing_point.missionItemNo;
+					message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
 
 					fcc_messages.push_back(temp_fcc_command);
 					boss_messages.push_back(temp_boss);
 					gcs_messages.push_back(temp_gcs_update);
 
-					get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags) = fcc_messages;
-					get_messages<typename Landing_Routine<TIME>::defs::o_update_boss>(bags) = boss_messages;
-					get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
-
+					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags) = fcc_messages;
+					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_boss>(bags) = boss_messages;
+					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 				}
 				break;
 			case States::NOTIFY_LANDED:
@@ -206,9 +203,9 @@ public:
 					gcs_messages.push_back(temp_gcs_update);
 					mission_complete_messages.push_back(true);
 					mission_item_messages.push_back(true);
-					get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = mission_complete_messages;
-					get_messages<typename Landing_Routine<TIME>::defs::o_update_mission_item>(bags) = mission_item_messages;
-					get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
+					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = mission_complete_messages;
+					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_mission_item>(bags) = mission_item_messages;
+					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
 				}
 				break;
 			default:
@@ -227,7 +224,7 @@ public:
             case States::LANDING:
             case States::LANDED:
             case States::PILOT_CONTROL:
-				return numeric_limits<TIME>::infinity();
+				return std::numeric_limits<TIME>::infinity();
 			case States::REQUEST_LAND:
 			case States::NOTIFY_LANDED:
 				return TIME(TA_ZERO);
@@ -236,8 +233,8 @@ public:
 		}
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Landing_Routine<TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Landing_Routine<TIME>::state_type& i) {
+		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 

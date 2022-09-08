@@ -23,8 +23,6 @@
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-using namespace cadmium;
-
 template<typename TIME>
 class Mission_Initialization {
 public:
@@ -44,26 +42,26 @@ public:
 
 	// Input and output port definitions
 	struct defs {
-		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-		struct i_perception_status : public in_port<bool> {};
-		struct i_start_supervisor : public in_port<message_start_supervisor_t> {};
+		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
+		struct i_perception_status : public cadmium::in_port<bool> {};
+		struct i_start_supervisor : public cadmium::in_port<message_start_supervisor_t> {};
 
-		struct o_request_perception_status : public out_port<bool> {};
-		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_set_mission_monitor_status : public out_port<uint8_t> {};
-		struct o_start_mission : public out_port<int> {};
-		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_request_perception_status : public cadmium::out_port<bool> {};
+		struct o_request_aircraft_state : public cadmium::out_port<bool> {};
+		struct o_set_mission_monitor_status : public cadmium::out_port<uint8_t> {};
+		struct o_start_mission : public cadmium::out_port<int> {};
+		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
-	using input_ports = tuple<
+	using input_ports = std::tuple<
 			typename Mission_Initialization::defs::i_aircraft_state,
 			typename Mission_Initialization::defs::i_perception_status,
 			typename Mission_Initialization::defs::i_start_supervisor
 			>;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = tuple<
+	using output_ports = std::tuple<
 			typename Mission_Initialization::defs::o_request_perception_status,
 			typename Mission_Initialization::defs::o_request_aircraft_state,
 			typename Mission_Initialization::defs::o_set_mission_monitor_status,
@@ -124,33 +122,33 @@ public:
 	}
 
 	// External transitions (required for the simulator)
-	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_start_supervisor;
 		bool received_perception_status;
 		bool received_aircraft_state;
 
 		switch (state.current_state) {
 			case States::IDLE:
-				received_start_supervisor = !get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).empty();
+				received_start_supervisor = !cadmium::get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).empty();
 				if (received_start_supervisor) {
 					// Get the most recent start supervisor input (found at the back of the vector of inputs)
-					mission_data = get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).back();
+					mission_data = cadmium::get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).back();
 					state.current_state = States::MISSION_STATUS;
 				}
 				break;
 			case States::CHECK_PERCEPTION_SYSTEM:
-				received_perception_status = !get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs).empty();
+				received_perception_status = !cadmium::get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs).empty();
 				if (received_perception_status) {
-					vector<bool> perception_status = get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs);
+					std::vector<bool> perception_status = cadmium::get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs);
 					perception_healthy = perception_status[0];
 					state.current_state = States::OUTPUT_PERCEPTION_STATUS;
 				}
 				break;
 			case States::CHECK_AIRCRAFT_STATE:
-				received_aircraft_state = !get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !cadmium::get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs).empty();
 
 				if (received_aircraft_state) {
-					vector<message_aircraft_state_t> new_aircraft_state = get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs);
+					std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs);
 					aircraft_height = new_aircraft_state[0].alt_AGL;
 					state.current_state = States::OUTPUT_TAKEOFF_POSITION;
 				}
@@ -163,25 +161,25 @@ public:
 	// Confluence transition sets the internal/external precedence
 	// Triggered when a message is received at the same time as an internal transition.
 	// (required for the simulator)
-	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
 	// Creates output messages (required for the simulator)
 	[[nodiscard]]
-	typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<bool> bool_port_out;
-		vector<message_update_gcs_t> gcs_messages;
-		vector<uint8_t> mission_monitor_messages;
+	typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<bool> bool_port_out;
+		std::vector<message_update_gcs_t> gcs_messages;
+		std::vector<uint8_t> mission_monitor_messages;
 
 		switch (state.current_state) {
 			case States::CHECK_AUTONOMY:
 				{
 					if (mission_data.autonomy_armed) {
 						bool_port_out.push_back(true);
-						get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags) = bool_port_out;
+						cadmium::get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags) = bool_port_out;
 					}
 				}
 				break;
@@ -195,32 +193,32 @@ public:
 					}
 					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
 					gcs_messages.emplace_back(temp_gcs_update);
-					get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
+					cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
 				}
 				break;
 			case States::REQUEST_AIRCRAFT_STATE:
 				{
 					bool_port_out.push_back(true);
-					get_messages<typename Mission_Initialization::defs::o_request_aircraft_state>(bags) = bool_port_out;
+					cadmium::get_messages<typename Mission_Initialization::defs::o_request_aircraft_state>(bags) = bool_port_out;
 				}
 				break;
 			case States::OUTPUT_TAKEOFF_POSITION:
 				{
 					mission_monitor_messages.emplace_back(1);
-					get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
+					cadmium::get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
 
 					if (aircraft_height > 10.0) {
 						message_update_gcs_t temp_gcs_update;
 						temp_gcs_update.text = "Starting Mission in air!";
 						temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
 						gcs_messages.emplace_back(temp_gcs_update);
-						get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
+						cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
 					}
 				}
 				break;
 			case States::START_MISSION:
 				{
-					get_messages<typename Mission_Initialization::defs::o_start_mission>(bags).push_back(mission_data.mission_number);
+					cadmium::get_messages<typename Mission_Initialization::defs::o_start_mission>(bags).push_back(mission_data.mission_number);
 				}
 				break;
 			default:
@@ -237,7 +235,7 @@ public:
 			case States::IDLE:
 			case States::CHECK_PERCEPTION_SYSTEM:
 			case States::CHECK_AIRCRAFT_STATE:
-				next_internal = numeric_limits<TIME>::infinity();
+				next_internal = std::numeric_limits<TIME>::infinity();
 				break;
 			case States::MISSION_STATUS:
 			case States::RESUME_MISSION:
@@ -256,8 +254,8 @@ public:
 	}
 
 	// Used for logging outputs the state's name. (required for the simulator)
-	friend ostringstream& operator<<(ostringstream& os, const typename Mission_Initialization<TIME>::state_type& i) {
-		os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Mission_Initialization<TIME>::state_type& i) {
+		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 };

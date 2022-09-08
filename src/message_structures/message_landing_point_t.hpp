@@ -28,7 +28,7 @@ struct message_landing_point_t{
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const message_landing_point_t& msg) {
+std::ostream& operator<<(std::ostream& os, const message_landing_point_t& msg) {
     os  << msg.id << " "
         << msg.missionItemNo << " "
         << std::fixed << std::setprecision(7)
@@ -44,7 +44,7 @@ ostream& operator<<(ostream& os, const message_landing_point_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, message_landing_point_t& msg) {
+std::istream& operator>> (std::istream& is, message_landing_point_t& msg) {
 	is >> msg.id;
 	is >> msg.missionItemNo;
 	is >> msg.lat;

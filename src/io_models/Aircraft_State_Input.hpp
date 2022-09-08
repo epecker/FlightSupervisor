@@ -25,13 +25,10 @@
 #include "../enum_string_conversion.hpp"
 #include "../message_structures/message_aircraft_state_t.hpp"
 
-
-using namespace cadmium;
-
 // Input and output port definitions
 struct Aircraft_State_Input_defs {
-	struct o_message : public out_port<message_aircraft_state_t> { };
-	struct i_request : public in_port<bool> { };
+	struct o_message : public cadmium::out_port<message_aircraft_state_t> { };
+	struct i_request : public cadmium::in_port<bool> { };
 };
 
 // Atomic model
@@ -98,8 +95,8 @@ public:
 	// External transitions
 	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_request = !get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).empty();
+	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		bool received_request = !cadmium::get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).empty();
 		if (received_request) {
 			state.current_state = States::SEND;
 		}
@@ -107,15 +104,15 @@ public:
 
 	// Confluence transition
 	// Used to call set call precedence
-	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
 	// Output function
-	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<message_aircraft_state_t> bag_port_message;
+	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<message_aircraft_state_t> bag_port_message;
 
 		if (state.current_state == States::SEND) {
 			message_aircraft_state_t message = message_aircraft_state_t(
@@ -128,7 +125,7 @@ public:
 					sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
 			bag_port_message.push_back(message);
-			get_messages<typename Aircraft_State_Input_defs::o_message>(bags) = bag_port_message;
+			cadmium::get_messages<typename Aircraft_State_Input_defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}

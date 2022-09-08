@@ -18,8 +18,6 @@
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-using namespace cadmium;
-
 // Atomic model
 template<typename TIME>
 class RUDP_Output {
@@ -36,7 +34,7 @@ public:
 
 	// Input and output port definitions
 	struct defs{
-	    struct i_message : public in_port<vector<char>> { };
+	    struct i_message : public cadmium::in_port<std::vector<char>> { };
 	};
 
     // Default constructor
@@ -54,7 +52,7 @@ public:
     }
 
     // Constructor with polling rate parameter
-    RUDP_Output(const string& address, unsigned short port, int timeout_ms, int retries_limit) {
+    RUDP_Output(const std::string& address, unsigned short port, int timeout_ms, int retries_limit) {
         state.current_state = States::IDLE;
         int connection_number = rudp::ConnectionController::addConnection(timeout_ms);
 		connection = rudp::ConnectionController::getConnection(connection_number);
@@ -71,7 +69,7 @@ public:
 	// (required for the simulator)
     struct state_type{
         States current_state;
-		std::vector<vector<char>> messages;
+		std::vector<std::vector<char>> messages;
     };
     state_type state;
 
@@ -94,10 +92,10 @@ public:
 	// External transitions
 	// These are transitions occurring from external inputs
 	// (required for the simulator)
-    void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename RUDP_Output::defs::i_message>(mbs).size() >= 1){
+    void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		if (cadmium::get_messages<typename RUDP_Output::defs::i_message>(mbs).size() >= 1){
 			state.current_state = States::SENDING;
-			for (vector<char> m : get_messages<typename RUDP_Output::defs::i_message>(mbs)) {
+			for (std::vector<char> m : cadmium::get_messages<typename RUDP_Output::defs::i_message>(mbs)) {
 				state.messages.push_back(m);
 			}
 		}
@@ -105,14 +103,14 @@ public:
 
 	// Confluence transition
 	// Used to call set call precedent
-    void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+    void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         internal_transition();
         external_transition(TIME(), std::move(mbs));
     }
 
     // Output function
-    [[nodiscard]] typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
+    [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
 
         switch(state.current_state) {
             case States::SENDING:
@@ -138,13 +136,13 @@ public:
     }
 
     friend std::ostringstream& operator<<(std::ostringstream& os, const typename RUDP_Output::state_type& i) {
-        os << "State: " << enumToString(i.current_state) + string("\n");
+        os << "State: " << enumToString(i.current_state) + std::string("\n");
         return os;
     }
 
 private:
     void send_packets() const {
-        for (vector<char> m : state.messages) {
+        for (std::vector<char> m : state.messages) {
 			try {
             	connection->send(m.data(), m.size());
 			}

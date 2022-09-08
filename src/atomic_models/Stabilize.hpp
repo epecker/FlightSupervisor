@@ -27,8 +27,6 @@
 #include "../time_conversion.hpp"
 #include "../Constants.hpp"
 
-using namespace cadmium;
-
 // Atomic Model
 template<typename TIME> class Stabilize {
 public:
@@ -47,19 +45,19 @@ public:
 
 	// Input and output port definition
 	struct defs {
-		struct i_aircraft_state : public in_port<message_aircraft_state_t> {};
-		struct i_cancel_hover : public in_port<bool> {};
-		struct i_stabilize : public in_port<message_hover_criteria_t> {};
-		struct i_start_mission : public in_port<int> {};
+		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
+		struct i_cancel_hover : public cadmium::in_port<bool> {};
+		struct i_stabilize : public cadmium::in_port<message_hover_criteria_t> {};
+		struct i_start_mission : public cadmium::in_port<int> {};
 
-		struct o_fcc_command_hover : public out_port<message_fcc_command_t> {};
-		struct o_hover_criteria_met : public out_port<bool> {};
-		struct o_request_aircraft_state : public out_port<bool> {};
-		struct o_update_gcs : public out_port<message_update_gcs_t> {};
+		struct o_fcc_command_hover : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_hover_criteria_met : public cadmium::out_port<bool> {};
+		struct o_request_aircraft_state : public cadmium::out_port<bool> {};
+		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
 	};
 
 	// Create a tuple of input ports (required for the simulator)
-	using input_ports = tuple<
+	using input_ports = std::tuple<
 		typename Stabilize::defs::i_aircraft_state,
 		typename Stabilize::defs::i_cancel_hover,
 		typename Stabilize::defs::i_stabilize,
@@ -67,7 +65,7 @@ public:
     >;
 
 	// Create a tuple of output ports (required for the simulator)
-	using output_ports = tuple<
+	using output_ports = std::tuple<
 		typename Stabilize::defs::o_fcc_command_hover,
 		typename Stabilize::defs::o_hover_criteria_met,
 		typename Stabilize::defs::o_request_aircraft_state,
@@ -161,9 +159,9 @@ public:
 	// External transitions
 	// These are transitions occurring from external inputs
 	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_cancel_hover = !get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
-		bool received_start_mission = !get_messages<typename Stabilize::defs::i_start_mission>(mbs).empty();
+	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		bool received_cancel_hover = !cadmium::get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
+		bool received_start_mission = !cadmium::get_messages<typename Stabilize::defs::i_start_mission>(mbs).empty();
 		if (received_cancel_hover || received_start_mission) {
 			reset_state();
             state.current_state = States::WAIT_STABILIZE;
@@ -174,25 +172,25 @@ public:
         bool received_stabilize;
 		switch (state.current_state) {
 			case States::WAIT_STABILIZE:
-				received_stabilize = !get_messages<typename Stabilize::defs::i_stabilize>(mbs).empty();
+				received_stabilize = !cadmium::get_messages<typename Stabilize::defs::i_stabilize>(mbs).empty();
 				if (received_stabilize) {
 					// Get the most recent hover criteria input (found at the back of the vector of inputs)
-					hover_criteria = get_messages<typename Stabilize::defs::i_stabilize>(mbs).back();
+					hover_criteria = cadmium::get_messages<typename Stabilize::defs::i_stabilize>(mbs).back();
 					state.stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
 					state.current_state = States::REQUEST_AIRCRAFT_STATE;
 				}
 				break;
 			case States::GET_AIRCRAFT_STATE:
-				received_aircraft_state = !get_messages<typename Stabilize::defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !cadmium::get_messages<typename Stabilize::defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
-					aircraft_state = get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
+					aircraft_state = cadmium::get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
 					state.current_state = States::INIT_HOVER;
 				}
 				break;
 			case States::CHECK_STATE:
-				received_aircraft_state = !get_messages<typename Stabilize::defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !cadmium::get_messages<typename Stabilize::defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
-					aircraft_state = get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
+					aircraft_state = cadmium::get_messages<typename Stabilize::defs::i_aircraft_state>(mbs)[0];
 					state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
 					if (!state.in_tolerance) {
 						state.stabilization_time_prev = seconds_to_time<TIME>(hover_criteria.timeTol);
@@ -210,8 +208,8 @@ public:
 
 	// confluence transition;
 	// Used to call set call order
-	void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
-		bool received_cancel_hover = !get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		bool received_cancel_hover = !cadmium::get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
 
 		if (received_cancel_hover) {
 			external_transition(TIME(), std::move(mbs));
@@ -222,16 +220,16 @@ public:
 
 	// output function
 	// Nothing to output
-	[[nodiscard]] typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<bool> message_out;
-		vector<message_fcc_command_t> message_fcc_out;
-		vector<message_update_gcs_t> message_gcs_out;
+	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<bool> message_out;
+		std::vector<message_fcc_command_t> message_fcc_out;
+		std::vector<message_update_gcs_t> message_gcs_out;
 
 		switch (state.current_state) {
 			case States::REQUEST_AIRCRAFT_STATE:
 				message_out.push_back(true);
-				get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
+				cadmium::get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
 				break;
 			case States::INIT_HOVER:
 			{
@@ -243,7 +241,7 @@ public:
 						hover_criteria.desiredAltMSL * FT_TO_METERS
 						);
 				message_fcc_out.push_back(mfc);
-				get_messages<typename Stabilize::defs::o_fcc_command_hover>(bags) = message_fcc_out;
+				cadmium::get_messages<typename Stabilize::defs::o_fcc_command_hover>(bags) = message_fcc_out;
 			}
 			break;
 			case States::STABILIZING:
@@ -251,11 +249,11 @@ public:
 					message_update_gcs_t temp_gcs_update("Came to hover!", Mav_Severities_E::MAV_SEVERITY_INFO);
 					message_out.push_back(true);
 					message_gcs_out.push_back(temp_gcs_update);
-					get_messages<typename Stabilize::defs::o_hover_criteria_met>(bags) = message_out;
-					get_messages<typename Stabilize::defs::o_update_gcs>(bags) = message_gcs_out;
+					cadmium::get_messages<typename Stabilize::defs::o_hover_criteria_met>(bags) = message_out;
+					cadmium::get_messages<typename Stabilize::defs::o_update_gcs>(bags) = message_gcs_out;
 				} else {
 					message_out.push_back(true);
-					get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
+					cadmium::get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
 				}
 				break;
 			default:
@@ -274,7 +272,7 @@ public:
 			case States::WAIT_STABILIZE:
 			case States::GET_AIRCRAFT_STATE:
 			case States::CHECK_STATE:
-				next_internal = numeric_limits<TIME>::infinity();
+				next_internal = std::numeric_limits<TIME>::infinity();
 				break;
 			case States::REQUEST_AIRCRAFT_STATE:
 			case States::INIT_HOVER:
@@ -290,11 +288,11 @@ public:
 		return next_internal;
 	}
 
-	friend ostringstream& operator<<(ostringstream& os, const typename Stabilize<TIME>::state_type& i) {
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Stabilize<TIME>::state_type& i) {
         #ifdef DEBUG_MODELS
         os << (string("State: ") + enumToString(i.current_state) + i.failures + "-") << i.stabilization_time_prev << string("\n");
         #else
-        os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+        os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
         #endif
 		return os;
 	}

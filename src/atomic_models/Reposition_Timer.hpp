@@ -28,8 +28,6 @@
 // Macros
 #include "../Constants.hpp"
 
-using namespace cadmium;
-
 // Atomic Model
 template<typename TIME> class Reposition_Timer {
 public:
@@ -50,22 +48,22 @@ public:
 
     // Input and output port definition
     struct defs {
-        struct i_control_yielded : public in_port<bool> {};
-        struct i_lp_crit_met : public in_port<message_landing_point_t> {};
-        struct i_lp_new : public in_port<message_landing_point_t> {};
-        struct i_pilot_takeover : public in_port<bool> {};
-        struct i_start_mission : public in_port<int> {};
+        struct i_control_yielded : public cadmium::in_port<bool> {};
+        struct i_lp_crit_met : public cadmium::in_port<message_landing_point_t> {};
+        struct i_lp_new : public cadmium::in_port<message_landing_point_t> {};
+        struct i_pilot_takeover : public cadmium::in_port<bool> {};
+        struct i_start_mission : public cadmium::in_port<int> {};
 
-        struct o_cancel_hover : public out_port<bool> {};
-        struct o_land : public out_port<message_landing_point_t> {};
-        struct o_pilot_handover : public out_port<message_landing_point_t> {};
-        struct o_request_reposition : public out_port<message_landing_point_t> {};
-        struct o_update_boss : public out_port<message_boss_mission_update_t> {};
-        struct o_update_gcs : public out_port<message_update_gcs_t> {};
+        struct o_cancel_hover : public cadmium::out_port<bool> {};
+        struct o_land : public cadmium::out_port<message_landing_point_t> {};
+        struct o_pilot_handover : public cadmium::out_port<message_landing_point_t> {};
+        struct o_request_reposition : public cadmium::out_port<message_landing_point_t> {};
+        struct o_update_boss : public cadmium::out_port<message_boss_mission_update_t> {};
+        struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
     };
 
     // Create a tuple of input ports (required for the simulator)
-    using input_ports = tuple<
+    using input_ports = std::tuple<
             typename Reposition_Timer::defs::i_control_yielded,
             typename Reposition_Timer::defs::i_lp_crit_met,
             typename Reposition_Timer::defs::i_lp_new,
@@ -74,7 +72,7 @@ public:
     >;
 
     // Create a tuple of output ports (required for the simulator)
-    using output_ports = tuple<
+    using output_ports = std::tuple<
             typename Reposition_Timer::defs::o_land,
             typename Reposition_Timer::defs::o_cancel_hover,
             typename Reposition_Timer::defs::o_pilot_handover,
@@ -147,39 +145,39 @@ public:
     // External transitions
     // These are transitions occurring from external inputs
     // (required for the simulator)
-    void external_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+    void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         bool received_control_yielded;
         bool received_lp_new;
         bool received_lp_crit_met;
 
-        bool received_pilot_takeover = !get_messages<typename Reposition_Timer::defs::i_pilot_takeover>(mbs).empty();
+        bool received_pilot_takeover = !cadmium::get_messages<typename Reposition_Timer::defs::i_pilot_takeover>(mbs).empty();
         if (received_pilot_takeover) {
             state.current_state = States::PILOT_CONTROL;
             return;
         }
 
-        bool received_start_mission = !get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).empty();
+        bool received_start_mission = !cadmium::get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
-            mission_number = get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).back();
+            mission_number = cadmium::get_messages<typename Reposition_Timer<TIME>::defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_NEW_LP;
             return;
         }
 
         switch (state.current_state) {
             case States::WAIT_NEW_LP:
-                received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
+                received_lp_new = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
                 if (received_lp_new) {
-                    vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::NOTIFY_UPDATE;
                 }
                 break;
             case States::UPDATE_LP:
-                received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
+                received_lp_new = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
                 if (received_lp_new) {
-                    vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
                     update_upd_time(e);
@@ -187,11 +185,11 @@ public:
                 }
                 break;
             case States::LP_REPO:
-                received_lp_new = !get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
-                received_lp_crit_met = !get_messages<typename Reposition_Timer::defs::i_lp_crit_met>(mbs).empty();
+                received_lp_new = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
+                received_lp_crit_met = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_crit_met>(mbs).empty();
 
                 if (received_lp_new) {
-                    vector<message_landing_point_t> new_landing_points = get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::NEW_LP_REPO;
@@ -200,7 +198,7 @@ public:
                 }
                 break;
             case States::HANDOVER_CTRL:
-                received_control_yielded = !get_messages<typename Reposition_Timer::defs::i_control_yielded>(mbs).empty();
+                received_control_yielded = !cadmium::get_messages<typename Reposition_Timer::defs::i_control_yielded>(mbs).empty();
 
                 if (received_control_yielded) {
                     state.current_state = States::PILOT_CONTROL;
@@ -213,25 +211,25 @@ public:
 
     // confluence transition
     // Used to call set call precedent
-    void confluence_transition([[maybe_unused]] TIME e, typename make_message_bags<input_ports>::type mbs) {
+    void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         internal_transition();
         external_transition(TIME(), std::move(mbs));
     }
 
     // output function
-    [[nodiscard]] typename make_message_bags<output_ports>::type output() const {
-        typename make_message_bags<output_ports>::type bags;
-        vector<bool> bag_port_out;
-        vector<message_landing_point_t> bag_port_lp_out;
-        vector<message_boss_mission_update_t> boss_messages;
-        vector<message_update_gcs_t> gcs_messages;
+    [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
+        typename cadmium::make_message_bags<output_ports>::type bags;
+        std::vector<bool> bag_port_out;
+        std::vector<message_landing_point_t> bag_port_lp_out;
+        std::vector<message_boss_mission_update_t> boss_messages;
+        std::vector<message_update_gcs_t> gcs_messages;
 
         switch (state.current_state) {
             case States::NOTIFY_UPDATE: {
                 if (last_lp == 0) {
                     std::string message = "LP found. Holding for " + std::to_string(upd_time.getSeconds()) + "s";
                     message_update_gcs_t temp_gcs_update{message, Mav_Severities_E::MAV_SEVERITY_ALERT};
-                    get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).push_back(temp_gcs_update);
+                    cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).push_back(temp_gcs_update);
                 }
 
                 if (landing_point.id != last_lp) {
@@ -245,14 +243,14 @@ public:
                             "LP UPD");
                     temp_boss.missionNo = mission_number;
                     temp_boss.missionItemNo = landing_point.missionItemNo;
-                    get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).push_back(temp_boss);
+                    cadmium::get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).push_back(temp_boss);
                     last_lp = landing_point.id;
                 }
 
                 break;
             }
             case States::REQUEST_LAND: {
-                get_messages<typename Reposition_Timer::defs::o_land>(bags).push_back(landing_point);
+                cadmium::get_messages<typename Reposition_Timer::defs::o_land>(bags).push_back(landing_point);
                 break;
             }
             case States::LP_REPO: {
@@ -265,15 +263,15 @@ public:
                 gcs_messages.push_back(temp_gcs);
                 bag_port_lp_out.push_back(landing_point);
                 bag_port_out.push_back(true);
-                get_messages<typename Reposition_Timer::defs::o_cancel_hover>(bags) = bag_port_out;
-                get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
-                get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags) = gcs_messages;
-                get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags) = bag_port_lp_out;
+                cadmium::get_messages<typename Reposition_Timer::defs::o_cancel_hover>(bags) = bag_port_out;
+                cadmium::get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
+                cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags) = gcs_messages;
+                cadmium::get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags) = bag_port_lp_out;
                 break;
             }
             case States::NEW_LP_REPO:
                 bag_port_lp_out.push_back(landing_point);
-                get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags) = bag_port_lp_out;
+                cadmium::get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags) = bag_port_lp_out;
                 break;
             default:
                 break;
@@ -293,7 +291,7 @@ public:
             case States::HANDOVER_CTRL:
             case States::PILOT_CONTROL:
             case States::LANDING_ROUTINE:
-                next_internal = numeric_limits<TIME>::infinity();
+                next_internal = std::numeric_limits<TIME>::infinity();
                 break;
             case States::UPDATE_LP:
                 next_internal = upd_time;
@@ -313,8 +311,8 @@ public:
         return next_internal;
     }
 
-    friend ostringstream& operator<<(ostringstream& os, const typename Reposition_Timer<TIME>::state_type& i) {
-        os << (string("State: ") + enumToString(i.current_state) + string("\n"));
+    friend std::ostringstream& operator<<(std::ostringstream& os, const typename Reposition_Timer<TIME>::state_type& i) {
+        os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
         return os;
     }
 

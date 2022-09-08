@@ -27,8 +27,6 @@
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-using namespace cadmium;
-
 // Atomic model
 template<typename START_TYPE, typename QUIT_TYPE, typename TIME>
 class Polling_Condition_Input {
@@ -51,9 +49,9 @@ public:
 
 	// Input and output port definitions
 	struct defs {
-		struct o_message : public out_port<bool> { };
-		struct i_start : public in_port<START_TYPE> { };
-		struct i_quit : public in_port<QUIT_TYPE> { };
+		struct o_message : public cadmium::out_port<bool> { };
+		struct i_start : public cadmium::in_port<START_TYPE> { };
+		struct i_quit : public cadmium::in_port<QUIT_TYPE> { };
 	};
 
 	// Default constructor
@@ -106,29 +104,29 @@ public:
 	// External transitions
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename Polling_Condition_Input::defs::i_quit>(mbs).size() >= 1) {
+	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		if (cadmium::get_messages<typename Polling_Condition_Input::defs::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
-		else if (get_messages<typename Polling_Condition_Input::defs::i_start>(mbs).size() >= 1) {
+		else if (cadmium::get_messages<typename Polling_Condition_Input::defs::i_start>(mbs).size() >= 1) {
 			state.current_state = States::POLL;
 		}
 	}
 
 	// Confluence transition
 	// Used to call set call precedence
-	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		external_transition(TIME(), std::move(mbs));
 		internal_transition();
 	}
 
 	// Output function
-	typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
+	typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> bag_port_message;
 		if (state.current_state == States::POLL && state.condition_met) {
 			bag_port_message.push_back(true);
-			get_messages<typename Polling_Condition_Input::defs::o_message>(bags) = bag_port_message;
+			cadmium::get_messages<typename Polling_Condition_Input::defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}

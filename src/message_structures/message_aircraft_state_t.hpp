@@ -47,7 +47,7 @@ struct message_aircraft_state_t {
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
+std::ostream& operator<<(std::ostream& os, const message_aircraft_state_t& msg) {
     os  << std::fixed << std::setprecision(2)
         << msg.gps_time << " "
         << std::fixed << std::setprecision(7)
@@ -65,7 +65,7 @@ ostream& operator<<(ostream& os, const message_aircraft_state_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, message_aircraft_state_t& msg) {
+std::istream& operator>> (std::istream& is, message_aircraft_state_t& msg) {
 	is >> msg.gps_time;
 	is >> msg.lat;
 	is >> msg.lon;
