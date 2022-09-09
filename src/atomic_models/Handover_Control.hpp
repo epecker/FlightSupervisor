@@ -39,8 +39,8 @@ template<typename TIME>
 class Handover_Control {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
 	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
@@ -54,10 +54,10 @@ public:
 	);
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Handover_Control_input_ports "Input Ports" and
+	 *	\ref 	Handover_Control_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
     struct defs {
         struct i_hover_criteria_met : public cadmium::in_port<bool> {};
@@ -71,12 +71,13 @@ public:
     };
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var 	i_hover_criteria_met 	[input] Port for receiving updates on whether the previously commanded hover was achieved.
-	 * 	\var 	i_pilot_handover 		[input] Port for receiving signal indicating control should be handed over to the pilot.
-	 * 	\var 	i_pilot_takeover 		[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
-	 * 	\var 	i_start_mission 		[input] Port for receiving signal indicating the mission has started.
+	 * 	\anchor	Handover_Control_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param 	i_hover_criteria_met 	Port for receiving updates on whether the previously commanded hover was achieved.
+	 * 	\param 	i_pilot_handover 		Port for receiving signal indicating control should be handed over to the pilot.
+	 * 	\param 	i_pilot_takeover 		Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\param 	i_start_mission 		Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
 		typename defs::i_hover_criteria_met,
@@ -86,11 +87,12 @@ public:
 	>;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_notify_pilot		[output] Port for notifying the pilot that they should take control of the aircraft.
-	 * 	\var	o_control_yielded	[output] Port for sending an acknowledgement that the supervisor has relinquished control of the aircraft.
-	 * 	\var	o_stabilize 		[output] Port for requesting the helicopter hover at a specific location.
+	 *	\anchor	Handover_Control_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_notify_pilot		Port for notifying the pilot that they should take control of the aircraft.
+	 * 	\param	o_control_yielded	Port for sending an acknowledgement that the supervisor has relinquished control of the aircraft.
+	 * 	\param	o_stabilize 		Port for requesting the helicopter hover at a specific location.
 	 */
 	using output_ports = std::tuple<
 		typename defs::o_notify_pilot,
@@ -99,9 +101,10 @@ public:
 	>;
 
 	/**
-	 *	\struct	state_type
-	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 	Current state of atomic model.
+	 *	\anchor	Handover_Control_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
 		States current_state;

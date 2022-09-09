@@ -46,8 +46,8 @@ template<typename TIME>
 class LP_Manager {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
 	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
@@ -66,10 +66,10 @@ public:
 	);
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	LP_Manager_input_ports "Input Ports" and
+	 *	\ref 	LP_Manager_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
 		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
@@ -91,15 +91,16 @@ public:
 	};
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var 	i_aircraft_state 	[input] Port for receiving the current state of the aircraft.
-	 * 	\var	i_control_yielded	[input] Port for receiving signal indicating control has been handed over to the pilot
-	 * 	\var	i_fcc_command_land	[input] Port for receiving notification that a landing will be attempted.
-	 * 	\var	i_lp_recv			[input] Port for receiving landing points from the perception system.
-	 * 	\var 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
-	 * 	\var	i_plp_ach			[input] Port for receiving signal indicating that the planned landing point has been achieved.
-	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 * 	\anchor	LP_Manager_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param 	i_aircraft_state 	Port for receiving the current state of the aircraft.
+	 * 	\param	i_control_yielded	Port for receiving signal indicating control has been handed over to the pilot
+	 * 	\param	i_fcc_command_land	Port for receiving notification that a landing will be attempted.
+	 * 	\param	i_lp_recv			Port for receiving landing points from the perception system.
+	 * 	\param 	i_pilot_takeover 	Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\param	i_plp_ach			Port for receiving signal indicating that the planned landing point has been achieved.
+	 * 	\param 	i_start_mission 	Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
 		typename defs::i_aircraft_state,
@@ -112,16 +113,17 @@ public:
 	>;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_fcc_command_orbit				[output] Port for sending orbit commands to the FCC.
-	 * 	\var	o_lp_expired					[output] Port for sending notifcation that the LP accept timer has expired.
-	 * 	\var	o_lp_new						[output] Port for sending new valid landing points.
-	 * 	\var	o_pilot_handover				[output] Port for requesting that control be handed over to the pilot.
-	 * 	\var	o_request_aircraft_state 		[output] Port for requesting the current aircraft state.
-	 * 	\var	o_set_mission_monitor_status 	[output] Port for telling the mission monitor to stop monitoring mission progress.
-	 * 	\var	o_update_boss 					[output] Port for sending updates to BOSS.
-	 * 	\var	o_update_gcs 					[output] Port for sending updates to the GCS.
+	 *	\anchor	LP_Manager_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_fcc_command_orbit				Port for sending orbit commands to the FCC.
+	 * 	\param	o_lp_expired					Port for sending notifcation that the LP accept timer has expired.
+	 * 	\param	o_lp_new						Port for sending new valid landing points.
+	 * 	\param	o_pilot_handover				Port for requesting that control be handed over to the pilot.
+	 * 	\param	o_request_aircraft_state 		Port for requesting the current aircraft state.
+	 * 	\param	o_set_mission_monitor_status 	Port for telling the mission monitor to stop monitoring mission progress.
+	 * 	\param	o_update_boss 					Port for sending updates to BOSS.
+	 * 	\param	o_update_gcs 					Port for sending updates to the GCS.
 	 */
 	using output_ports = std::tuple<
 		typename defs::o_fcc_command_orbit,
@@ -135,9 +137,10 @@ public:
 	>;
 
 	/**
-	 *	\struct	state_type
-	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 	Current state of atomic model.
+	 *	\anchor	LP_Manager_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
 		States current_state;

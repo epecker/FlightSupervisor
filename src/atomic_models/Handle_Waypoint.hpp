@@ -39,8 +39,8 @@ template<typename TIME>
 class Handle_Waypoint {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par		States
+	 * 	Declaration of the states of the atomic model.
 	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
@@ -50,10 +50,10 @@ public:
 	);
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Handle_Waypoint_input_ports "Input Ports" and
+	 *	\ref 	Handle_Waypoint_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
 		struct i_pilot_takeover : public cadmium::out_port<bool> {};
@@ -64,31 +64,34 @@ public:
 	};
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var	i_pilot_takeover	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
-	 * 	\var	i_start_mission		[input] Port for receiving signal indicating the mission has started.
-	 * 	\var	i_waypoint			[input] Port for receiving new waypoints during the on-route phase.
+	 * 	\anchor	Handle_Waypoint_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param	i_pilot_takeover	Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\param	i_start_mission		Port for receiving signal indicating the mission has started.
+	 * 	\param	i_waypoint			Port for receiving new waypoints during the on-route phase.
 	 */
 	using input_ports = std::tuple<
-			typename defs::i_pilot_takeover,
-			typename defs::i_start_mission,
-			typename defs::i_waypoint
+		typename defs::i_pilot_takeover,
+		typename defs::i_start_mission,
+		typename defs::i_waypoint
 	>;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_fcc_waypoint_update	[output] Port for sending waypoint commands to the FCC.
+	 *	\anchor	Handle_Waypoint_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_fcc_waypoint_update	Port for sending waypoint commands to the FCC.
 	 */
 	using output_ports = std::tuple<
-			typename defs::o_fcc_waypoint_update
+		typename defs::o_fcc_waypoint_update
 	>;
 
 	/**
-	 *	\struct	state_type
-	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 	Current state of atomic model.
+	 *	\anchor	Handle_Waypoint_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
 		States current_state;

@@ -40,8 +40,8 @@ template<typename TIME>
 class Reposition_Timer {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
 	 */
     DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
         (IDLE)
@@ -57,10 +57,10 @@ public:
     );
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Reposition_Timer_input_ports "Input Ports" and
+	 *	\ref 	Reposition_Timer_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
     struct defs {
         struct i_control_yielded : public cadmium::in_port<bool> {};
@@ -78,13 +78,14 @@ public:
     };
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var	i_control_yielded	[input] Port for receiving signal indicating control has been handed over to the pilot
-     *  \var    i_lp_crit_met       [input] Port for receiving signal indicating that the helicopter is now hovering over a landing point.
-     *  \var    i_lp_new            [input] Port for receiving new valid landing points that should be repositioned to.
-	 * 	\var 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
-	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 * 	\anchor	Reposition_Timer_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param	i_control_yielded	[input] Port for receiving signal indicating control has been handed over to the pilot
+     *  \param  i_lp_crit_met       [input] Port for receiving signal indicating that the helicopter is now hovering over a landing point.
+     *  \param  i_lp_new            [input] Port for receiving new valid landing points that should be repositioned to.
+	 * 	\param 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\param 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
      */
     using input_ports = std::tuple<
             typename Reposition_Timer::defs::i_control_yielded,
@@ -95,14 +96,15 @@ public:
     >;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-     *  \var    o_land                  [output] Port for requesting that the landing be attempted at a landing point.
-	 * 	\var	o_cancel_hover 			[output] Port for cancelling a previously requested stabilization.
-	 * 	\var	o_pilot_handover		[output] Port for requesting that control be handed over to the pilot.
-     *  \var    o_request_reposition    [output] Port for requesting that a landing point be repositioned to.
-	 * 	\var	o_update_boss 			[output] Port for sending updates to BOSS.
-	 * 	\var	o_update_gcs 			[output] Port for sending updates to the GCS.
+	 *	\anchor	Reposition_Timer_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+     *  \param  o_land                  Port for requesting that the landing be attempted at a landing point.
+	 * 	\param	o_cancel_hover 			Port for cancelling a previously requested stabilization.
+	 * 	\param	o_pilot_handover		Port for requesting that control be handed over to the pilot.
+     *  \param  o_request_reposition    Port for requesting that a landing point be repositioned to.
+	 * 	\param	o_update_boss 			Port for sending updates to BOSS.
+	 * 	\param	o_update_gcs 			Port for sending updates to the GCS.
      */
     using output_ports = std::tuple<
             typename Reposition_Timer::defs::o_land,
@@ -114,9 +116,10 @@ public:
     >;
 
 	/**
-	 *	\struct	state_type
-	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 	Current state of atomic model.
+	 *	\anchor	Reposition_Timer_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
 	 */
     struct state_type {
         States current_state;

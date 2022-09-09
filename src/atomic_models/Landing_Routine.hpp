@@ -43,8 +43,8 @@ template<typename TIME>
 class Landing_Routine {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
 	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
@@ -57,10 +57,10 @@ public:
 	);
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Landing_Routine_input_ports "Input Ports" and
+	 *	\ref 	Landing_Routine_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
 		struct i_land : public cadmium::in_port<message_landing_point_t> {};
@@ -76,12 +76,13 @@ public:
 	};
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var	i_land				[input] Port for receiving a request to land at a landing point.
-	 * 	\var	i_landing_achieved	[input] Port for receiving signal indicating that the aircraft has successfully landed.
-	 * 	\var 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
-	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 * 	\anchor	Landing_Routine_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param	i_land				Port for receiving a request to land at a landing point.
+	 * 	\param	i_landing_achieved	Port for receiving signal indicating that the aircraft has successfully landed.
+	 * 	\param 	i_pilot_takeover 	Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\param 	i_start_mission 	Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
 		typename Landing_Routine<TIME>::defs::i_land,
@@ -91,13 +92,14 @@ public:
 	>;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_fcc_command_land		[output] Port for sending land commands to the FCC.
-	 * 	\var	o_mission_complete		[output] Port for declaring the mission as being complete after landing.
-	 * 	\var	o_update_boss 			[output] Port for sending updates to BOSS.
-	 * 	\var	o_update_gcs 			[output] Port for sending updates to the GCS.
-	 * 	\var	o_update_mission_item	[output] Port for updating the mission manager that the last mission item has been reached.
+	 *	\anchor	Landing_Routine_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_fcc_command_land		Port for sending land commands to the FCC.
+	 * 	\param	o_mission_complete		Port for declaring the mission as being complete after landing.
+	 * 	\param	o_update_boss 			Port for sending updates to BOSS.
+	 * 	\param	o_update_gcs 			Port for sending updates to the GCS.
+	 * 	\param	o_update_mission_item	Port for updating the mission manager that the last mission item has been reached.
 	 */
 	using output_ports = std::tuple<
 		typename Landing_Routine<TIME>::defs::o_fcc_command_land,
@@ -108,9 +110,10 @@ public:
 	>;
 
 	/**
-	 *	\struct	state_type
-	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 	Current state of atomic model.
+	 *	\anchor	Landing_Routine_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
 		States current_state;

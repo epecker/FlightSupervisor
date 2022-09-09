@@ -33,7 +33,7 @@
 #include <string>
 
 /**
- * 	\file		Stabilize
+ * 	\class		Stabilize
  *	\brief		Definition of the Stabilize atomic model.
  *	\details	This class defines the Stabilize atomic model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when 
@@ -43,8 +43,8 @@ template<typename TIME>
 class Stabilize {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
 	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
@@ -58,10 +58,10 @@ public:
 	)
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Stabilize_input_ports "Input Ports" and
+	 *	\ref 	Stabilize_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
 		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
@@ -76,12 +76,13 @@ public:
 	};
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var 	i_aircraft_state	[input] Port for receiving the current state of the aircraft.
-	 * 	\var	i_cancel_hover		[input] Port for receiving signal indicating that the current attempt to hover should be aborted.
-	 * 	\var	i_stabilize			[input] Port for receiving hover criteria to attempt to hover at.
-	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 * 	\anchor	Stabilize_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param 	i_aircraft_state	Port for receiving the current state of the aircraft.
+	 * 	\param	i_cancel_hover		Port for receiving signal indicating that the current attempt to hover should be aborted.
+	 * 	\param	i_stabilize			Port for receiving hover criteria to attempt to hover at.
+	 * 	\param 	i_start_mission 	Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
 		typename Stabilize::defs::i_aircraft_state,
@@ -91,12 +92,13 @@ public:
     >;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_fcc_command_hover			[output] Port for sending hover commands to the FCC.
-	 * 	\var	o_hover_criteria_met		[output] Port for sending notification that the helicopter is now hovering at the specified hover criteria.
-	 * 	\var	o_request_aircraft_state	[output] Port for requesting the current aircraft state.
-	 * 	\var	o_update_gcs 				[output] Port for sending updates to the GCS.
+	 *	\anchor	Stabilize_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_fcc_command_hover			Port for sending hover commands to the FCC.
+	 * 	\param	o_hover_criteria_met		Port for sending notification that the helicopter is now hovering at the specified hover criteria.
+	 * 	\param	o_request_aircraft_state	Port for requesting the current aircraft state.
+	 * 	\param	o_update_gcs 				Port for sending updates to the GCS.
 	 */
 	using output_ports = std::tuple<
 		typename Stabilize::defs::o_fcc_command_hover,
@@ -108,10 +110,10 @@ public:
 	/**
 	 *	\struct	state_type
 	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 			Current state of atomic model.
-	 *	\var	in_tolerance			Boolean for whether the helicopter is currently within the specified tolerance of the hover criteria.
-	 *	\var	time_tolerance_met		Boolean for whether the time tolerance of the hover criteria has been met.
-	 *	\var	stabilization_time_prev	Remaining time left of the time tolerance before the hover criteria is considered met.
+	 * 	\param 	current_state 			Current state of atomic model.
+	 *	\param	in_tolerance			Boolean for whether the helicopter is currently within the specified tolerance of the hover criteria.
+	 *	\param	time_tolerance_met		Boolean for whether the time tolerance of the hover criteria has been met.
+	 *	\param	stabilization_time_prev	Remaining time left of the time tolerance before the hover criteria is considered met.
 	 */
 	struct state_type {
 		States current_state;

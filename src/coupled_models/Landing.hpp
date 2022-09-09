@@ -54,10 +54,10 @@ class Landing {
 
 public:
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		iports
-	 * \see 	oports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Handle_Waypoint_input_ports "Input Ports" and
+	 *	\ref 	Handle_Waypoint_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
 		/***** Define input port for coupled models *****/
@@ -96,20 +96,15 @@ public:
 	std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> lp_reposition = std::make_shared<cadmium::dynamic::modeling::coupled<TIME>>("lp_reposition", lpr.submodels, lpr.iports, lpr.oports, lpr.eics, lpr.eocs, lpr.ics);
 
 	/**
-	 *	\struct	iports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var 	i_aircraft_state
-	 * 	[input] Port for
-	 * 	\var 	i_landing_achieved
-	 * 	[input] Port for
-	 * 	\var 	i_LP_recv
-	 * 	[input] Port for
-	 * 	\var 	i_pilot_takeover
-	 * 	[input] Port for
-	 * 	\var 	i_PLP_ach
-	 * 	[input] Port for
-	 * 	\var 	i_start_mission
-	 * 	[input] Port for
+	 * 	\anchor	Handle_Waypoint_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param 	i_aircraft_state	Port for
+	 * 	\param 	i_landing_achieved	Port for
+	 * 	\param 	i_LP_recv			Port for
+	 * 	\param 	i_pilot_takeover	Port for
+	 * 	\param 	i_PLP_ach			Port for
+	 * 	\param 	i_start_mission		Port for
 	 */
 	cadmium::dynamic::modeling::Ports iports = {
 		typeid(Landing::defs::i_aircraft_state),
@@ -121,36 +116,23 @@ public:
 	};
 
 	/**
-	 *	\struct	oports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var 	o_control_yielded
-	 * 	[output] Port for
-	 * 	\var 	o_fcc_command_hover
-	 * 	[output] Port for
-	 * 	\var 	o_fcc_command_land
-	 * 	[output] Port for
-	 * 	\var 	o_fcc_command_orbit
-	 * 	[output] Port for
-	 * 	\var 	o_fcc_command_velocity
-	 * 	[output] Port for
-	 * 	\var 	o_LP_expired
-	 * 	[output] Port for
-	 * 	\var 	o_LP_new
-	 * 	[output] Port for
-	 * 	\var 	o_mission_complete
-	 * 	[output] Port for
-	 * 	\var 	o_notify_pilot
-	 * 	[output] Port for
-	 * 	\var 	o_request_aircraft_state
-	 * 	[output] Port for
-	 * 	\var 	o_set_mission_monitor_status
-	 * 	[output] Port for
-	 * 	\var 	o_update_boss
-	 * 	[output] Port for
-	 * 	\var 	o_update_gcs
-	 * 	[output] Port for
-	 * 	\var 	o_update_mission_item
-	 * 	[output] Port for
+	 *	\anchor	Handle_Waypoint_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param 	o_control_yielded				Port for
+	 * 	\param 	o_fcc_command_hover				Port for
+	 * 	\param 	o_fcc_command_land				Port for
+	 * 	\param 	o_fcc_command_orbit				Port for
+	 * 	\param 	o_fcc_command_velocity			Port for
+	 * 	\param 	o_LP_expired					Port for
+	 * 	\param 	o_LP_new					 	Port for
+	 * 	\param 	o_mission_complete				Port for
+	 * 	\param 	o_notify_pilot					Port for
+	 * 	\param 	o_request_aircraft_state		Port for
+	 * 	\param 	o_set_mission_monitor_status	Port for
+	 * 	\param 	o_update_boss					Port for
+	 * 	\param 	o_update_gcs					Port for
+	 * 	\param 	o_update_mission_item			Port for
 	 */
 	cadmium::dynamic::modeling::Ports oports = {
 		typeid(Landing::defs::o_control_yielded),
@@ -170,16 +152,13 @@ public:
 	};
 
 	/**
-	 *	\struct	submodels
-	 * 	\brief 	Definition of the sub-models that make up the coupled model.
-	 * 	\var 	lp_manager
-	 * 	Model for
-	 *	\var 	stabilize
-	 *	Model for
-	 *	\var 	handover_control
-	 *	Model for
-	 *	\var 	lp_reposition
-	 *	Model for
+	 *	\anchor	Handle_Waypoint_submodels
+	 * 	\par 	Output Ports
+	 * 	Definition of the sub-models that make up the coupled model.
+	 * 	\param 	lp_manager			Model for
+	 *	\param 	stabilize			Model for
+	 *	\param 	handover_control	Model for
+	 *	\param 	lp_reposition		Model for
 	 */
 	cadmium::dynamic::modeling::Models submodels = {
 		lp_manager,
@@ -189,9 +168,9 @@ public:
 	};
 
 	/**
-	 * \struct	eics
-	 * \brief	Definition of the external to internal couplings for the model.
-	 * \see 	Landing
+	 * 	\par 	External Input Couplings
+	 *	Definition of the external to internal couplings for the model.
+	 * 	\see 	Landing
 	 */
 	cadmium::dynamic::modeling::EICs eics = {
 		// lp_manager
@@ -217,9 +196,9 @@ public:
 	};
 
 	/**
-	 * \struct	eocs
-	 * \brief	Definition of the internal to external couplings for the model.
-	 * \see 	Landing
+	 * 	\par 	External Output Couplings
+	 *	Definition of the internal to external couplings for the model.
+	 * 	\see 	Landing
 	 */
 	cadmium::dynamic::modeling::EOCs eocs = {
 		// lp_manager
@@ -252,9 +231,9 @@ public:
 	};
 
 	/**
-	 * \struct	ics
-	 * \brief	Definition of the internal to internal couplings for the model.
-	 * \see 	Landing
+	 * 	\par 	Internal Couplings
+	 * 	Definition of the internal to internal couplings for the model.
+	 * 	\see 	Landing
 	 */
 	cadmium::dynamic::modeling::ICs ics = {
 		// lp_manager

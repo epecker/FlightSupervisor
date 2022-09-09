@@ -5,6 +5,7 @@
 				simulation software. The model represents the behaviour of the Supervisor at the beginning
 				of the mission when the autonomy system is being initialized.
  *	\author		Tanner Trautrim
+ *	\author		James Horner
  */
 
 #ifndef  MISSION_INITIALIZATION_HPP
@@ -39,8 +40,8 @@ template<typename TIME>
 class Mission_Initialization {
 public:
 	/**
-	 *	\enum	States
-	 * 	\brief	Declaration of the states of the atomic model.
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
 	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
@@ -57,10 +58,10 @@ public:
 	);
 
 	/**
-	 * \struct	defs
-	 * \brief 	Declaration of the ports for the model.
-	 * \see		input_ports
-	 * \see 	output_ports
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Mission_Initialization_input_ports "Input Ports" and
+	 *	\ref 	Mission_Initialization_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
 		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
@@ -75,11 +76,12 @@ public:
 	};
 
 	/**
-	 *	\struct	input_ports
-	 * 	\brief 	Defintion of the input ports for the model.
-	 * 	\var 	i_aircraft_state 	[input] Port for receiving the current state of the aircraft.
-	 * 	\var	i_perception_status	[input]	Port for receiving the status of the perception system.
-	 * 	\var 	i_start_mission 	[input] Port for receiving signal to start the supervisor.
+	 * 	\anchor	Mission_Initialization_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 * 	\param 	i_aircraft_state 	Port for receiving the current state of the aircraft.
+	 * 	\param	i_perception_status	Port for receiving the status of the perception system.
+	 * 	\param 	i_start_mission 	Port for receiving signal to start the supervisor.
 	 */
 	using input_ports = std::tuple<
 		typename Mission_Initialization::defs::i_aircraft_state,
@@ -88,13 +90,14 @@ public:
 	>;
 
 	/**
-	 *	\struct	output_ports
-	 * 	\brief 	Defintion of the output ports for the model.
-	 * 	\var	o_request_perception_status		[output] Port for requesting the current state of the perception system.
-	 * 	\var	o_request_aircraft_state 		[output] Port for requesting the current aircraft state.
-	 * 	\var	o_set_mission_monitor_status 	[output] Port for telling the mission monitor to stop monitoring mission progress.
-	 *	\var	o_start_mission					[output] Port for sending a notification that the mission has started.
-	 * 	\var	o_update_gcs 					[output] Port for sending updates to the GCS.
+	 *	\anchor	Mission_Initialization_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_request_perception_status		Port for requesting the current state of the perception system.
+	 * 	\param	o_request_aircraft_state 		Port for requesting the current aircraft state.
+	 * 	\param	o_set_mission_monitor_status 	Port for telling the mission monitor to stop monitoring mission progress.
+	 *	\param	o_start_mission					Port for sending a notification that the mission has started.
+	 * 	\param	o_update_gcs 					Port for sending updates to the GCS.
 	 */
 	using output_ports = std::tuple<
 		typename Mission_Initialization::defs::o_request_perception_status,
@@ -105,10 +108,10 @@ public:
 	>;
 
 	/**
-	 *	\struct	state_type
-	 * 	\brief 	Defintion of the states of the atomic model.
-	 * 	\var 	current_state 	
-	 * 	Current state of atomic model.
+	 *	\anchor	Handle_Waypoint_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
 		States current_state;
