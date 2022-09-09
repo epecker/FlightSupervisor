@@ -62,14 +62,14 @@ public:
 
 	//Define the external to internal couplings for the Landing Point Reposition model.
  	cadmium::dynamic::modeling::EICs eics = {
-		 cadmium::dynamic::translate::make_EIC<On_Route_defs::i_pilot_takeover, Handle_Waypoint_defs::i_pilot_takeover>("handle_waypoint"),
-		 cadmium::dynamic::translate::make_EIC<On_Route_defs::i_start_mission, Handle_Waypoint_defs::i_start_mission>("handle_waypoint"),
-		 cadmium::dynamic::translate::make_EIC<On_Route_defs::i_waypoint, Handle_Waypoint_defs::i_waypoint>("handle_waypoint")
+		 cadmium::dynamic::translate::make_EIC<On_Route_defs::i_pilot_takeover, Handle_Waypoint<TIME>::defs::i_pilot_takeover>("handle_waypoint"),
+		 cadmium::dynamic::translate::make_EIC<On_Route_defs::i_start_mission, Handle_Waypoint<TIME>::defs::i_start_mission>("handle_waypoint"),
+		 cadmium::dynamic::translate::make_EIC<On_Route_defs::i_waypoint, Handle_Waypoint<TIME>::defs::i_waypoint>("handle_waypoint")
 	};
 
 	//Define the internal to external couplings for the Landing Point Reposition model.
  	cadmium::dynamic::modeling::EOCs eocs = {
-		 cadmium::dynamic::translate::make_EOC<Handle_Waypoint_defs::o_fcc_waypoint_update, On_Route_defs::o_fcc_waypoint_update>("handle_waypoint"),
+		 cadmium::dynamic::translate::make_EOC<Handle_Waypoint<TIME>::defs::o_fcc_waypoint_update, On_Route_defs::o_fcc_waypoint_update>("handle_waypoint"),
 	};
 
 	//Define the internal to internal couplings for the Landing Point Reposition model.

@@ -1,8 +1,9 @@
 /**
- *	\brief		An atomic model representing the Stabilize model.
- *	\details	This header file define the Stabilize model as
-				an atomic model for use in the Cadmium DEVS
-				simulation software.
+ * 	\file		Stabilize.hpp
+ *	\brief		Definition of the Stabilize atomic model.
+ *	\details	This header file defines the Stabilize atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				stabilizing at a given hover criteria.
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -10,28 +11,41 @@
 #ifndef STABILIZE_HPP
 #define STABILIZE_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits> // Used to set the time advance to infinity
-#include <cassert> // Used to check values and stop the simulation
-#include <string>
-
+// Messages structures
 #include "../message_structures/message_hover_criteria_t.hpp"
 #include "../message_structures/message_aircraft_state_t.hpp"
 #include "../message_structures/message_fcc_command_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 
-#include "mavNRC/geo.h"
+// Utility functions
 #include "../enum_string_conversion.hpp"
 #include "../time_conversion.hpp"
+#include <mavNRC/geo.h>
 #include "../Constants.hpp"
 
-// Atomic Model
-template<typename TIME> class Stabilize {
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits> // Used to set the time advance to infinity
+#include <cassert>
+#include <string>
+
+/**
+ * 	\file		Stabilize
+ *	\brief		Definition of the Stabilize atomic model.
+ *	\details	This class defines the Stabilize atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when 
+				stabilizing at a given hover criteria.
+ */
+template<typename TIME> 
+class Stabilize {
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(WAIT_STABILIZE)
@@ -43,7 +57,12 @@ public:
 		(HOVER)
 	)
 
-	// Input and output port definition
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
 	struct defs {
 		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
 		struct i_cancel_hover : public cadmium::in_port<bool> {};
@@ -56,7 +75,14 @@ public:
 		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
 	};
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var 	i_aircraft_state	[input] Port for receiving the current state of the aircraft.
+	 * 	\var	i_cancel_hover		[input] Port for receiving signal indicating that the current attempt to hover should be aborted.
+	 * 	\var	i_stabilize			[input] Port for receiving hover criteria to attempt to hover at.
+	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+	 */
 	using input_ports = std::tuple<
 		typename Stabilize::defs::i_aircraft_state,
 		typename Stabilize::defs::i_cancel_hover,
@@ -64,7 +90,14 @@ public:
 		typename Stabilize::defs::i_start_mission
     >;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+	 * 	\var	o_fcc_command_hover			[output] Port for sending hover commands to the FCC.
+	 * 	\var	o_hover_criteria_met		[output] Port for sending notification that the helicopter is now hovering at the specified hover criteria.
+	 * 	\var	o_request_aircraft_state	[output] Port for requesting the current aircraft state.
+	 * 	\var	o_update_gcs 				[output] Port for sending updates to the GCS.
+	 */
 	using output_ports = std::tuple<
 		typename Stabilize::defs::o_fcc_command_hover,
 		typename Stabilize::defs::o_hover_criteria_met,
@@ -72,19 +105,27 @@ public:
 		typename Stabilize::defs::o_update_gcs
 	>;
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 			Current state of atomic model.
+	 *	\var	in_tolerance			Boolean for whether the helicopter is currently within the specified tolerance of the hover criteria.
+	 *	\var	time_tolerance_met		Boolean for whether the time tolerance of the hover criteria has been met.
+	 *	\var	stabilization_time_prev	Remaining time left of the time tolerance before the hover criteria is considered met.
+	 */
 	struct state_type {
 		States current_state;
 		bool in_tolerance;
 		bool time_tolerance_met;
 		TIME stabilization_time_prev;
         #ifdef DEBUG_MODELS
-        string failures;
+        std::string failures;
         #endif
 	} state;
 
-	// Default constructor
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Stabilize() {
 		state.current_state = States::IDLE;
 		state.in_tolerance = false;
@@ -95,7 +136,10 @@ public:
 		aircraft_state = message_aircraft_state_t();
 	}
 
-	// Default constructor
+	/**
+	 * \brief 	Constructor for the model with parameter for how fast the aircraft state should be polled when checking the hover criteria.
+	 * \param	polling_rate	TIME rate at which the aircraft state should be polled.
+	 */
 	explicit Stabilize(TIME polling_rate) {
 		state.current_state = States::IDLE;
 		state.in_tolerance = false;
@@ -106,7 +150,11 @@ public:
 		aircraft_state = message_aircraft_state_t();
 	}
 
-	// Constructor with initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	explicit Stabilize(States initial_state) {
 		state.current_state = initial_state;
 		state.in_tolerance = false;
@@ -117,7 +165,12 @@ public:
 		aircraft_state = message_aircraft_state_t();
 	}
 
-	// Constructor with initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	polling_rate	TIME rate at which the aircraft state should be polled.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	Stabilize(TIME polling_rate, States initial_state) {
 		state.current_state = initial_state;
 		state.in_tolerance = false;
@@ -128,10 +181,7 @@ public:
 		aircraft_state = message_aircraft_state_t();
 	}
 
-	// Internal transitions
-	// These are transitions occurring from internal inputs
-	// There are no internal transitions
-	// (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::REQUEST_AIRCRAFT_STATE:
@@ -156,9 +206,7 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occurring from external inputs
-	// (required for the simulator)
+	/// External transitions of the model
 	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_cancel_hover = !cadmium::get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
 		bool received_start_mission = !cadmium::get_messages<typename Stabilize::defs::i_start_mission>(mbs).empty();
@@ -206,8 +254,7 @@ public:
 		}
 	}
 
-	// confluence transition;
-	// Used to call set call order
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_cancel_hover = !cadmium::get_messages<typename Stabilize::defs::i_cancel_hover>(mbs).empty();
 
@@ -218,8 +265,7 @@ public:
 		}
 	}
 
-	// output function
-	// Nothing to output
+	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> message_out;
@@ -263,8 +309,7 @@ public:
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
@@ -288,6 +333,10 @@ public:
 		return next_internal;
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Stabilize<TIME>::state_type& i) {
         #ifdef DEBUG_MODELS
         os << (string("State: ") + enumToString(i.current_state) + i.failures + "-") << i.stabilization_time_prev << string("\n");
@@ -297,44 +346,50 @@ public:
 		return os;
 	}
 
-	// Stub implementation for now so we can always hover.
-	bool calculate_hover_criteria_met(message_aircraft_state_t i_state) {
+private:
+	/// Variable for storing the hover criteria that the helicopter will hover at.
+	message_hover_criteria_t hover_criteria;
+	/// Variable for storing aircraft state when checking if the tolerance of the hover criteria has been met.
+	message_aircraft_state_t aircraft_state;
+	/// Variable for storing the rate at which the aircraft state should be polled.
+	TIME polling_rate;
 
+    /// Function for resetting the state of the model.
+	void reset_state() {
+		state.stabilization_time_prev = TIME("00:00:000");
+		state.in_tolerance = false;
+		state.time_tolerance_met = false;
+	}
+
+	/// @brief 	Function calculate_hover_criteria_met is used to check if a given aircraft state is within the current hover criteria.
+	/// @param 	i_state message_aircraft_state_t current state of the aircraft.
+	/// @return	true if the helicopter is within the criteria, false otherwise.
+	bool calculate_hover_criteria_met(message_aircraft_state_t i_state) {
 		if (abs(i_state.alt_MSL - hover_criteria.desiredAltMSL) >= hover_criteria.vertDistTolFt) {
             #ifdef DEBUG_MODELS
             state.failures = "-FAILED-ALT";
             #endif
 			return false;
 		}
+
 		//If the heading is negative wrap back into 0-360
 		while (i_state.hdg_Deg < 0.0) {
 			i_state.hdg_Deg += 360;
 		}
+
 		if (!isnan(hover_criteria.desiredHdgDeg) && abs(i_state.hdg_Deg - hover_criteria.desiredHdgDeg) >= hover_criteria.hdgToleranceDeg) {
             #ifdef DEBUG_MODELS
             state.failures = "-FAILED-HDG";
             #endif
 			return false;
 		}
+
 		if (abs(i_state.vel_Kts) >= hover_criteria.velTolKts) {
             #ifdef DEBUG_MODELS
             state.failures = "-FAILED-VEL";
             #endif
 			return false;
 		}
-
-		//Radius of the earth in meters (WGS-84).
-		// const float R = 6378137.0;
-
-		// double i_x = R * cos(i_state.lat) * cos(i_state.lon);
-		// double i_y = R * cos(i_state.lat) * sin(i_state.lon);
-		// double i_z = R * sin(i_state.lat);
-
-		// double goal_x = R * cos(hover_criteria.desiredLat) * cos(hover_criteria.desiredLon);
-		// double goal_y = R * cos(hover_criteria.desiredLat) * sin(hover_criteria.desiredLon);
-		// double goal_z = R * sin(hover_criteria.desiredLat);
-
-		// double distance_m = sqrt(pow((i_x - goal_x), 2) + pow((i_y - goal_y), 2) + pow((i_z - goal_z), 2));
 
 		float dist_xy_m, dist_z_m;
 		get_distance_to_point_global_wgs84(
@@ -353,17 +408,6 @@ public:
         state.failures = string("");
         #endif
 		return true;
-	}
-
-private:
-	message_hover_criteria_t hover_criteria;
-	message_aircraft_state_t aircraft_state;
-	TIME polling_rate;
-
-	void reset_state() {
-		state.stabilization_time_prev = TIME("00:00:000");
-		state.in_tolerance = false;
-		state.time_tolerance_met = false;
 	}
 };
 

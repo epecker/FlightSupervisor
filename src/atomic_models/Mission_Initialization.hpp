@@ -208,7 +208,7 @@ public:
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	/// Function for generating output from the model after internal transitions.
+	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> bool_port_out;

@@ -95,14 +95,14 @@ int main() {
 
 		// The output ports will be used to export in logging
 		cadmium::dynamic::modeling::EOCs eocs_TestDriver = {
-				cadmium::dynamic::translate::make_EOC<Handle_Waypoint_defs::o_fcc_waypoint_update,o_fcc_waypoint_update>("handle_waypoint")
+				cadmium::dynamic::translate::make_EOC<Handle_Waypoint<TIME>::defs::o_fcc_waypoint_update,o_fcc_waypoint_update>("handle_waypoint")
 		};
 
 		// This will connect our outputs from our input reader to the file
 		cadmium::dynamic::modeling::ICs ics_TestDriver = {
-				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out,Handle_Waypoint_defs::i_pilot_takeover>("ir_pilot_takeover", "handle_waypoint"),
-				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<int>::out,Handle_Waypoint_defs::i_start_mission>("ir_start_mission", "handle_waypoint"),
-				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out,Handle_Waypoint_defs::i_waypoint>("ir_waypoint", "handle_waypoint")
+				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out,Handle_Waypoint<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "handle_waypoint"),
+				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<int>::out,Handle_Waypoint<TIME>::defs::i_start_mission>("ir_start_mission", "handle_waypoint"),
+				cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out,Handle_Waypoint<TIME>::defs::i_waypoint>("ir_waypoint", "handle_waypoint")
 		};
 
 		shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> TEST_DRIVER = make_shared<cadmium::dynamic::modeling::coupled<TIME>>(

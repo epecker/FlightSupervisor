@@ -1,8 +1,9 @@
 /**
- *	\brief		An atomic model representing the reposition model.
- *	\details	This header file define the reposition model as
-				an atomic model for use in the Cadmium DEVS
-				simulation software.
+ * 	\file		Reposition_Timer.hpp
+ *	\brief		Definition of the Reposition Timer atomic model.
+ *	\details	This header file defines the Reposition Timer atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when valid LPs
+                are found and must be repositioned to within a specified amount of time.
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -10,29 +11,38 @@
 #ifndef REPOSITION_TIMER_HPP
 #define REPOSITION_TIMER_HPP
 
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-#include <limits> // Used to set the time advance to infinity
-#include <cassert> // Used to check values and stop the simulation
-#include <string>
-
-// Includes the macro DEFINE_ENUM_WITH_STRING_CONVERSIONS
-#include "../enum_string_conversion.hpp"
-
-// Data structures that are used in message transport
+// Messages structures
 #include "../message_structures/message_landing_point_t.hpp"
 #include "../message_structures/message_boss_mission_update_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 
-// Macros
+// Utility functions
+#include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
-// Atomic Model
-template<typename TIME> class Reposition_Timer {
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// System Libraries
+#include <limits> // Used to set the time advance to infinity
+#include <cassert>
+#include <string>
+
+/**
+ * 	\class		Reposition_Timer
+ *	\brief		Definition of the Reposition Timer atomic model.
+ *	\details	This class defines the Reposition Timer atomic model for use in the Cadmium DEVS
+				simulation software. The model represents the behaviour of the Supervisor when valid LPs
+                are found and must be repositioned to within a specified amount of time.
+ */
+template<typename TIME> 
+class Reposition_Timer {
 public:
-    // Used to keep track of the states
-    // (not required for the simulator)
+	/**
+	 *	\enum	States
+	 * 	\brief	Declaration of the states of the atomic model.
+	 */
     DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
         (IDLE)
         (WAIT_NEW_LP)
@@ -46,7 +56,12 @@ public:
         (PILOT_CONTROL)
     );
 
-    // Input and output port definition
+	/**
+	 * \struct	defs
+	 * \brief 	Declaration of the ports for the model.
+	 * \see		input_ports
+	 * \see 	output_ports
+	 */
     struct defs {
         struct i_control_yielded : public cadmium::in_port<bool> {};
         struct i_lp_crit_met : public cadmium::in_port<message_landing_point_t> {};
@@ -62,7 +77,15 @@ public:
         struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
     };
 
-    // Create a tuple of input ports (required for the simulator)
+	/**
+	 *	\struct	input_ports
+	 * 	\brief 	Defintion of the input ports for the model.
+	 * 	\var	i_control_yielded	[input] Port for receiving signal indicating control has been handed over to the pilot
+     *  \var    i_lp_crit_met       [input] Port for receiving signal indicating that the helicopter is now hovering over a landing point.
+     *  \var    i_lp_new            [input] Port for receiving new valid landing points that should be repositioned to.
+	 * 	\var 	i_pilot_takeover 	[input] Port for receiving signal indicating that the pilot has taken control from the supervisor.
+	 * 	\var 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
+     */
     using input_ports = std::tuple<
             typename Reposition_Timer::defs::i_control_yielded,
             typename Reposition_Timer::defs::i_lp_crit_met,
@@ -71,7 +94,16 @@ public:
             typename Reposition_Timer::defs::i_start_mission
     >;
 
-    // Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\struct	output_ports
+	 * 	\brief 	Defintion of the output ports for the model.
+     *  \var    o_land                  [output] Port for requesting that the landing be attempted at a landing point.
+	 * 	\var	o_cancel_hover 			[output] Port for cancelling a previously requested stabilization.
+	 * 	\var	o_pilot_handover		[output] Port for requesting that control be handed over to the pilot.
+     *  \var    o_request_reposition    [output] Port for requesting that a landing point be repositioned to.
+	 * 	\var	o_update_boss 			[output] Port for sending updates to BOSS.
+	 * 	\var	o_update_gcs 			[output] Port for sending updates to the GCS.
+     */
     using output_ports = std::tuple<
             typename Reposition_Timer::defs::o_land,
             typename Reposition_Timer::defs::o_cancel_hover,
@@ -81,13 +113,18 @@ public:
             typename Reposition_Timer::defs::o_update_gcs
     >;
 
-    // This is used to track the state of the atomic model.
-    // (required for the simulator)
+	/**
+	 *	\struct	state_type
+	 * 	\brief 	Defintion of the states of the atomic model.
+	 * 	\var 	current_state 	Current state of atomic model.
+	 */
     struct state_type {
         States current_state;
     } state;
 
-    // Default constructor
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
     Reposition_Timer() {
         state.current_state = States::IDLE;
         mission_number = 0;
@@ -97,7 +134,11 @@ public:
         last_lp = 0;
     }
 
-    // Constructor with timer parameter
+	/**
+	 * \brief 	Constructor for the model with parameters for the length of the reposition and update timers.
+	 * \param	i_lp_accept_time	TIME length of the reposition timer.
+	 * \param	i_orbit_time		TIME length of the update timer.
+	 */
     explicit Reposition_Timer(TIME i_repo_time, TIME i_upd_time) {
         state.current_state = States::IDLE;
         mission_number = 0;
@@ -107,7 +148,13 @@ public:
         last_lp = 0;
     }
 
-    // Constructor with timer parameter and initial state parameter for debugging or partial execution startup.
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	i_lp_accept_time	TIME length of the reposition timer.
+	 * \param	i_orbit_time		TIME length of the update timer.
+	 * \param	initial_state	    States initial state of the model.
+	 */
     Reposition_Timer(TIME i_repo_time, TIME i_upd_time, States initial_state) {
         state.current_state = initial_state;
         mission_number = 0;
@@ -117,9 +164,7 @@ public:
         last_lp = 0;
     }
 
-    // Internal transitions
-    // These are transitions occurring from internal inputs
-    // (required for the simulator)
+	/// Internal transitions of the model
     void internal_transition() {
         switch (state.current_state) {
             case States::NOTIFY_UPDATE:
@@ -142,9 +187,7 @@ public:
         }
     }
 
-    // External transitions
-    // These are transitions occurring from external inputs
-    // (required for the simulator)
+	/// External transitions of the model
     void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         bool received_control_yielded;
         bool received_lp_new;
@@ -209,14 +252,13 @@ public:
         }
     }
 
-    // confluence transition
-    // Used to call set call precedent
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
     void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         internal_transition();
         external_transition(TIME(), std::move(mbs));
     }
 
-    // output function
+	/// Function for generating output from the model before internal transitions.
     [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
         typename cadmium::make_message_bags<output_ports>::type bags;
         std::vector<bool> bag_port_out;
@@ -280,8 +322,7 @@ public:
         return bags;
     }
 
-    // Time advance
-    // Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
     TIME time_advance() const {
         TIME next_internal;
 
@@ -311,18 +352,28 @@ public:
         return next_internal;
     }
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
     friend std::ostringstream& operator<<(std::ostringstream& os, const typename Reposition_Timer<TIME>::state_type& i) {
         os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
         return os;
     }
 
 private:
+    /// Variable for storing the current valid landing point being repositioned to.
     message_landing_point_t landing_point;
+    /// Variable for storing the number of the mission for updating BOSS.
     int mission_number;
+    /// Variable for storing the length of the reposition timer.
     TIME repo_time;
+    /// Variable for storing the remaining length of the update timer.
 	TIME upd_time;
+    /// Variable for storing the number of the last landing point, to check if one has been received yet.
     mutable int last_lp;
 
+    /// Function for resetting private variables.
     void reset_state() {
         mission_number = 0;
         repo_time = TIME(LP_REPOSITION_TIME);
@@ -331,13 +382,15 @@ private:
         last_lp = 0;
     }
 
+    /**
+     * \brief   Function update_upd_time is used to update the update timer based on the current state and an elapsed time.
+     */
 	void update_upd_time(TIME e) {
         upd_time = upd_time - e;
         if (upd_time <= TIME(TA_ZERO)) {
             upd_time = TIME(TA_ZERO);
         }
     }
-
 };
 
 #endif // REPOSITION_TIMER_HPP
