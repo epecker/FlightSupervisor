@@ -1,5 +1,4 @@
 add_executable(td_aircraft_state_input              "td_aircraft_state_input.cpp")
-add_executable(td_blocking_input                    "td_blocking_input.cpp")
 add_executable(td_cache_input                       "td_cache_input.cpp")
 add_executable(td_command_reposition                "td_command_reposition.cpp")
 add_executable(td_handle_waypoint                   "td_handle_waypoint.cpp")
@@ -30,7 +29,6 @@ add_executable(td_udp_output_fcc                    "td_udp_output_fcc.cpp")
 add_executable(td_udp_output_gcs                    "td_udp_output_gcs.cpp")
 
 target_compile_definitions(td_aircraft_state_input              PUBLIC RT_LINUX RT_DEVS)
-target_compile_definitions(td_blocking_input                    PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_polling_condition_input_landing   PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_polling_condition_input_takeover  PUBLIC RT_LINUX RT_DEVS)
 target_compile_definitions(td_rudp_output_mavnrc                PUBLIC RT_LINUX RT_DEVS)
@@ -42,7 +40,6 @@ target_compile_definitions(td_udp_output_fcc                    PUBLIC RT_LINUX 
 target_compile_definitions(td_udp_output_gcs                    PUBLIC RT_LINUX RT_DEVS)
 
 target_sources(td_aircraft_state_input              PRIVATE "${CMAKE_SOURCE_DIR}/src" "${SHARED_MEM}")
-target_sources(td_blocking_input                    PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_cache_input                       PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_command_reposition                PRIVATE "${CMAKE_SOURCE_DIR}/src" "${MavNRC_GEO}")
 target_sources(td_handle_waypoint                   PRIVATE "${CMAKE_SOURCE_DIR}/src")
@@ -73,7 +70,6 @@ target_sources(td_udp_output_fcc                    PRIVATE "${CMAKE_SOURCE_DIR}
 target_sources(td_udp_output_gcs                    PRIVATE "${CMAKE_SOURCE_DIR}/src")
 
 target_include_directories(td_aircraft_state_input              PUBLIC ${includes_list})
-target_include_directories(td_blocking_input                    PUBLIC ${includes_list})
 target_include_directories(td_cache_input                       PUBLIC ${includes_list})
 target_include_directories(td_command_reposition                PUBLIC ${includes_list})
 target_include_directories(td_handle_waypoint                   PUBLIC ${includes_list})
@@ -104,7 +100,6 @@ target_include_directories(td_udp_output_fcc                    PUBLIC ${include
 target_include_directories(td_udp_output_gcs                    PUBLIC ${includes_list})
 
 target_link_libraries(td_aircraft_state_input               ${Boost_LIBRARIES})
-target_link_libraries(td_blocking_input                     ${Boost_LIBRARIES})
 target_link_libraries(td_cache_input                        ${Boost_LIBRARIES})
 target_link_libraries(td_command_reposition                 ${Boost_LIBRARIES})
 target_link_libraries(td_handle_waypoint                    ${Boost_LIBRARIES})

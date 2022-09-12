@@ -49,7 +49,7 @@ int main() {
 
         // Instantiate the atomic model to test
         std::shared_ptr<cadmium::dynamic::modeling::model> rudp_output = cadmium::dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>(
-                "rudp_output", HOST, 24000, 1000, 100);
+                "rudp_output", IPV4_MAVNRC, 24000, 1000, 100);
 
         // Instantiate the input readers.
         // One for each input
