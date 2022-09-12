@@ -83,7 +83,8 @@
 
 // Network Addresses & Ports
 #define LOCALHOST "127.0.0.1"
-#define HOST "192.168.101.106"
+// #define HOST "192.168.101.106"
+#define HOST "10.0.0.63"
 #define IPV4_BOSS HOST
 #define IPV4_FCC HOST
 #define IPV4_GCS HOST

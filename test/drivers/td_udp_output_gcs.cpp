@@ -51,7 +51,7 @@ int main() {
 		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char*, const unsigned short>("udp_output", IPV4_GCS, 14550);
+		std::shared_ptr<dynamic::modeling::model> udp_output = dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char*, const unsigned short, bool>("udp_output", IPV4_GCS, 14550, true);
 
 		// Instantiate the input readers.
 		// One for each input
