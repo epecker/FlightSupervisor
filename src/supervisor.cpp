@@ -111,15 +111,15 @@ int main() {
 		cadmium::dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("supervisor", "im_aircraft_state"),
 
 		cadmium::dynamic::translate::make_IC<Polling_Condition_Input_Pilot_Takeover<TIME>::defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
-		// cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_start_supervisor, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_start>("im_udp_interface", "im_pilot_takeover"),
+		// cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_start_supervisor, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_start>("im_udp_interface", "im_pilot_takeover"),
 		// cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_quit>("supervisor", "im_pilot_takeover"),
 
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_lp_recv, Supervisor_defs::i_LP_recv>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_plp_ach, Supervisor_defs::i_PLP_ach>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_perception_status, Supervisor_defs::i_perception_status>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_start_supervisor, Supervisor_defs::i_start_supervisor>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input_defs::o_waypoint, Supervisor_defs::i_waypoint>("im_udp_interface", "supervisor"),
-		// cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Supervisor_UDP_Input_defs::i_quit>("supervisor", "im_udp_interface"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_lp_recv, Supervisor_defs::i_LP_recv>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_plp_ach, Supervisor_defs::i_PLP_ach>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_perception_status, Supervisor_defs::i_perception_status>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_start_supervisor, Supervisor_defs::i_start_supervisor>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_waypoint, Supervisor_defs::i_waypoint>("im_udp_interface", "supervisor"),
+		// cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Supervisor_UDP_Input<TIME>::defs::i_quit>("supervisor", "im_udp_interface"),
 
 		// Output ICs
         cadmium::dynamic::translate::make_IC<Supervisor_defs::o_LP_new, Packet_Builder_Landing_Point<TIME>::defs::i_data>("supervisor", "pb_landing_point"),

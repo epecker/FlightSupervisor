@@ -82,7 +82,7 @@ int main() {
 
 		// This will connect our outputs from our input reader to the file
 		cadmium::dynamic::modeling::ICs ics_TestDriver = {
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor_UDP_Input_defs::i_quit>("ir_quit", "supervisor_udp_input")
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor_UDP_Input<TIME>::defs::i_quit>("ir_quit", "supervisor_udp_input")
 		};
 
 		std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<cadmium::dynamic::modeling::coupled<TIME>>(

@@ -101,7 +101,7 @@ int main() {
 	 	cadmium::dynamic::modeling::ICs ics_TestDriver = {
 			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out, Packet_Builder_Fcc<TIME>::defs::i_data>("ir_message", "packet_builder"),
 			cadmium::dynamic::translate::make_IC<Packet_Builder_Fcc<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("packet_builder", "udp_output"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, UDP_Input_defs<message_fcc_command_t>::i_quit>("ir_quit", "udp_input")
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, UDP_Input<message_fcc_command_t, TIME>::defs::i_quit>("ir_quit", "udp_input")
 		};
 
 		std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<cadmium::dynamic::modeling::coupled<TIME>>(
