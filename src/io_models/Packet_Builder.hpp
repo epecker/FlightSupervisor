@@ -83,7 +83,7 @@ public:
 		switch (state.current_state) {
 			case States::IDLE:
 				if (received_data){
-                    vector<TYPE> temp = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs);
+                    std::vector<TYPE> temp = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs);
                     for (int i = 0; i < temp.size(); i++) {
                         data.push_back(temp[i]);
                         preprocess_data(&data[i]);

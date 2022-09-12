@@ -87,28 +87,28 @@ int main() {
 		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> lp_manager = dynamic::translate::make_dynamic_atomic_model<LP_Manager, TIME, TIME, TIME, LP_Manager<TIME>::States>("lp_manager", std::move(lp_accept_time), std::move(orbit_time), std::move(initial_state));
+		shared_ptr<cadmium::dynamic::modeling::model> lp_manager = cadmium::dynamic::translate::make_dynamic_atomic_model<LP_Manager, TIME, TIME, TIME, LP_Manager<TIME>::States>("lp_manager", std::move(lp_accept_time), std::move(orbit_time), std::move(initial_state));
 
 		// Instantiate the input readers.
 		// One for each input
-		shared_ptr<dynamic::modeling::model> ir_aircraft_state =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", input_file_aircraft_state.c_str());
-		shared_ptr<dynamic::modeling::model> ir_fcc_command_land =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_fcc_command_land", input_file_fcc_command_land.c_str());
-		shared_ptr<dynamic::modeling::model> ir_lp_recv =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_recv", input_file_lp_recv.c_str());
-		shared_ptr<dynamic::modeling::model> ir_plp_ach =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_plp_ach", input_file_plp_ach.c_str());
-		shared_ptr<dynamic::modeling::model> ir_pilot_takeover =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
-		shared_ptr<dynamic::modeling::model> ir_control_yielded =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_control_yielded", input_file_control_yielded.c_str());
-        shared_ptr<dynamic::modeling::model> ir_start_mission =
-                dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_aircraft_state =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Aircraft_State, TIME, const char* >("ir_aircraft_state", input_file_aircraft_state.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_fcc_command_land =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Fcc_Command, TIME, const char* >("ir_fcc_command_land", input_file_fcc_command_land.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_lp_recv =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_lp_recv", input_file_lp_recv.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_plp_ach =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Mavlink_Mission_Item, TIME, const char* >("ir_plp_ach", input_file_plp_ach.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_pilot_takeover =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_pilot_takeover", input_file_pilot_takeover.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_control_yielded =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_control_yielded", input_file_control_yielded.c_str());
+        shared_ptr<cadmium::dynamic::modeling::model> ir_start_mission =
+                cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Int, TIME, const char* >("ir_start_mission", input_file_start_mission.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
-		dynamic::modeling::Models submodels_TestDriver = {
+	 	cadmium::dynamic::modeling::Models submodels_TestDriver = {
 			ir_aircraft_state,
 			ir_fcc_command_land,
 			ir_lp_recv,
@@ -119,27 +119,27 @@ int main() {
 			lp_manager
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = { };
+	 	cadmium::dynamic::modeling::Ports iports_TestDriver = { };
 
-		dynamic::modeling::Ports oports_TestDriver = { };
+	 	cadmium::dynamic::modeling::Ports oports_TestDriver = { };
 
-		dynamic::modeling::EICs eics_TestDriver = {	};
+	 	cadmium::dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = { };
+	 	cadmium::dynamic::modeling::EOCs eocs_TestDriver = { };
 
 		// This will connect our outputs from our input reader to the file
-		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<message_aircraft_state_t>::out,LP_Manager<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<message_fcc_command_t>::out,LP_Manager<TIME>::defs::i_fcc_command_land>("ir_fcc_command_land", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_control_yielded>("ir_control_yielded", "lp_manager"),
-			dynamic::translate::make_IC<iestream_input_defs<int>::out,LP_Manager<TIME>::defs::i_start_mission>("ir_start_mission", "lp_manager")
+	 	cadmium::dynamic::modeling::ICs ics_TestDriver = {
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_aircraft_state_t>::out,LP_Manager<TIME>::defs::i_aircraft_state>("ir_aircraft_state", "lp_manager"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out,LP_Manager<TIME>::defs::i_fcc_command_land>("ir_fcc_command_land", "lp_manager"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_lp_recv>("ir_lp_recv", "lp_manager"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_landing_point_t>::out,LP_Manager<TIME>::defs::i_plp_ach>("ir_plp_ach", "lp_manager"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_pilot_takeover>("ir_pilot_takeover", "lp_manager"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out,LP_Manager<TIME>::defs::i_control_yielded>("ir_control_yielded", "lp_manager"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<int>::out,LP_Manager<TIME>::defs::i_start_mission>("ir_start_mission", "lp_manager")
 		};
 
-		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
+		shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test_driver = make_shared<cadmium::dynamic::modeling::coupled<TIME>>(
 			"test_driver", submodels_TestDriver, iports_TestDriver, oports_TestDriver, eics_TestDriver, eocs_TestDriver, ics_TestDriver
 		);
 
@@ -161,14 +161,14 @@ int main() {
 			}
 		};
 
-		using state = logger::logger<logger::logger_state, dynamic::logger::formatter<TIME>, oss_sink_state>;
-		using log_messages = logger::logger<logger::logger_messages, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-		using global_time_mes = logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-		using global_time_sta = logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_state>;
+		using state = cadmium::logger::logger<cadmium::logger::logger_state, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
+		using log_messages = cadmium::logger::logger<cadmium::logger::logger_messages, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
+		using global_time_mes = cadmium::logger::logger<cadmium::logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
+		using global_time_sta = cadmium::logger::logger<cadmium::logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
 
-		using logger_supervisor = logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
+		using logger_supervisor = cadmium::logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
-		dynamic::engine::runner<NDTime, logger_supervisor> r(test_driver, { 0 });
+		cadmium::dynamic::engine::runner<NDTime, logger_supervisor> r(test_driver, { 0 });
 
 		r.run_until_passivate();
 		test_set_enumeration++;

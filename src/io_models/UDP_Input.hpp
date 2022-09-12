@@ -1,16 +1,33 @@
 /**
- *	\brief		An atomic model for receiving command line input from the user.
- *	\details	This header file defines an asynchronous input atomic model
-				for use in the RT-Cadmium DEVS simulation software. This atomic
-				model is intended to be used as a demonstration of asynchronous
-				input techniques using RT-Cadmium.
+ * 	\file		UDP_Input.hpp
+ *	\brief		Definition of the UDP Input atomic model.
+ *	\details	This header file defines the UDP Input atomic model for use in the Cadmium DEVS
+				simulation software. UDP Input is an atomic model for receiving UDP packets and 
+				forwarding them as Cadmim events.
+ *	\author		Tanner Trautrim
  *	\author		James Horner
  */
 
 #ifndef UDP_INPUT_HPP
 #define UDP_INPUT_HPP
 
- // System libraries
+// Message structures
+#include "../message_structures/message_command_ack_t.hpp"
+
+// Utility functions
+#include "../enum_string_conversion.hpp"
+#include "../Constants.hpp"
+
+// Cadmium Simulator Headers
+#include <cadmium/engine/pdevs_dynamic_runner.hpp>
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+#include <cadmium/modeling/dynamic_model.hpp>
+
+// Boost Libraries
+#include <boost/asio.hpp>
+
+// System Libraries
 #include <iostream>
 #include <assert.h>
 #include <thread>
@@ -20,65 +37,75 @@
 #include <sstream>
 #include <csignal>
 
-#include <boost/asio.hpp>
-
-// RT-Cadmium
-#include "cadmium/engine/pdevs_dynamic_runner.hpp"
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-#include "cadmium/modeling/dynamic_model.hpp"
-
-// Message Structures
-#include "../message_structures/message_command_ack_t.hpp"
-
-// Includes
-#include "../enum_string_conversion.hpp"
-#include "../Constants.hpp"
-
+// Guard to ensure that the model is run in real-time.
 #ifdef RT_LINUX
 
-using namespace cadmium;
-using namespace std;
-
-// Input and output port definitions
-template<typename MSG> struct UDP_Input_defs {
-	struct o_message : public out_port<MSG> { };
-	struct i_quit : public in_port<bool> { };
-};
-
-// Atomic model
+/**
+ * 	\class		UDP_Input
+ *	\brief		Definition of the UDP Input atomic model.
+ *	\details	This class defines the UDP Input atomic model for use in the Cadmium DEVS
+				simulation software. UDP Input is an atomic model for receiving UDP packets and 
+				forwarding them as Cadmim events.
+ *	\tparam		MSG Template parameter for the message type.
+ */
 template<typename MSG, typename TIME>
 class UDP_Input {
-
-	// Private members for thread management.
-private:
-	// Mutex for thread synchronization using unique locks.
-	mutable std::mutex input_mutex;
-	mutable std::vector<MSG> message;
-
-	// Networking members
-	boost::asio::ip::udp::endpoint endpoint_local;
-	boost::asio::ip::udp::endpoint endpoint_remote;
-	boost::asio::io_service io_service;
-	boost::asio::ip::udp::socket socket{ io_service };
-	char recv_buffer[MAX_SER_BUFFER_CHARS];
-
-	// Const Members
-	bool send_ack;
-	TIME polling_rate;
-
-	// Global member for thread sync
-	bool stop;
-
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(INPUT)
 	);
 
-	// Default constructor
+	/**
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	UDP_Input_input_ports "Input Ports" and
+	 *	\ref 	UDP_Input_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
+	 */
+	template<typename MSG> 
+	struct defs {
+		struct o_message : public cadmium::out_port<MSG> { };
+		struct i_quit : public cadmium::in_port<bool> { };
+	};
+
+	/**
+	 * 	\anchor	UDP_Input_input_ports
+	 *	\par	Input Ports
+	 * 	Defintion of the input ports for the model.
+	 *	\param	i_quit	Port for receiving signal indicating that the model should stop listening for packets and passivate.
+	 */
+	using input_ports = std::tuple<typename defs<MSG>::i_quit>;
+
+	/**
+	 *	\anchor	UDP_Input_output_ports
+	 * 	\par 	Output Ports
+	 * 	Defintion of the output ports for the model.
+	 * 	\param	o_message	Port to forward any packets received.
+	 */
+	using output_ports = std::tuple<typename defs<MSG>::o_message>;
+
+	/**
+	 *	\anchor	UDP_Input_state_type
+	 *	\par	State
+	 * 	Defintion of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
+	 * 	\param	has_messages	State variable indicating if any packets have been received since the last poll.
+	 * 	\param	message			Queue of messages that have been received by the child thread.
+	 */
+	struct state_type {
+		States current_state;
+		bool has_messages;
+		mutable std::vector<MSG> message;
+	};
+	state_type state;
+
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	UDP_Input() {
 		//Initialise the current state
 		state.current_state = States::INPUT;
@@ -100,8 +127,13 @@ public:
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
-	// Constructor with polling rate parameter
-	UDP_Input(TIME rate, bool ack_required, string port) {
+	/**
+	 * 	\brief 	Constructor for the model with port that model should listen on and whether an acknowledgement should be returned back.
+	 * \param	rate			TIME rate at which the message queue should be polled.
+	 * 	\param	ack_required	bool true for if an acknowledgement should be sent back to the sender on packet receipt.
+	 * 	\param	port			unsigned short port number that the model should listen on.
+	 */
+	UDP_Input(TIME rate, bool ack_required, std::string port) {
 		//Initialise the current state
 		state.current_state = States::INPUT;
 		state.has_messages = false;
@@ -122,17 +154,19 @@ public:
 		std::thread(&UDP_Input::receive_packet_thread, this).detach();
 	}
 
-	// Destructor for the class that shuts down gracefully
+	/**
+	 * \brief 	Destructor for the model.
+	 */
 	~UDP_Input() {
 		shutdown();
 	}
 
-	// Handler for signals.
+	/// Handler for signals.
     void handle_signal(int signal_number) {
 		shutdown();
 	}
 
-	// Member for shutting down the thread and IO services gracefully.
+	/// Member for shutting down the thread and IO services gracefully.
 	void shutdown() {
 		//Before exiting stop the Boost IO service to interupt the receipt handler.
 		stop = true;
@@ -141,23 +175,7 @@ public:
 			socket.close();
 	}
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
-	struct state_type {
-		States current_state;
-		bool has_messages;
-	};
-	state_type state;
-
-	// Create a tuple of input ports (required for the simulator)
-	using input_ports = std::tuple<typename UDP_Input_defs<MSG>::i_quit>;
-
-	// Create a tuple of output ports (required for the simulator)
-	using output_ports = std::tuple<typename UDP_Input_defs<MSG>::o_message>;
-
-	// Internal transitions
-	// These are transitions occuring from internal inputs
-	// (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		if (state.current_state == States::INPUT) {
 			std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
@@ -168,43 +186,39 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occuring from external inputs
-	// (required for the simulator)
-	void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-		if (get_messages<typename UDP_Input_defs<MSG>::i_quit>(mbs).size() >= 1) {
+	/// External transitions of the model
+	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+		if (cadmium::get_messages<typename defs<MSG>::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
 	}
 
-	// Confluence transition
-	// Used to call set call precedence
-	void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
+	void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	// Output function
-	typename make_message_bags<output_ports>::type output() const {
-		typename make_message_bags<output_ports>::type bags;
-		vector<MSG> message_out;
+	/// Function for generating output from the model before internal transitions.
+	typename cadmium::make_message_bags<output_ports>::type output() const {
+		typename cadmium::make_message_bags<output_ports>::type bags;
+		std::vector<MSG> message_out;
 
 		if (state.current_state == States::INPUT) {
 			//If the lock is free and there are messages, send the messages.
 			std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 			if (state.has_messages && mutexLock.try_lock()) {
-				for (auto msg : message) {
+				for (auto msg : state.message) {
 					message_out.push_back(msg);
 				}
-				message.clear();
-				get_messages<typename UDP_Input_defs<MSG>::o_message>(bags) = message_out;
+				state.message.clear();
+			 cadmium::get_messages<typename defs<MSG>::o_message>(bags) = message_out;
 			}
 		}
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
@@ -220,7 +234,45 @@ public:
 		}
 	}
 
-	// Child thread for receiving UDP packets
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
+	friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Input<MSG, TIME>::state_type& i) {
+		os << "State: " << enumToString(i.current_state) << "-" << (i.has_messages ? "MESSAGES" : "NO_MESSAGES");
+		return os;
+	}
+
+private:
+    /// Variable for the mutex for thread synchronization using unique locks.
+	mutable std::mutex input_mutex;
+
+	/// Variable to store the endpoint that the model for listen for packets on.
+	boost::asio::ip::udp::endpoint endpoint_local;
+	/// Variable to store the origin endpoint of the packet that was just received.
+	boost::asio::ip::udp::endpoint endpoint_remote;
+	/// Variable to store the Boost IO service.
+	boost::asio::io_service io_service;
+	/// Variable to store the socket that the child thread will listen on. 
+	boost::asio::ip::udp::socket socket{ io_service };
+	/// Buffer to hold the bytes received by RUDP until they can be parsed.
+	char recv_buffer[MAX_SER_BUFFER_CHARS];
+
+	/// Variable to indicate if an acknowledgement should be sent back to the sender on packet receipt.
+	bool send_ack;
+    /// Variable for rate at which the message queues should be polled by the model.
+	TIME polling_rate;
+
+    /// Variable for thread synchronization.
+	bool stop;
+
+	/**
+	 * 	\anchor		UDP_Input_child_thread
+	 *	\brief		Function receive_packet_thread is used as a child thread for receiving UDP packets.
+	 *	\details	The thread is started in the model constructor and constantly receives packets until 
+	 * 				the model is passivated. The packets are received then added to a queue to be sent 
+	 * 				as Cadmium events.
+	 */
 	void receive_packet_thread() {
 		//Open and bind the socket using Boost.
 		socket.open(boost::asio::ip::udp::v4());
@@ -247,7 +299,7 @@ public:
 		socket.close();
 	}
 
-	//Message handler that is called on UDP packet receipt.
+	/// Handler that is called on UDP packet receipt by Boost.
 	void receive_packet(const boost::system::error_code& error, size_t bytes_transferred) {
 		//Aquire the unique lock for the message vector.
 		std::unique_lock<std::mutex> mutexLock(input_mutex);
@@ -256,7 +308,7 @@ public:
 		//Add the message to the vector.
 		MSG recv = MSG();
 		memcpy(&recv, &recv_buffer, bytes_transferred);
-		message.insert(message.begin(), recv);
+		state.message.insert(message.begin(), recv);
 
 		//If an ack is required,
 		if (send_ack) {
@@ -269,11 +321,6 @@ public:
 			//Send the ack to the origin of the packet.
 			socket.send_to(boost::asio::buffer(ack_data), endpoint_remote, 0, ack_err);
 		}
-	}
-
-	friend std::ostringstream& operator<<(std::ostringstream& os, const typename UDP_Input<MSG, TIME>::state_type& i) {
-		os << "State: " << enumToString(i.current_state) << "-" << (i.has_messages ? "MESSAGES" : "NO_MESSAGES");
-		return os;
 	}
 };
 

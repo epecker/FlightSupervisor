@@ -26,7 +26,7 @@ using hclock = chrono::high_resolution_clock;
 using TIME = NDTime;
 
 // Define output ports to be used for logging purposes
-struct out : public out_port<string> {};
+struct out : public cadmium::out_port<string> {};
 
 int main() {
 	int test_set_enumeration = 0;
@@ -54,39 +54,39 @@ int main() {
 		boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
 
 		// Instantiate the atomic model to test
-		shared_ptr<dynamic::modeling::model> blocking_input = dynamic::translate::make_dynamic_atomic_model<User_Input, TIME, TIME>("blocking_input", std::move(TIME("00:00:00:100")));
+		shared_ptr<cadmium::dynamic::modeling::model> blocking_input = cadmium::dynamic::translate::make_dynamic_atomic_model<User_Input, TIME, TIME>("blocking_input", std::move(TIME("00:00:00:100")));
 
 		// Instantiate the input readers.
 		// One for each input
-		shared_ptr<dynamic::modeling::model> ir_in =
-			dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_in", input_file_in.c_str());
+		shared_ptr<cadmium::dynamic::modeling::model> ir_in =
+			cadmium::dynamic::translate::make_dynamic_atomic_model<Input_Reader_Boolean, TIME, const char* >("ir_in", input_file_in.c_str());
 
 		// The models to be included in this coupled model
 		// (accepts atomic and coupled models)
-		dynamic::modeling::Models submodels_TestDriver = {
+		cadmium::dynamic::modeling::Models submodels_TestDriver = {
 			blocking_input,
 			ir_in
 		};
 
-		dynamic::modeling::Ports iports_TestDriver = {	};
+		cadmium::dynamic::modeling::Ports iports_TestDriver = {	};
 
-		dynamic::modeling::Ports oports_TestDriver = {
+		cadmium::dynamic::modeling::Ports oports_TestDriver = {
 			typeid(out)
 		};
 
-		dynamic::modeling::EICs eics_TestDriver = {	};
+		cadmium::dynamic::modeling::EICs eics_TestDriver = {	};
 
 		// The output ports will be used to export in logging
-		dynamic::modeling::EOCs eocs_TestDriver = {
-			dynamic::translate::make_EOC<User_Input_defs::out, out>("blocking_input")
+		cadmium::dynamic::modeling::EOCs eocs_TestDriver = {
+			cadmium::dynamic::translate::make_EOC<User_Input_defs::out, out>("blocking_input")
 		};
 
 		// This will connect our outputs from our input reader to the file
-		dynamic::modeling::ICs ics_TestDriver = {
-			dynamic::translate::make_IC<iestream_input_defs<bool>::out, User_Input_defs::in>("ir_in", "blocking_input")
+		cadmium::dynamic::modeling::ICs ics_TestDriver = {
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, User_Input_defs::in>("ir_in", "blocking_input")
 		};
 
-		shared_ptr<dynamic::modeling::coupled<TIME>> test_driver = make_shared<dynamic::modeling::coupled<TIME>>(
+		shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test_driver = make_shared<cadmium::dynamic::modeling::coupled<TIME>>(
 			"test_driver", submodels_TestDriver, iports_TestDriver, oports_TestDriver, eics_TestDriver, eocs_TestDriver, ics_TestDriver
 		);
 
@@ -116,12 +116,12 @@ int main() {
 			}
 		};
 
-		using state = logger::logger<logger::logger_state, dynamic::logger::formatter<TIME>, oss_sink_state>;
-		using log_messages = logger::logger<logger::logger_messages, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-		using global_time_mes = logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-		using global_time_sta = logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_state>;
-		using info = logger::logger<logger::logger_info, dynamic::logger::formatter<TIME>, oss_sink_info>;
-		using logger_top = logger::multilogger<state, log_messages, global_time_mes, global_time_sta, info>;
+		using state = logger::logger<logger::logger_state, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
+		using log_messages = logger::logger<logger::logger_messages, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
+		using global_time_mes = logger::logger<logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
+		using global_time_sta = logger::logger<logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
+		using info = logger::logger<logger::logger_info, cadmium::dynamic::logger::formatter<TIME>, oss_sink_info>;
+		using logger_top = cadmium::logger::multilogger<state, log_messages, global_time_mes, global_time_sta, info>;
 
 		auto start_time = hclock::now(); //to measure simulation execution time
 

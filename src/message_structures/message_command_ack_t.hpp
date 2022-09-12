@@ -3,8 +3,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 /*******************************************/
 /**************** Message_t ****************/
 /*******************************************/
@@ -26,7 +24,7 @@ struct message_command_ack_t{
 /************* Output stream ************************/
 /***************************************************/
 
-ostream& operator<<(ostream& os, const message_command_ack_t& msg) {
+std::ostream& operator<<(std::ostream& os, const message_command_ack_t& msg) {
 	os << msg.command << " " << msg.result << " " << msg.progress << " " << msg.result_param2 << " " << msg.target_system << " " << msg.target_component;
 	return os;
 }
@@ -35,7 +33,7 @@ ostream& operator<<(ostream& os, const message_command_ack_t& msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream& operator>> (istream& is, message_command_ack_t& msg) {
+std::istream& operator>> (std::istream& is, message_command_ack_t& msg) {
 	is >> msg.command;
 	is >> msg.result;
 	is >> msg.progress;

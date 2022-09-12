@@ -28,16 +28,13 @@
 
 #ifdef RT_LINUX
 
-using namespace cadmium;
-using namespace std;
-
 chrono::time_point<chrono::high_resolution_clock> start;
-void get_user_input(mutex *lock, string *input);
+void get_user_input(std::mutex *lock, std::string *input);
 
 // Input and output port definitions
 struct User_Input_defs{
-    struct in   : public in_port<bool> { };
-    struct out  : public out_port<string> { };
+    struct in   : public cadmium::in_port<bool> { };
+    struct out  : public cadmium::out_port<std::string> { };
 };
 
 // Atomic model
@@ -46,7 +43,7 @@ class User_Input {
 
 // Private members for thread management.
 private:
-    string *user_input;
+    std::string *user_input;
     TIME polling_rate;
 
 public:
@@ -69,8 +66,8 @@ public:
         state.current_state = States::IDLE;
 
         //Create the mutex and user input variable
-        state.user_input_mutex = new mutex();
-        user_input = new string();
+        state.user_input_mutex = new std::mutex();
+        user_input = new std::string();
         polling_rate = rate;
 
 		start = chrono::high_resolution_clock::now(); //to measure simulation execution time
@@ -80,7 +77,7 @@ public:
 	// (required for the simulator)
     struct state_type{
         States current_state;
-        mutex *user_input_mutex;
+        std::mutex *user_input_mutex;
     };
     state_type state;
 
@@ -106,8 +103,8 @@ public:
 	// External transitions
 	// These are transitions occuring from external inputs
 	// (required for the simulator)
-    void external_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
-        bool start = get_messages<typename User_Input_defs::in>(mbs).size() >= 1;
+    void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+        bool start = cadmium::get_messages<typename User_Input_defs::in>(mbs).size() >= 1;
         if (state.current_state == States::IDLE) {
             if (start){
                 state.current_state = States::INPUT;
@@ -119,18 +116,18 @@ public:
 
 	// Confluence transition
 	// Used to call set call precedence
-    void confluence_transition(TIME e, typename make_message_bags<input_ports>::type mbs) {
+    void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         internal_transition();
         external_transition(TIME(), std::move(mbs));
     }
 
     // Output function
-    typename make_message_bags<output_ports>::type output() const {
-        typename make_message_bags<output_ports>::type bags;
+    typename cadmium::make_message_bags<output_ports>::type output() const {
+        typename cadmium::make_message_bags<output_ports>::type bags;
         if(state.current_state == States::INPUT) {
             //If the thread has finished receiving input, send the string as output.
             if(state.user_input_mutex->try_lock()) {
-                get_messages<typename User_Input_defs::out>(bags).push_back(*user_input);
+                cadmium::get_messages<typename User_Input_defs::out>(bags).push_back(*user_input);
                 auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(chrono::high_resolution_clock::now() - start).count();
                 cout << "(" << elapsed << ") Output sent: " << *user_input << endl;
                 state.user_input_mutex->unlock();
@@ -163,7 +160,7 @@ public:
 };
 
 // Function used to retrieve user input in a thread.
-void get_user_input(mutex *lock, string *input) {
+void get_user_input(std::mutex *lock, std::string *input) {
     lock->lock();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(chrono::high_resolution_clock::now() - start).count();
     cout << "(" << elapsed << ") Please enter any input: ";

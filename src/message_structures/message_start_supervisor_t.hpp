@@ -29,7 +29,7 @@ struct message_start_supervisor_t {
 /************* Output stream ************************/
 /***************************************************/
 
-ostream &operator<<(ostream &os, const message_start_supervisor_t &msg) {
+std::ostream &operator<<(std::ostream &os, const message_start_supervisor_t &msg) {
 	os << msg.autonomy_armed << " "
 	   << msg.mission_started << " "
        << msg.mission_number << " ";
@@ -40,7 +40,7 @@ ostream &operator<<(ostream &os, const message_start_supervisor_t &msg) {
 /************* Input stream ************************/
 /***************************************************/
 
-istream &operator>>(istream &is, message_start_supervisor_t &msg) {
+std::istream &operator>>(std::istream &is, message_start_supervisor_t &msg) {
 	is >> msg.autonomy_armed;
 	is >> msg.mission_started;
 	is >> msg.mission_number;
