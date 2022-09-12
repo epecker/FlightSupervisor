@@ -61,10 +61,11 @@ int main() {
     std::shared_ptr<cadmium::dynamic::modeling::model> pb_gcs = cadmium::dynamic::translate::make_dynamic_atomic_model<Packet_Builder_GCS, TIME>("pb_gcs");
     std::shared_ptr<cadmium::dynamic::modeling::model> pb_landing_point = cadmium::dynamic::translate::make_dynamic_atomic_model<Packet_Builder_Landing_Point, TIME>("pb_landing_point");
 
-    shared_ptr<cadmium::dynamic::modeling::model> udp_boss = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_boss", IPV4_BOSS, PORT_BOSS, false);
-    shared_ptr<cadmium::dynamic::modeling::model> udp_fcc = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_fcc", IPV4_FCC, PORT_FCC, false);
-    shared_ptr<cadmium::dynamic::modeling::model> udp_gcs = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_gcs", IPV4_GCS, PORT_GCS, true);
-    shared_ptr<cadmium::dynamic::modeling::model> rudp_mavnrc = cadmium::dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>("rudp_mavnrc", IPV4_MAVNRC, PORT_MAVNRC, DEFAULT_TIMEOUT_MS, 10);
+    std::shared_ptr<cadmium::dynamic::modeling::model> udp_boss = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_boss", IPV4_BOSS, PORT_BOSS, false);
+    std::shared_ptr<cadmium::dynamic::modeling::model> udp_fcc = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_fcc", IPV4_FCC, PORT_FCC, false);
+    std::shared_ptr<cadmium::dynamic::modeling::model> udp_gcs = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_gcs", IPV4_GCS, PORT_GCS, true);
+    std::shared_ptr<cadmium::dynamic::modeling::model> udp_gcs_broadcast = cadmium::dynamic::translate::make_dynamic_atomic_model<UDP_Output, TIME, const char *, const unsigned short, bool>("udp_gcs_broadcast", IPV4_QGC_BROADCAST, PORT_QGC_BROADCAST, true);
+    std::shared_ptr<cadmium::dynamic::modeling::model> rudp_mavnrc = cadmium::dynamic::translate::make_dynamic_atomic_model<RUDP_Output, TIME, const char *, const unsigned short, int, int>("rudp_mavnrc", IPV4_MAVNRC, PORT_MAVNRC, DEFAULT_TIMEOUT_MS, 10);
 
     // Instantiate GPS time logger
 	std::shared_ptr<cadmium::dynamic::modeling::model> gps_time = cadmium::dynamic::translate::make_dynamic_atomic_model<GPS_Time, TIME>("a_gps_time");
@@ -88,6 +89,7 @@ int main() {
             udp_boss,
             udp_fcc,
             udp_gcs,
+			udp_gcs_broadcast,
             gps_time,
             rudp_mavnrc
 	};
@@ -141,6 +143,7 @@ int main() {
         cadmium::dynamic::translate::make_IC<Packet_Builder_Boss<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_boss", "udp_boss"),
         cadmium::dynamic::translate::make_IC<Packet_Builder_Fcc<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_fcc", "udp_fcc"),
         cadmium::dynamic::translate::make_IC<Packet_Builder_GCS<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_gcs", "udp_gcs"),
+        cadmium::dynamic::translate::make_IC<Packet_Builder_GCS<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_gcs", "udp_gcs_broadcast"),
 
         cadmium::dynamic::translate::make_IC<Packet_Builder_Int<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_int_mission_start", "rudp_mavnrc"),
         cadmium::dynamic::translate::make_IC<Packet_Builder_Bool<TIME>::defs::o_packet, RUDP_Output<TIME>::defs::i_message>("pb_bool_mission_complete", "rudp_mavnrc"),

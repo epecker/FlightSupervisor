@@ -83,16 +83,19 @@
 
 // Network Addresses & Ports
 #define LOCALHOST "127.0.0.1"
+#define BROADCAST_AIRCRAFT "132.246.193.255"
 // #define HOST "192.168.101.106"
 #define HOST "10.0.0.63"
 #define IPV4_BOSS HOST
 #define IPV4_FCC HOST
 #define IPV4_GCS HOST
+#define IPV4_QGC_BROADCAST BROADCAST_AIRCRAFT
 #define IPV4_MAVNRC HOST
 
 #define PORT_BOSS 13333
 #define PORT_FCC 4060
 #define PORT_GCS 14550
 #define PORT_MAVNRC 24000
+#define PORT_QGC_BROADCAST 12346
 
 #endif /* CONSTANTS_HPP */
