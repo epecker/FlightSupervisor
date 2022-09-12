@@ -17,6 +17,7 @@
 #include "../message_structures/message_update_gcs_t.hpp"
 
 // Utility functions
+#include "../time_conversion.hpp"
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
 
@@ -36,7 +37,7 @@
 				simulation software. The model represents the behaviour of the Supervisor when valid LPs
                 are found and must be repositioned to within a specified amount of time.
  */
-template<typename TIME> 
+template<typename TIME>
 class Reposition_Timer {
 public:
 	/**

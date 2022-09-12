@@ -11,14 +11,6 @@
 #ifndef LANDING_HPP
 #define LANDING_HPP
 
-// Coupled model headers
-#include "LP_Reposition.hpp"
-
-// Atomic model headers
-#include "../atomic_models/LP_Manager.hpp"
-#include "../atomic_models/Stabilize.hpp"
-#include "../atomic_models/Handover_Control.hpp"
-
 // Messages structures
 #include "../message_structures/message_aircraft_state_t.hpp"
 #include "../message_structures/message_landing_point_t.hpp"
@@ -26,11 +18,16 @@
 #include "../message_structures/message_boss_mission_update_t.hpp"
 #include "../message_structures/message_update_gcs_t.hpp"
 
+// Atomic model headers
+#include "../atomic_models/LP_Manager.hpp"
+#include "../atomic_models/Stabilize.hpp"
+#include "../atomic_models/Handover_Control.hpp"
+
+// Coupled model headers
+#include "LP_Reposition.hpp"
+
 // Utility functions
 #include "../time_conversion.hpp"
-
-// Project information headers this is created by cmake at generation time!!!!
-#include "../SupervisorConfig.hpp"
 
 // Constants
 #include "../Constants.hpp"
@@ -55,8 +52,8 @@ class Landing {
 public:
 	/**
 	 *	\brief	For definition of the input and output ports see:
-	 *	\ref 	Handle_Waypoint_input_ports "Input Ports" and
-	 *	\ref 	Handle_Waypoint_output_ports "Output Ports"
+	 *	\ref 	Landing_input_ports "Input Ports" and
+	 *	\ref 	Landing_output_ports "Output Ports"
 	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
 	struct defs {
@@ -96,15 +93,15 @@ public:
 	std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> lp_reposition = std::make_shared<cadmium::dynamic::modeling::coupled<TIME>>("lp_reposition", lpr.submodels, lpr.iports, lpr.oports, lpr.eics, lpr.eocs, lpr.ics);
 
 	/**
-	 * 	\anchor	Handle_Waypoint_input_ports
+	 * 	\anchor	Landing_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
-	 * 	\param 	i_aircraft_state	Port for
-	 * 	\param 	i_landing_achieved	Port for
-	 * 	\param 	i_LP_recv			Port for
-	 * 	\param 	i_pilot_takeover	Port for
-	 * 	\param 	i_PLP_ach			Port for
-	 * 	\param 	i_start_mission		Port for
+	 * 	Definition of the input ports for the model.
+	 * 	\param 	i_aircraft_state	Port for receiving the current state of the aircraft.
+	 * 	\param 	i_landing_achieved	Port for receiving signal indicating that the aircraft has successfully landed.
+	 * 	\param 	i_LP_recv			Port for receiving landing points from the perception system.
+	 * 	\param 	i_pilot_takeover	Port for signal indicating that the pilot has taken control from the supervisor.
+	 * 	\param 	i_PLP_ach			Port for receiving signal indicating that the planned landing point has been achieved.
+	 * 	\param 	i_start_mission		Port for receiving signal indicating the mission has started.
 	 */
 	cadmium::dynamic::modeling::Ports iports = {
 		typeid(Landing::defs::i_aircraft_state),
@@ -116,23 +113,23 @@ public:
 	};
 
 	/**
-	 *	\anchor	Handle_Waypoint_output_ports
+	 *	\anchor	Landing_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
-	 * 	\param 	o_control_yielded				Port for
-	 * 	\param 	o_fcc_command_hover				Port for
-	 * 	\param 	o_fcc_command_land				Port for
-	 * 	\param 	o_fcc_command_orbit				Port for
-	 * 	\param 	o_fcc_command_velocity			Port for
-	 * 	\param 	o_LP_expired					Port for
-	 * 	\param 	o_LP_new					 	Port for
-	 * 	\param 	o_mission_complete				Port for
-	 * 	\param 	o_notify_pilot					Port for
-	 * 	\param 	o_request_aircraft_state		Port for
-	 * 	\param 	o_set_mission_monitor_status	Port for
-	 * 	\param 	o_update_boss					Port for
-	 * 	\param 	o_update_gcs					Port for
-	 * 	\param 	o_update_mission_item			Port for
+	 * 	Definition of the output ports for the model.
+	 * 	\param 	o_control_yielded				Port for sending an acknowledgement that the supervisor has relinquished control of the aircraft.
+	 * 	\param 	o_fcc_command_hover				Port for sending hover commands to the FCC.
+	 * 	\param 	o_fcc_command_land				Port for sending land commands to the FCC.
+	 * 	\param 	o_fcc_command_orbit				Port for orbit commands to the FCC.
+	 * 	\param 	o_fcc_command_velocity			Port for sending velocity commands to the FCC.
+	 * 	\param 	o_LP_expired					Port for sending notification that the LP accept timer has expired.
+	 * 	\param 	o_LP_new					 	Port for sending new valid landing points.
+	 * 	\param 	o_mission_complete				Port for declaring the mission as being complete after landing.
+	 * 	\param 	o_notify_pilot					Port for notifying the pilot that they should take control of the aircraft.
+	 * 	\param 	o_request_aircraft_state		Port for requesting the current aircraft state.
+	 * 	\param 	o_set_mission_monitor_status	Port for telling the mission monitor to stop monitoring mission progress.
+	 * 	\param 	o_update_boss					Port for sending updates to BOSS.
+	 * 	\param 	o_update_gcs					Port for sending updates to the GCS.
+	 * 	\param 	o_update_mission_item			Port for updating the mission manager that the last mission item has been reached.
 	 */
 	cadmium::dynamic::modeling::Ports oports = {
 		typeid(Landing::defs::o_control_yielded),
@@ -152,13 +149,13 @@ public:
 	};
 
 	/**
-	 *	\anchor	Handle_Waypoint_submodels
+	 *	\anchor	Landing_submodels
 	 * 	\par 	Output Ports
 	 * 	Definition of the sub-models that make up the coupled model.
-	 * 	\param 	lp_manager			Model for
-	 *	\param 	stabilize			Model for
-	 *	\param 	handover_control	Model for
-	 *	\param 	lp_reposition		Model for
+	 * 	\param 	lp_manager			Model for behaviour after receiving a plp or lp.
+	 *	\param 	stabilize			Model for bringing the aircraft to a stabilized state.
+	 *	\param 	handover_control	Model for handing over control of the aircraft to the pilot.
+	 *	\param 	lp_reposition		Model for behaviour of the aircraft when attempting to land.
 	 */
 	cadmium::dynamic::modeling::Models submodels = {
 		lp_manager,
