@@ -1,16 +1,14 @@
 /**
- *	\brief		An atomic model for caching inputs for later access.
- *	\details	This header file defines an input atomic model for use in the
-                Cadmium DEVS simulation software.
+ * 	\file		Cache_Input.hpp
+ *	\brief		Definition of the Cache Input atomic model.
+ *	\details	This header file defines the Cache Input atomic model for use in the Cadmium DEVS
+				simulation software. The model receives inputs and caches them for later access.
+ *	\author		Tanner Trautrim
  *	\author		James Horner
  */
 
 #ifndef CACHE_INPUT_HPP
 #define CACHE_INPUT_HPP
-
-// Cadmium Simulator Headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/message_bag.hpp>
 
 // Utility functions
 #include "../enum_string_conversion.hpp"
@@ -18,74 +16,104 @@
 // Constants
 #include "../Constants.hpp"
 
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
 // System libraries
+#include <iostream>
 #include <string>
 
-// Input and output port definitions
-template<typename MSG> struct Cache_Input_defs{
+/**
+ *	\brief	For definition of the input and output ports see:
+ *	\ref 	Cache_Input_input_ports "Input Ports" and
+ *	\ref 	Cache_Input_output_ports "Output Ports"
+ * 	\note 	All input and output ports must be listed in this struct.
+ */
+template<typename MSG> struct Cache_Input_defs {
     struct i_new_input   	: public cadmium::in_port<MSG> { };
     struct i_get_input   	: public cadmium::in_port<bool> { };
     struct o_cached_input	: public cadmium::out_port<MSG> { };
 };
 
-// Atomic model
+/**
+ *	\class		Cache_Input
+ *	\brief		Definition of the Cache Input atomic model.
+ *	\details	This class defines the Cache Input atomic model for use in the Cadmium DEVS
+				simulation software. The model receives inputs and caches them for later access.
+ */
 template<typename MSG, typename TIME>
 class Cache_Input {
-
-// Private members.
-private:
-
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(SEND)
 	);
 
-    // Default constructor
+	/**
+	 * 	\anchor	Cache_Input_input_ports
+	 *	\par	Input Ports
+	 * 	Definition of the input ports for the model.
+	 * 	\param 	i_new_input	Port for receiving a new message to cache.
+	 * 	\param 	i_get_input	Port for requesting a cached message be sent.
+	 */
+	using input_ports=std::tuple<
+			typename Cache_Input_defs<MSG>::i_new_input,
+			typename Cache_Input_defs<MSG>::i_get_input
+	>;
+
+	/**
+	 *	\anchor	Cache_Input_output_ports
+	 * 	\par 	Output Ports
+	 * 	Definition of the output ports for the model.
+	 * 	\param	o_cached_input	Port for outputting cached messages.
+	 */
+	using output_ports=std::tuple<
+			typename Cache_Input_defs<MSG>::o_cached_input
+	>;
+
+	/**
+	 *	\anchor	Cache_Input_state_type
+	 *	\par	State
+	 * 	Definition of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
+	 * 	\param 	cached_input 	Message to store for future retrieval.
+	 */
+	struct state_type{
+		States current_state;
+		MSG cached_input;
+	} state;
+
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
     Cache_Input() {
         state.current_state = States::IDLE;
 		state.cached_input = MSG();
     }
 
-    // Constructor with polling rate parameter
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
     explicit Cache_Input(MSG initial_cached_input) {
         state.current_state = States::IDLE;
 		state.cached_input = initial_cached_input;
     }
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
-    struct state_type{
-        States current_state;
-		MSG cached_input;
-    };
-    state_type state;
-
-	// Create a tuple of input ports (required for the simulator)
-    using input_ports=std::tuple<
-		typename Cache_Input_defs<MSG>::i_new_input,
-		typename Cache_Input_defs<MSG>::i_get_input
-	>;
-
-    // Create a tuple of output ports (required for the simulator)
-    using output_ports=std::tuple<
-		typename Cache_Input_defs<MSG>::o_cached_input
-	>;
-
-	// Internal transitions
-	// These are transitions occurring from internal inputs
-	// (required for the simulator)
+	/// Internal transitions of the model
     void internal_transition() {
         if (state.current_state == States::SEND) {
             state.current_state = States::IDLE;
         }
     }
 
-	// External transitions
-	// These are transitions occurring from external inputs
-	// (required for the simulator)
+	/// External transitions of the model
     void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         bool new_input = cadmium::get_messages<typename Cache_Input_defs<MSG>::i_new_input>(mbs).size() >= 1;
         bool get_input = cadmium::get_messages<typename Cache_Input_defs<MSG>::i_get_input>(mbs).size() >= 1;
@@ -101,14 +129,13 @@ public:
         }
     }
 
-	// Confluence transition
-	// Used to call set call precedent
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
     void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
         internal_transition();
         external_transition(TIME(), std::move(mbs));
     }
 
-    // Output function
+	/// Function for generating output from the model before internal transitions.
     [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<MSG> bag_port_message;
@@ -124,8 +151,7 @@ public:
         return bags;
     }
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
     TIME time_advance() const {
         switch (state.current_state) {
             case States::IDLE:
@@ -135,12 +161,22 @@ public:
         }
     }
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
     friend std::ostringstream& operator<<(std::ostringstream& os, const typename Cache_Input<MSG, TIME>::state_type& i) {
         os << "State: " << enumToString(i.current_state) + std::string("\n");
         return os;
     }
 };
 
+/**
+ *	\class		Cache_Input_Boolean
+ *	\brief		Definition of the Cache Input atomic model.
+ *	\details	This class defines the Cache Input atomic model for use in the Cadmium DEVS
+				simulation software. The model receives boolean inputs and caches them for later access.
+ */
 template<typename T>
 class Cache_Input_Boolean : public Cache_Input<bool, T> {
 public:

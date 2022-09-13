@@ -1,96 +1,117 @@
 /**
- *	\brief		An atomic model for receiving input on demand into the simulation based on a condition.
- *	\details	This header file defines a polling conditional input atomic model that is activated upon
-				a condition becoming true for use in the RT-Cadmium DEVS simulation software.
+ * 	\file		Polling_Condition_Input.hpp
+ *	\brief		Definition of the Polling Condition Input atomic model.
+ *	\details	This header file defines the Polling Condition Input atomic model for use in the Cadmium DEVS
+				simulation software. The model polls shared memory when requested.
+ *	\author		Tanner Trautrim
  *	\author		James Horner
  */
 
 #ifndef POLLING_CONDITION_INPUT_HPP
 #define POLLING_CONDITION_INPUT_HPP
 
- // System libraries
+// Utility functions
+#include "../enum_string_conversion.hpp"
+
+// Constants
+#include "../Constants.hpp"
+
+// RT-Cadmium
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// Shared Memory Model
+#include <sharedmemorymodel/SharedMemoryModel.h>
+
+// System libraries
 #include <iostream>
-#include <assert.h>
 #include <string>
 #include <vector>
 
-// RT-Cadmium
-#include "cadmium/engine/pdevs_dynamic_runner.hpp"
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-#include "cadmium/modeling/dynamic_model.hpp"
-
-// Shared Memory Model
-#include "sharedmemorymodel/SharedMemoryModel.h"
-
-// Includes
-#include "../enum_string_conversion.hpp"
-#include "../Constants.hpp"
-
-// Atomic model
+/**
+ *	\class		Polling_Condition_Input
+ *	\brief		Definition of the Polling Condition Input atomic model.
+ *	\details	This class defines the Polling Condition Input atomic model for use in the Cadmium DEVS
+				simulation software. The model polls shared memory when requested.
+ */
 template<typename START_TYPE, typename QUIT_TYPE, typename TIME>
 class Polling_Condition_Input {
-
-	// Private members.
-private:
-	TIME polling_rate;
-
-protected:
-	virtual bool setup() {return false;};
-	virtual bool check_condition() {return false;};
-
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(POLL)
 	);
 
-	// Input and output port definitions
+	/**
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	Polling_Condition_Input_input_ports "Input Ports" and
+	 *	\ref 	Polling_Condition_Input_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
+	 */
 	struct defs {
-		struct o_message : public cadmium::out_port<bool> { };
-		struct i_start : public cadmium::in_port<START_TYPE> { };
 		struct i_quit : public cadmium::in_port<QUIT_TYPE> { };
+		struct i_start : public cadmium::in_port<START_TYPE> { };
+		struct o_message : public cadmium::out_port<bool> { };
 	};
 
-	// Default constructor
-	Polling_Condition_Input() {
-		//Initialise the current state
-		state.current_state = States::IDLE;
-		state.condition_met = false;
+	/**
+	 * 	\anchor	Polling_Condition_Input_input_ports
+	 *	\par	Input Ports
+	 * 	Definition of the input ports for the model.
+	 * 	\param 	i_quit	Port for to stop polling the memory location.
+	 * 	\param 	i_start	Port for to start polling the memory location.
+	 */
+	using input_ports = std::tuple<
+			typename Polling_Condition_Input::defs::i_quit,
+			typename Polling_Condition_Input::defs::i_start
+	>;
 
-		//Set the rate at which the shared memory segement will be polled.
-		polling_rate = TIME("00:00:00:100");
-	}
+	/**
+	 *	\anchor	Polling_Condition_Input_output_ports
+	 * 	\par 	Output Ports
+	 * 	Definition of the output ports for the model.
+	 * 	\param	o_message	Port for outputting messages.
+	 */
+	using output_ports = std::tuple<typename Polling_Condition_Input::defs::o_message>;
 
-	// Constructor with polling rate and name parameters
-	Polling_Condition_Input(TIME rate) : polling_rate(rate) {
-		//Initialise the current state
-		state.current_state = States::IDLE;
-		state.condition_met = false;
-	}
-
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
+	/**
+	 *	\anchor	Polling_Condition_Input_state_type
+	 *	\par	State
+	 * 	Definition of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
+	 * 	\param 	condition_met 	Flag to notify that it is time to poll.
+	 */
 	struct state_type {
 		States current_state;
 		bool condition_met;
-	};
-	state_type state;
+	} state;
 
-	// Create a tuple of input ports (required for the simulator)
-	using input_ports = std::tuple<
-		typename Polling_Condition_Input::defs::i_start,
-		typename Polling_Condition_Input::defs::i_quit
-	>;
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
+	Polling_Condition_Input() {
+		state.current_state = States::IDLE;
+		state.condition_met = false;
 
-	// Create a tuple of output ports (required for the simulator)
-	using output_ports = std::tuple<typename Polling_Condition_Input::defs::o_message>;
+		//Set the rate at which the shared memory segment will be polled.
+		polling_rate = TIME("00:00:00:100");
+	}
 
-	// Internal transitions
-	// These are transitions occuring from internal inputs
-	// (required for the simulator)
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	rate	Polling frequency.
+	 */
+	explicit Polling_Condition_Input(TIME rate) : polling_rate(rate) {
+		state.current_state = States::IDLE;
+		state.condition_met = false;
+	}
+
+	/// Internal transitions of the model
 	void internal_transition() {
 		if (state.condition_met) {
 			state.current_state = States::IDLE;
@@ -101,10 +122,8 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occuring from external inputs
-	// (required for the simulator)
-	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+	/// External transitions of the model
+	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		if (cadmium::get_messages<typename Polling_Condition_Input::defs::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
@@ -113,14 +132,13 @@ public:
 		}
 	}
 
-	// Confluence transition
-	// Used to call set call precedence
-	void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		external_transition(TIME(), std::move(mbs));
 		internal_transition();
 	}
 
-	// Output function
+	/// Function for generating output from the model before internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<bool> bag_port_message;
@@ -131,8 +149,7 @@ public:
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
@@ -149,21 +166,37 @@ public:
 		}
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Polling_Condition_Input<START_TYPE, QUIT_TYPE, TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state) << "-" << (i.condition_met ? "MET" : "NOT_MET");
 		return os;
 	}
+
+protected:
+	/// Used to setup the shared memory.
+	virtual bool setup() {return false;};
+	/// Used to verify the shared memory is accessible.
+	virtual bool check_condition() {return false;};
+	TIME polling_rate;
 };
 
 /**
- * \brief   Polling Condition Input for testing.
- * \author	James Horner
+ *	\class		Polling_Condition_Input_Test
+ *	\brief		Definition of the Polling Condition Input atomic model.
+ *	\details	This class defines the Polling Condition Input atomic model for use in the Cadmium DEVS
+				simulation software. The model is only used for testing.
  */
 template<typename TIME>
 class Polling_Condition_Input_Test : public Polling_Condition_Input<bool, bool, TIME> {
 public:
     Polling_Condition_Input_Test() = default;
-    Polling_Condition_Input_Test(TIME rate) : Polling_Condition_Input<bool, bool, TIME>(rate) {
+    explicit Polling_Condition_Input_Test(TIME rate) : Polling_Condition_Input<bool, bool, TIME>(rate) {
+		this->polling_rate = rate;
+		number_polls = 0;
+
 		if (!setup()) {
 			throw(std::runtime_error("Could not set up polling condition input test."));
 		}
@@ -180,12 +213,14 @@ public:
 	}
 
 private:
-	int number_polls;
+	int number_polls{};
 };
 
 /**
- * \brief   Polling Condition Input for Landing Achieved.
- * \author	James Horner
+ *	\class		Polling_Condition_Input
+ *	\brief		Definition of the Polling Condition Input atomic model.
+ *	\details	This class defines the Polling Condition Input atomic model for use in the Cadmium DEVS
+				simulation software. The model polls shared memory for aircraft height when requested.
  */
 template<typename TIME>
 class Polling_Condition_Input_Landing_Achieved : public Polling_Condition_Input<message_fcc_command_t, bool, TIME> {
@@ -215,18 +250,20 @@ public:
 
 private:
 	SharedMemoryModel model;
-	float landing_height_ft;
+	float landing_height_ft{};
 };
 
 /**
- * \brief   Polling Condition Input for Pilot Takeover.
- * \author	James Horner
+ *	\class		Polling_Condition_Input
+ *	\brief		Definition of the Polling Condition Input atomic model.
+ *	\details	This class defines the Polling Condition Input atomic model for use in the Cadmium DEVS
+				simulation software. The model polls shared memory for safety status when requested.
  */
 template<typename TIME>
 class Polling_Condition_Input_Pilot_Takeover : public Polling_Condition_Input<message_start_supervisor_t, bool, TIME> {
 public:
     Polling_Condition_Input_Pilot_Takeover() = default;
-    Polling_Condition_Input_Pilot_Takeover(TIME rate) :
+    explicit Polling_Condition_Input_Pilot_Takeover(TIME rate) :
 		Polling_Condition_Input<message_start_supervisor_t, bool, TIME>(rate) {
 		if (!setup()) {
 			throw(std::runtime_error("Could not set up polling condition input for pilot takeover."));
@@ -255,7 +292,7 @@ public:
 
 private:
 	SharedMemoryModel model;
-	uint32_t engaged;
+	uint32_t engaged{};
 };
 
 #endif /* POLLING_CONDITION_INPUT_HPP */

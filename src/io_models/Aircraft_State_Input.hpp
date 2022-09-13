@@ -1,53 +1,91 @@
 /**
- *	\brief		An atomic model for receiving input into the simulation from shared memory.
- *	\details	This header file defines a polling shared memory input atomic model for use
- 				in the RT-Cadmium DEVS simulation software.
+ * 	\file		Aircraft_State_Input.hpp
+ *	\brief		Definition of the Aircraft State Input atomic model.
+ *	\details	This header file defines the Aircraft State Input atomic model for use in the Cadmium DEVS
+				simulation software. The model connects to shared memory and outputs the aircraft state.
+ *	\author		Tanner Trautrim
  *	\author		James Horner
  */
 
 #ifdef RT_LINUX
 #ifndef AIRCRAFT_STATE_INPUT_HPP
 #define AIRCRAFT_STATE_INPUT_HPP
-// System libraries
-#include <iostream>
-#include <cassert>
 
-#include <string>
-
-// Cadmium
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
-// Shared Memory Model
-#include "sharedmemorymodel/SharedMemoryModel.h"
-
-// Includes
-#include "../enum_string_conversion.hpp"
+// Message structures
 #include "../message_structures/message_aircraft_state_t.hpp"
 
-// Input and output port definitions
+// Utility functions
+#include "../enum_string_conversion.hpp"
+
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// Shared Memory Model
+#include <sharedmemorymodel/SharedMemoryModel.h>
+
+// System libraries
+#include <cassert>
+#include <string>
+
+/**
+ *	\brief	For definition of the input and output ports see:
+ *	\ref 	Aircraft_State_Input_input_ports "Input Ports" and
+ *	\ref 	Aircraft_State_Input_output_ports "Output Ports"
+ * 	\note 	All input and output ports must be listed in this struct.
+ */
 struct Aircraft_State_Input_defs {
 	struct o_message : public cadmium::out_port<message_aircraft_state_t> { };
 	struct i_request : public cadmium::in_port<bool> { };
 };
 
-// Atomic model
+/**
+ *	\class		Aircraft_State_Input
+ *	\brief		Definition of the Aircraft State Input atomic model.
+ *	\details	This class defines the Aircraft State Input atomic model for use in the Cadmium DEVS
+				simulation software. The model connects to shared memory and outputs the aircraft state.
+ */
 template<typename TIME>
 class Aircraft_State_Input {
-
-	// Private members.
-private:
-	SharedMemoryModel model;
-
 public:
-	// Used to keep track of the states
-	// (not required for the simulator)
+	/**
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 		(IDLE)
 		(SEND)
 	);
 
-	// Default constructor
+	/**
+	 * 	\anchor	Aircraft_State_Input_input_ports
+	 *	\par	Input Ports
+	 * 	Definition of the input ports for the model.
+	 * 	\param 	i_request	Port for receiving a request to get an aircraft state.
+	 */
+	using input_ports = std::tuple<typename Aircraft_State_Input_defs::i_request>;
+
+	/**
+	 *	\anchor	Aircraft_State_Input_output_ports
+	 * 	\par 	Output Ports
+	 * 	Definition of the output ports for the model.
+	 * 	\param	o_message	Port for sending aircraft state messages.
+	 */
+	using output_ports = std::tuple<typename Aircraft_State_Input_defs::o_message>;
+
+	/**
+	 *	\anchor	Aircraft_State_Input_state_type
+	 *	\par	State
+	 * 	Definition of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
+	 */
+	struct state_type {
+		States current_state;
+	} state;
+
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Aircraft_State_Input() {
 		//Initialise the current state
 		state.current_state = States::IDLE;
@@ -59,27 +97,14 @@ public:
 		}
 	}
 
-	// Destructor for disconnecting from shared memory.
+	/**
+	 * \brief 	Destructor for disconnecting from shared memory.
+	 */
 	~Aircraft_State_Input() {
 		model.disconnectSharedMem();
 	}
 
-	// This is used to track the state of the atomic model.
-	// (required for the simulator)
-	struct state_type {
-		States current_state;
-	};
-	state_type state;
-
-	// Create a tuple of input ports (required for the simulator)
-	using input_ports = std::tuple<typename Aircraft_State_Input_defs::i_request>;
-
-	// Create a tuple of output ports (required for the simulator)
-	using output_ports = std::tuple<typename Aircraft_State_Input_defs::o_message>;
-
-	// Internal transitions
-	// These are transitions occurring from internal inputs
-	// (required for the simulator)
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state)
 		{
@@ -92,9 +117,7 @@ public:
 		}
 	}
 
-	// External transitions
-	// These are transitions occurring from external inputs
-	// (required for the simulator)
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_request = !cadmium::get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).empty();
 		if (received_request) {
@@ -102,14 +125,13 @@ public:
 		}
 	}
 
-	// Confluence transition
-	// Used to call set call precedence
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
-	// Output function
+	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<message_aircraft_state_t> bag_port_message;
@@ -130,8 +152,7 @@ public:
 		return bags;
 	}
 
-	// Time advance
-	// Used to set the internal time of the current state
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		switch (state.current_state) {
 			case States::IDLE:
@@ -143,11 +164,19 @@ public:
 		}
 	}
 
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Aircraft_State_Input<TIME>::state_type& i) {
 		os << "State: " << enumToString(i.current_state);
 		return os;
 	}
+
+private:
+	// Variable used for shared memory management and access
+	SharedMemoryModel model;
 };
 
-#endif /* AIRCRAFT_STATE_INPUT_HPP */
-#endif /* RT_LINUX */
+#endif // AIRCRAFT_STATE_INPUT_HPP
+#endif // RT_LINUX

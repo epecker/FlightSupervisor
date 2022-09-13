@@ -1,71 +1,118 @@
 /**
- *	\brief		A generic atomic model used for creating packets.
- *	\details	This header file defines a packet builder which takes in
-				any signal and outputs a generic packet. This atomic model is for use
-				in the Cadmium DEVS simulation software.
+ * 	\file		Packet_Builder.hpp
+ *	\brief		Definition of the Packet Builder atomic model.
+ *	\details	This header file defines the Packet Builder atomic model for use in the Cadmium DEVS
+				simulation software. This model converts input messages into char buffers.
  *	\author		Tanner Trautrim
+ *	\author		James Horner
  */
 
 #ifndef PACKET_BUILDER_HPP
 #define PACKET_BUILDER_HPP
 
-#include <limits>
-#include <cstring>
-#include <cassert>
-
-#include <boost/container/vector.hpp>
-
-#include "cadmium/modeling/ports.hpp"
-#include "cadmium/modeling/message_bag.hpp"
-
+// Messages structures
 #include "../message_structures/message_update_gcs_t.hpp"
 #include "../message_structures/message_fcc_command_t.hpp"
 #include "../message_structures/message_boss_mission_update_t.hpp"
 #include "../message_structures/message_landing_point_t.hpp"
 
-#include "mavNRC/endian.hpp"
+// Utility Functions
 #include "../enum_string_conversion.hpp"
+#include <mavNRC/endian.hpp>
+
+// Constants
 #include "../Constants.hpp"
 
+// Cadmium Simulator Headers
+#include <cadmium/modeling/ports.hpp>
+#include <cadmium/modeling/message_bag.hpp>
+
+// Boost Headers
+#include <boost/container/vector.hpp>
+
+// System libraries
+#include <limits>
+#include <cstring>
+#include <cassert>
+
+/**
+ *	\class		Packet_Builder
+ *	\brief		Definition of the Packet Builder atomic model.
+ *	\details	This class defines the Packet Builder atomic model for use in the Cadmium DEVS
+				simulation software. This model converts input messages into char buffers.
+ */
 template<typename TYPE, typename TIME>
 class Packet_Builder {
 public:
+	/**
+	 *	\par	States
+	 * 	Declaration of the states of the atomic model.
+	 */
 	DEFINE_ENUM_WITH_STRING_CONVERSIONS(States,
 										(IDLE)
 										(GENERATE_PACKET)
 	);
 
-	// Input and output port definitions
+	/**
+	 *	\brief	For definition of the input and output ports see:
+	 *	\ref 	RUDP_Output_input_ports "Input Ports" and
+	 *	\ref 	RUDP_Output_output_ports "Output Ports"
+	 * 	\note 	All input and output ports must be listed in this struct.
+	 */
 	struct defs {
 		struct i_data : public cadmium::in_port<TYPE> {};
-        struct o_packet: public cadmium::out_port<std::vector<char>> {};
+		struct o_packet: public cadmium::out_port<std::vector<char>> {};
 	};
 
-	// Create a tuple of input ports (required for the simulator)
+	/**
+	 * 	\anchor	Packet_Builder_input_ports
+	 *	\par	Input Ports
+	 * 	Definition of the input ports for the model.
+	 * 	\param 	i_data	Port for receiving data to be converted into a packet.
+	 */
 	using input_ports = std::tuple<
-			typename Packet_Builder::defs::i_data
+			typename defs::i_data
 	>;
 
-	// Create a tuple of output ports (required for the simulator)
+	/**
+	 *	\anchor	Packet_Builder_output_ports
+	 * 	\par 	Output Ports
+	 * 	Definition of the output ports for the model.
+	 * 	\param	o_packet	Port for outputting the packet.
+	 */
 	using output_ports = std::tuple<
-			typename Packet_Builder::defs::o_packet
+			typename defs::o_packet
 	>;
 
-	// Tracks the state of the model
+	/**
+	 *	\anchor	Packet_Builder_state_type
+	 *	\par	State
+	 * 	Definition of the states of the atomic model.
+	 * 	\param 	current_state 	Current state of atomic model.
+	 */
 	struct state_type {
 		States current_state;
 	} state;
 
+	/**
+	 * \brief 	Default constructor for the model.
+	 */
 	Packet_Builder() {
 		state.current_state = States::IDLE;
 		packet_sequence = 0;
 	}
 
+	/**
+	 * \brief 	Constructor for the model with initial state parameter
+	 * 			for debugging or partial execution startup.
+	 * \param	initial_state	States initial state of the model.
+	 */
 	explicit Packet_Builder(States initial_state) {
 		state.current_state = initial_state;
 		packet_sequence = 0;
 	}
 
+	/// Internal transitions of the model
 	void internal_transition() {
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:
@@ -77,6 +124,7 @@ public:
 		}
 	}
 
+	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		bool received_data = !cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs).empty();
 
@@ -96,14 +144,13 @@ public:
 		}
 	}
 
-	// Confluence transition sets the internal/external precedence
-	// Triggered when a message is received at the same time as an internal transition.
-	// (required for the simulator)
+	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
 	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
 
+	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<std::vector<char>> packets;
@@ -123,6 +170,7 @@ public:
 		return bags;
 	}
 
+	/// Function to declare the time advance value for each state of the model.
 	TIME time_advance() const {
 		TIME next_internal;
 		switch (state.current_state) {
@@ -138,19 +186,26 @@ public:
 		return next_internal;
 	}
 
-	// Used for logging outputs the state's name. (required for the simulator)
+	/**
+	 *  \brief 		Operator for defining how the model state will be represented as a string.
+	 * 	\warning 	Prepended "State: " is required for log parsing, do not remove.
+	 */
 	friend std::ostringstream& operator<<(std::ostringstream& os, const typename Packet_Builder<TYPE, TIME>::state_type& i) {
 		os << (std::string("State: ") + enumToString(i.current_state) + std::string("\n"));
 		return os;
 	}
 
 protected:
+	/// Stores the data to be converted into a packet
     mutable boost::container::vector<TYPE> data;
+	/// Number of packets processed
 	uint8_t packet_sequence;
 
 private:
+	/// Defined if the data needs to be processed before being converted into a packet.
     virtual void preprocess_data(TYPE * data_point) {}
 
+	/// Packet generator - can be overloaded to allow for different packet types.
     [[nodiscard]] virtual std::vector<char> generate_packet(TYPE * data_point) const {
         std::vector<char> packet(sizeof(*data_point));
         std::memcpy(packet.data(), (char *)data_point, sizeof(*data_point));
@@ -159,10 +214,10 @@ private:
 };
 
 /**
- * \brief   Packet_Builder_Boss creates packets for use in output models
- * \details Packet_Builder_Boss uses the default implementation of
- *          generate_packet from Packet builder.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_Boss
+ *	\brief		Definition of the Packet Builder Boss atomic model.
+ *	\details	This class defines the Packet Builder Boss atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_fcc_command_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_Boss : public Packet_Builder<message_boss_mission_update_t, TIME> {
@@ -171,10 +226,10 @@ public:
 };
 
 /**
- * \brief   Packet_Builder_Boss creates packets for use in output models
- * \details Packet_Builder_Boss uses the default implementation of
- *          generate_packet from Packet builder.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_Bool
+ *	\brief		Definition of the Packet Builder Bool atomic model.
+ *	\details	This class defines the Packet Builder Bool atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_fcc_command_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_Bool : public Packet_Builder<bool, TIME> {
@@ -197,10 +252,10 @@ private:
 };
 
 /**
- * \brief   Packet_Builder_Boss creates packets for use in output models
- * \details Packet_Builder_Boss uses the default implementation of
- *          generate_packet from Packet builder.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_Uint8
+ *	\brief		Definition of the Packet Builder Uint8 atomic model.
+ *	\details	This class defines the Packet Builder Uint8 atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_fcc_command_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_Uint8 : public Packet_Builder<uint8_t, TIME> {
@@ -223,10 +278,10 @@ private:
 };
 
 /**
- * \brief   Packet_Builder_Int creates packets for use in output models
- * \details Packet_Builder_Int adds a identification byte to the front of
- *          the vector that it creates.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_Int
+ *	\brief		Definition of the Packet Builder Int atomic model.
+ *	\details	This class defines the Packet Builder Int atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_fcc_command_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_Int : public Packet_Builder<int, TIME> {
@@ -249,10 +304,10 @@ private:
 };
 
 /**
- * \brief   Packet_Builder_Boss creates packets for use in output models
- * \details Packet_Builder_Boss uses the default implementation of
- *          generate_packet from Packet builder.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_Landing_Point
+ *	\brief		Definition of the Packet Builder Landing Point atomic model.
+ *	\details	This class defines the Packet Builder Landing Point atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_landing_point_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_Landing_Point : public Packet_Builder<message_landing_point_t, TIME> {
@@ -268,10 +323,10 @@ public:
 };
 
 /**
- * \brief Packet_Builder_Fcc creates packets for use in output models
- * \details Packet_Builder_Fcc requires the bytes be swapped using a
- *          the functions specified in MavNRC endian.c.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_Fcc
+ *	\brief		Definition of the Packet Builder Fcc atomic model.
+ *	\details	This class defines the Packet Builder Fcc atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_fcc_command_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_Fcc : public Packet_Builder<message_fcc_command_t, TIME> {
@@ -286,10 +341,10 @@ private:
 };
 
 /**
- * \brief Packet_Builder_GCS creates packets for use in output models
- * \details Packet_Builder_GCS creates packets in the same style as mavlink.
- * 			This allows the packets to be sent systems using the mavlink protocol.
- * \author	Tanner Trautrim
+ *	\class		Packet_Builder_GCS
+ *	\brief		Definition of the Packet Builder GCS atomic model.
+ *	\details	This class defines the Packet Builder GCS atomic model for use in the Cadmium DEVS
+				simulation software. This model converts message_update_gcs_t messages into char buffers.
  */
 template<typename TIME>
 class Packet_Builder_GCS : public Packet_Builder<message_update_gcs_t, TIME> {
@@ -297,6 +352,7 @@ public:
 	Packet_Builder_GCS() = default;
 
 private:
+	/// Mavlink compatible structure
 	struct mavlink_message_t {
 		uint8_t magic;
 		uint8_t len;
@@ -309,6 +365,7 @@ private:
 		uint64_t payload64[(MAVLINK_MAX_PAYLOAD_LEN+MAVLINK_NUM_CHECKSUM_BYTES+7)/8];
 	};
 
+	/// Mavlink compatible structure
 	struct mavlink_statustext_t {
 		uint8_t severity;
 		char text[50];
@@ -316,6 +373,7 @@ private:
 		uint8_t chunk_seq;
 	};
 
+	/// Helper that generates the crc checksum
 	void crc_accumulate_CUSTOM(uint8_t data, uint16_t *crcAccum) const
 	{
 		uint8_t tmp;
@@ -325,6 +383,7 @@ private:
 		*crcAccum = (*crcAccum>>8) ^ (tmp<<8) ^ (tmp <<3) ^ (tmp>>4);
 	}
 
+	/// Generates the crc checksum
 	void crc(uint16_t *crcAccum, const uint8_t *header, uint16_t header_length, const uint8_t *buffer, uint16_t buffer_length, const uint8_t static_crc) const
 	{
 		while (header_length--) {
@@ -336,6 +395,7 @@ private:
 		crc_accumulate_CUSTOM(static_crc, crcAccum);
 	}
 
+	/// Helper that fills the packet buffer
 	void create_packet(uint8_t *buf, mavlink_message_t *msg) const
 	{
 		buf[0] = msg->magic;
@@ -356,6 +416,7 @@ private:
 		buf[MAVLINK_CORE_HEADER_LEN + msg->len + 2] = (uint8_t)(checksum >> 8);
 	}
 
+	/// Used to craft mavlink packages
 	void create_message(mavlink_message_t * msg, message_update_gcs_t * data_point) const {
 		mavlink_statustext_t status_text{};
 		status_text.severity = data_point->severity;

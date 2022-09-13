@@ -2,8 +2,8 @@
  * 	\file		UDP_Input_Async.hpp
  *	\brief		Definition of the UDP Input Asynchronous atomic model.
  *	\details	This header file defines the UDP Input Asynchronous atomic model for use in the Cadmium DEVS
-				simulation software. UDP Input Asynchronous is an atomic model for receiving UDP packets and 
-				forwarding them as Cadmim events.
+				simulation software. UDP Input Asynchronous is an atomic model for receiving UDP packets and
+				forwarding them as Cadmium events.
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -19,22 +19,16 @@
 #include "../Constants.hpp"
 
 // Cadmium Simulator Headers
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
 #include <cadmium/modeling/ports.hpp>
 #include <cadmium/modeling/message_bag.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
 
 // Boost Libraries
 #include <boost/asio.hpp>
 
 // System Libraries
-#include <iostream>
-#include <assert.h>
 #include <thread>
 #include <mutex>
 #include <string>
-#include <chrono>
-#include <sstream>
 
 // Guard to ensure that the model is run in real-time.
 #ifdef RT_LINUX
@@ -43,8 +37,8 @@
  * 	\class		UDP_Input_Async
  *	\brief		Definition of the UDP Input Asynchronous atomic model.
  *	\details	This class defines the UDP Input Asynchronous atomic model for use in the Cadmium DEVS
-				simulation software. UDP Input Asynchronous is an atomic model for receiving UDP packets and 
-				forwarding them as Cadmim events.
+				simulation software. UDP Input Asynchronous is an atomic model for receiving UDP packets and
+				forwarding them as Cadmium events.
  *	\tparam		MSG Template parameter for the message type.
  */
 template<typename MSG, typename TIME>
@@ -65,7 +59,6 @@ public:
 	 *	\ref 	UDP_Input_Async_output_ports "Output Ports"
 	 * 	\note 	All input and output ports must be listed in this struct.
 	 */
-	template<typename MSG>
 	struct defs {
 		struct o_message : public cadmium::out_port<MSG> { };
 		struct i_quit : public cadmium::in_port<bool> { };
@@ -74,23 +67,23 @@ public:
 	/**
 	 * 	\anchor	UDP_Input_Async_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 *	\param	i_quit	Port for receiving signal indicating that the model should stop listening for packets and passivate.
 	 */
-	using input_ports = std::tuple<typename defs<MSG>::i_quit>;
+	using input_ports = std::tuple<typename defs::i_quit>;
 
 	/**
 	 *	\anchor	UDP_Input_Async_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 * 	\param	o_message	Port to forward any packets received.
 	 */
-	using output_ports = std::tuple<typename defs<MSG>::o_message>;
+	using output_ports = std::tuple<typename defs::o_message>;
 
 	/**
 	 *	\anchor	UDP_Input_Async_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 * 	\param	has_messages	State variable indicating if any packets have been received since the last poll.
 	 * 	\param	message			Queue of messages that have been received by the child thread.
@@ -114,10 +107,10 @@ public:
 		stop = false;
 
 		//Create the network endpoint using a default address and port.
-		unsigned short port_num = (unsigned short)MAVLINK_OVER_UDP_PORT;
+		unsigned short port_num = MAVLINK_OVER_UDP_PORT;
 		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 
-		//Set the interupts for the program to stop the child thread.
+		// Set the interrupts for the program to stop the child thread.
 		// std::signal(SIGINT, UDP_Input_Async::handle_signal);
 		// std::signal(SIGTERM, UDP_Input_Async::handle_signal);
 
@@ -130,7 +123,7 @@ public:
 	 * 	\param	ack_required	bool true for if an acknowledgement should be sent back to the sender on packet receipt.
 	 * 	\param	port			unsigned short port number that the model should listen on.
 	 */
-	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, std::string port) {
+	UDP_Input_Async(cadmium::dynamic::modeling::AsyncEventSubject* sub, bool ack_required, const std::string& port) {
 		//Initialise the current state
 		state.current_state = States::INPUT;
 		state.has_messages = !state.message.empty();
@@ -140,10 +133,10 @@ public:
 		stop = false;
 
 		//Create the network endpoint using the supplied address and port.
-		unsigned short port_num = (unsigned short)strtoul(port.c_str(), NULL, 0);
+		unsigned short port_num = strtoul(port.c_str(), nullptr, 0);
 		network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), port_num);
 
-		//Set the interupts for the program to stop the child thread.
+		// Set the interrupts for the program to stop the child thread.
 		// std::signal(SIGINT, UDP_Input_Async::handle_signal);
 		// std::signal(SIGTERM, UDP_Input_Async::handle_signal);
 
@@ -165,7 +158,7 @@ public:
 
 	/// Member for shutting down the thread and IO services gracefully.
 	void shutdown() {
-		//Before exiting stop the Boost IO service to interupt the receipt handler.
+		//Before exiting stop the Boost IO service to interrupt the receipt handler.
 		stop = true;
 		io_service.stop();
 		if (socket.is_open())
@@ -182,20 +175,20 @@ public:
 	}
 
 	/// External transitions of the model
-	void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 		//If the thread has finished receiving input, change state if there are messages.
 		if (mutexLock.try_lock()) {
 			state.has_messages = !state.message.empty();
 		}
 
-		if (cadmium::get_messages<typename defs<MSG>::i_quit>(mbs).size() >= 1) {
+		if (cadmium::get_messages<typename defs::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
 	}
 
 	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.
-	void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
+	void confluence_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
 		internal_transition();
 		external_transition(TIME(), std::move(mbs));
 	}
@@ -212,7 +205,7 @@ public:
 					message_out.push_back(msg);
 				}
 				state.message.clear();
-			 cadmium::get_messages<typename defs<MSG>::o_message>(bags) = message_out;
+			 cadmium::get_messages<typename defs::o_message>(bags) = message_out;
 			}
 		}
 		return bags;
@@ -237,22 +230,22 @@ public:
 	}
 
 private:
-	/// Variable to store a pointer to the asynchronous event subject used by the simulator for asynchronous interupts.
-	cadmium::dynamic::modeling::AsyncEventSubject* _sub;
-
+	/// Variable to store a pointer to the asynchronous event subject used by the simulator for asynchronous interrupts.
+	cadmium::dynamic::modeling::AsyncEventSubject* _sub{};
     /// Variable for the mutex for thread synchronization using unique locks.
 	mutable std::mutex input_mutex;
-
+	/// Stores multiple messages
+	mutable std::vector<MSG> message;
 	/// Variable to store the endpoint that the model for listen for packets on.
 	boost::asio::ip::udp::endpoint network_endpoint;
 	/// Variable to store the origin endpoint of the packet that was just received.
 	boost::asio::ip::udp::endpoint remote_endpoint;
 	/// Variable to store the Boost IO service.
 	boost::asio::io_service io_service;
-	/// Variable to store the socket that the child thread will listen on. 
+	/// Variable to store the socket that the child thread will listen on.
 	boost::asio::ip::udp::socket socket{ io_service };
 	/// Buffer to hold the bytes received by RUDP until they can be parsed.
-	char recv_buffer[MAX_SER_BUFFER_CHARS];
+	char recv_buffer[MAX_SER_BUFFER_CHARS]{};
 
 	/// Variable to indicate if an acknowledgement should be sent back to the sender on packet receipt.
 	bool send_ack;
@@ -263,8 +256,8 @@ private:
 	/**
 	 * 	\anchor		UDP_Input_Async_child_thread
 	 *	\brief		Function receive_packet_thread is used as a child thread for receiving UDP packets.
-	 *	\details	The thread is started in the model constructor and constantly receives packets until 
-	 * 				the model is passivated. The packets are received then added to a queue to be sent 
+	 *	\details	The thread is started in the model constructor and constantly receives packets until
+	 * 				the model is passivated. The packets are received then added to a queue to be sent
 	 * 				as Cadmium events.
 	 */
 	void receive_packet_thread() {
@@ -295,7 +288,7 @@ private:
 
 	/// Handler that is called on UDP packet receipt by Boost.
 	void receive_packet(const boost::system::error_code& error, size_t bytes_transferred) {
-		//Aquire the unique lock for the state.message vector.
+		// Acquire the unique lock for the state.message vector.
 		std::unique_lock<std::mutex> mutexLock(input_mutex);
 		if (error) return;
 
