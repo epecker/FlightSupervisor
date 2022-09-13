@@ -197,18 +197,5 @@ int main() {
 	auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
 	std::cout << "Simulation took: " << elapsed << " seconds" << std::endl;
 
-	fflush(nullptr);
-	std::string path_to_script = PROJECT_DIRECTORY + std::string("/test/scripts/simulation_cleanup.py");
-	std::string path_to_simulation_results = PROJECT_DIRECTORY + std::string("/test/simulation_results");
-	if (std::system("python3 --version") == 0) {
-		std::string command = "python3 " + path_to_script + std::string(" ") + path_to_simulation_results;
-		std::system(command.c_str());
-	} else if (std::system("python --version") == 0) {
-		std::string command = "python " + path_to_script + std::string(" ") + path_to_simulation_results;
-		std::system(command.c_str());
-	} else {
-		std::cout << "\nPython is not installed!\n";
-	}
-
 	return 0;
 }
