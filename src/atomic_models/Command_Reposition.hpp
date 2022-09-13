@@ -1,7 +1,7 @@
 /**
  * 	\file		Command_Reposition.hpp
- *	\brief		Definition of the Command Repostion atomic model.
- *	\details	This header file defines the Command Repostion atomic model for use in the Cadmium DEVS
+ *	\brief		Definition of the Command Reposition atomic model.
+ *	\details	This header file defines the Command Reposition atomic model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when 
 				repositioning to a landing point.
  *	\author		Tanner Trautrim
@@ -34,8 +34,8 @@
 
 /**
  *	\class		Command_Reposition
- *	\brief		Definition of the Command Repostion atomic model.
- *	\details	This class defines the Command Repostion coupled model for use in the Cadmium DEVS
+ *	\brief		Definition of the Command Reposition atomic model.
+ *	\details	This class defines the Command Reposition coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when
 				repositioning to a landing point.
  */
@@ -413,9 +413,9 @@ public:
 	}
 
 private:
-	/// Varible for storing the current landing points being repositioned to.
+	/// Variable for storing the current landing points being repositioned to.
 	message_landing_point_t landing_point;
-	/// Varible for storing aircraft state when scheduling repostion velocities.
+	/// Variable for storing aircraft state when scheduling Reposition velocities.
 	message_aircraft_state_t aircraft_state;
 	/// Variable for storing the reposition velocity.
     mutable float velocity;
