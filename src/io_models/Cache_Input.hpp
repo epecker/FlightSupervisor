@@ -48,7 +48,7 @@ public:
 	*	\ref 	Cache_Input_output_ports "Output Ports"
 	* 	\note 	All input and output ports must be listed in this struct.
 	*/
-	template<typename MSG> struct defs {
+	struct defs {
 		struct i_new_input   	: public cadmium::in_port<MSG> { };
 		struct i_get_input   	: public cadmium::in_port<bool> { };
 		struct o_cached_input	: public cadmium::out_port<MSG> { };
@@ -62,8 +62,8 @@ public:
 	 * 	\param 	i_get_input	Port for requesting a cached message be sent.
 	 */
 	using input_ports=std::tuple<
-			typename defs<MSG>::i_new_input,
-			typename defs<MSG>::i_get_input
+			typename defs::i_new_input,
+			typename defs::i_get_input
 	>;
 
 	/**
@@ -73,7 +73,7 @@ public:
 	 * 	\param	o_cached_input	Port for outputting cached messages.
 	 */
 	using output_ports=std::tuple<
-			typename defs<MSG>::o_cached_input
+			typename defs::o_cached_input
 	>;
 
 	/**
@@ -115,13 +115,13 @@ public:
 
 	/// External transitions of the model
     void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        bool new_input = cadmium::get_messages<typename defs<MSG>::i_new_input>(mbs).size() >= 1;
-        bool get_input = cadmium::get_messages<typename defs<MSG>::i_get_input>(mbs).size() >= 1;
+        bool new_input = cadmium::get_messages<typename defs::i_new_input>(mbs).size() >= 1;
+        bool get_input = cadmium::get_messages<typename defs::i_get_input>(mbs).size() >= 1;
         if (state.current_state == States::IDLE) {
             if (new_input){
                 state.current_state = States::IDLE;
 				// Cache the most recent input (found at the back of the vector of inputs)
-                state.cached_input = cadmium::get_messages<typename defs<MSG>::i_new_input>(mbs).back();
+                state.cached_input = cadmium::get_messages<typename defs::i_new_input>(mbs).back();
             }
 			if (get_input) {
 				state.current_state = States::SEND;
@@ -143,7 +143,7 @@ public:
         switch(state.current_state) {
             case States::SEND:
 				bag_port_message.push_back(state.cached_input);
-				cadmium::get_messages<typename defs<MSG>::o_cached_input>(bags) = bag_port_message;
+				cadmium::get_messages<typename defs::o_cached_input>(bags) = bag_port_message;
 		        break;
             default:
                 break;
