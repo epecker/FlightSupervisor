@@ -25,22 +25,6 @@
 #include <NDTime.hpp>
 
 /**
- *	\brief	For definition of the input and output ports see:
- *	\ref 	On_Route_input_ports "Input Ports" and
- *	\ref 	On_Route_output_ports "Output Ports"
- * 	\note 	All input and output ports must be listed in this struct.
- */
-struct On_Route_defs {
-	/***** Define input port for coupled models *****/
-	struct i_pilot_takeover : public cadmium::out_port<bool> {};
-	struct i_start_mission : public cadmium::out_port<int> {};
-	struct i_waypoint : public cadmium::out_port<message_fcc_command_t> {};
-
-	/***** Define output ports for coupled model *****/
-	struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
-};
-
-/**
  * 	\class		On_Route
  *	\brief		Definition of the On_Route coupled model.
  *	\details	This class defines the On_Route coupled model for use in the Cadmium DEVS
@@ -51,6 +35,22 @@ class On_Route {
 	using TIME = NDTime;
 
 public:
+	/**
+	 *	\brief	For definition of the input and output ports see:
+	*	\ref 	On_Route_input_ports "Input Ports" and
+	*	\ref 	On_Route_output_ports "Output Ports"
+	* 	\note 	All input and output ports must be listed in this struct.
+	*/
+	struct defs {
+		/***** Define input port for coupled models *****/
+		struct i_pilot_takeover : public cadmium::out_port<bool> {};
+		struct i_start_mission : public cadmium::out_port<int> {};
+		struct i_waypoint : public cadmium::out_port<message_fcc_command_t> {};
+
+		/***** Define output ports for coupled model *****/
+		struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
+	};
+
 	// Instantiate the Atomic models.
 	std::shared_ptr <cadmium::dynamic::modeling::model> handle_waypoint = cadmium::dynamic::translate::make_dynamic_atomic_model<Handle_Waypoint, TIME>("handle_waypoint");
 
@@ -63,9 +63,9 @@ public:
 	 * 	\param 	i_waypoint			Port for receiving new waypoints during the on-route phase.
 	 */
  	cadmium::dynamic::modeling::Ports iports = {
-			typeid(On_Route_defs::i_pilot_takeover),
-			typeid(On_Route_defs::i_start_mission),
-			typeid(On_Route_defs::i_waypoint)
+			typeid(defs::i_pilot_takeover),
+			typeid(defs::i_start_mission),
+			typeid(defs::i_waypoint)
 	};
 
 	/**
@@ -75,7 +75,7 @@ public:
 	 * 	\param 	o_fcc_waypoint_update	Port for sending waypoint commands to the FCC.
 	 */
  	cadmium::dynamic::modeling::Ports oports = {
-			typeid(On_Route_defs::o_fcc_waypoint_update)
+			typeid(defs::o_fcc_waypoint_update)
 	};
 
 	/**
@@ -95,9 +95,9 @@ public:
 	 */
  	cadmium::dynamic::modeling::EICs eics = {
 		// handle_waypoint
-		cadmium::dynamic::translate::make_EIC<On_Route_defs::i_pilot_takeover, Handle_Waypoint<TIME>::defs::i_pilot_takeover>("handle_waypoint"),
-		cadmium::dynamic::translate::make_EIC<On_Route_defs::i_start_mission, Handle_Waypoint<TIME>::defs::i_start_mission>("handle_waypoint"),
-		cadmium::dynamic::translate::make_EIC<On_Route_defs::i_waypoint, Handle_Waypoint<TIME>::defs::i_waypoint>("handle_waypoint")
+		cadmium::dynamic::translate::make_EIC<defs::i_pilot_takeover, Handle_Waypoint<TIME>::defs::i_pilot_takeover>("handle_waypoint"),
+		cadmium::dynamic::translate::make_EIC<defs::i_start_mission, Handle_Waypoint<TIME>::defs::i_start_mission>("handle_waypoint"),
+		cadmium::dynamic::translate::make_EIC<defs::i_waypoint, Handle_Waypoint<TIME>::defs::i_waypoint>("handle_waypoint")
 	};
 
 	/**
@@ -107,7 +107,7 @@ public:
 	 */
  	cadmium::dynamic::modeling::EOCs eocs = {
 		 // handle_waypoint
-		 cadmium::dynamic::translate::make_EOC<Handle_Waypoint<TIME>::defs::o_fcc_waypoint_update, On_Route_defs::o_fcc_waypoint_update>("handle_waypoint"),
+		 cadmium::dynamic::translate::make_EOC<Handle_Waypoint<TIME>::defs::o_fcc_waypoint_update, defs::o_fcc_waypoint_update>("handle_waypoint"),
 	};
 
 	/**

@@ -105,40 +105,40 @@ int main() {
 
 	// This will connect our outputs from our input reader to the file
  	cadmium::dynamic::modeling::ICs ics_TestDriver = {
-		cadmium::dynamic::translate::make_IC<Polling_Condition_Input_Landing_Achieved<TIME>::defs::o_message, Supervisor_defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Polling_Condition_Input_Landing_Achieved<TIME>::defs::i_start>("supervisor", "im_landing_achieved"),
-		cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Polling_Condition_Input_Landing_Achieved<TIME>::defs::i_quit>("supervisor", "im_landing_achieved"),
+		cadmium::dynamic::translate::make_IC<Polling_Condition_Input_Landing_Achieved<TIME>::defs::o_message, Supervisor::defs::i_landing_achieved>("im_landing_achieved", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor::defs::o_fcc_command_land, Polling_Condition_Input_Landing_Achieved<TIME>::defs::i_start>("supervisor", "im_landing_achieved"),
+		cadmium::dynamic::translate::make_IC<Supervisor::defs::o_mission_complete, Polling_Condition_Input_Landing_Achieved<TIME>::defs::i_quit>("supervisor", "im_landing_achieved"),
 
-		cadmium::dynamic::translate::make_IC<Aircraft_State_Input_defs::o_message, Supervisor_defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_defs::o_request_aircraft_state, Aircraft_State_Input_defs::i_request>("supervisor", "im_aircraft_state"),
+		cadmium::dynamic::translate::make_IC<Aircraft_State_Input<TIME>::defs::o_message, Supervisor::defs::i_aircraft_state>("im_aircraft_state", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor::defs::o_request_aircraft_state, Aircraft_State_Input<TIME>::defs::i_request>("supervisor", "im_aircraft_state"),
 
-		cadmium::dynamic::translate::make_IC<Polling_Condition_Input_Pilot_Takeover<TIME>::defs::o_message, Supervisor_defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Polling_Condition_Input_Pilot_Takeover<TIME>::defs::o_message, Supervisor::defs::i_pilot_takeover>("im_pilot_takeover", "supervisor"),
 		// cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_start_supervisor, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_start>("im_udp_interface", "im_pilot_takeover"),
-		// cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_quit>("supervisor", "im_pilot_takeover"),
+		// cadmium::dynamic::translate::make_IC<Supervisor::defs::o_mission_complete, Polling_Condition_Input_Pilot_Takeover<TIME>::defs::i_quit>("supervisor", "im_pilot_takeover"),
 
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_lp_recv, Supervisor_defs::i_LP_recv>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_plp_ach, Supervisor_defs::i_PLP_ach>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_perception_status, Supervisor_defs::i_perception_status>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_start_supervisor, Supervisor_defs::i_start_supervisor>("im_udp_interface", "supervisor"),
-		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_waypoint, Supervisor_defs::i_waypoint>("im_udp_interface", "supervisor"),
-		// cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Supervisor_UDP_Input<TIME>::defs::i_quit>("supervisor", "im_udp_interface"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_lp_recv, Supervisor::defs::i_LP_recv>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_plp_ach, Supervisor::defs::i_PLP_ach>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_perception_status, Supervisor::defs::i_perception_status>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_start_supervisor, Supervisor::defs::i_start_supervisor>("im_udp_interface", "supervisor"),
+		cadmium::dynamic::translate::make_IC<Supervisor_UDP_Input<TIME>::defs::o_waypoint, Supervisor::defs::i_waypoint>("im_udp_interface", "supervisor"),
+		// cadmium::dynamic::translate::make_IC<Supervisor::defs::o_mission_complete, Supervisor_UDP_Input<TIME>::defs::i_quit>("supervisor", "im_udp_interface"),
 
 		// Output ICs
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_LP_new, Packet_Builder_Landing_Point<TIME>::defs::i_data>("supervisor", "pb_landing_point"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_LP_new, Packet_Builder_Landing_Point<TIME>::defs::i_data>("supervisor", "pb_landing_point"),
 
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_start_mission, Packet_Builder_Int<TIME>::defs::i_data>("supervisor", "pb_int_mission_start"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_mission_complete, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_complete"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_update_mission_item, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_update_mission_item"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_set_mission_monitor_status, Packet_Builder_Uint8<TIME>::defs::i_data>("supervisor", "pb_uint8_set_mission_monitor_status"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_start_mission, Packet_Builder_Int<TIME>::defs::i_data>("supervisor", "pb_int_mission_start"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_mission_complete, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_mission_complete"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_update_mission_item, Packet_Builder_Bool<TIME>::defs::i_data>("supervisor", "pb_bool_update_mission_item"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_set_mission_monitor_status, Packet_Builder_Uint8<TIME>::defs::i_data>("supervisor", "pb_uint8_set_mission_monitor_status"),
 
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_update_boss, Packet_Builder_Boss<TIME>::defs::i_data>("supervisor", "pb_boss"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_update_gcs, Packet_Builder_GCS<TIME>::defs::i_data>("supervisor", "pb_gcs"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_update_boss, Packet_Builder_Boss<TIME>::defs::i_data>("supervisor", "pb_boss"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_update_gcs, Packet_Builder_GCS<TIME>::defs::i_data>("supervisor", "pb_gcs"),
 
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_hover, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_land, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_orbit, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_fcc_command_velocity, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
-        cadmium::dynamic::translate::make_IC<Supervisor_defs::o_fcc_waypoint_update, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_fcc_command_hover, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_fcc_command_land, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_fcc_command_orbit, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_fcc_command_velocity, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
+        cadmium::dynamic::translate::make_IC<Supervisor::defs::o_fcc_waypoint_update, Packet_Builder_Fcc<TIME>::defs::i_data>("supervisor", "pb_fcc"),
 
         cadmium::dynamic::translate::make_IC<Packet_Builder_Boss<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_boss", "udp_boss"),
         cadmium::dynamic::translate::make_IC<Packet_Builder_Fcc<TIME>::defs::o_packet, UDP_Output<TIME>::defs::i_message>("pb_fcc", "udp_fcc"),

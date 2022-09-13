@@ -31,42 +31,6 @@
 #include <NDTime.hpp>
 
 /**
- *	\brief	For definition of the input and output ports see:
- *	\ref 	Supervisor_input_ports "Input Ports" and
- *	\ref 	Supervisor_output_ports "Output Ports"
- * 	\note 	All input and output ports must be listed in this struct.
- */
-struct Supervisor_defs {
-	/***** Define input port for coupled models *****/
-	struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
-	struct i_landing_achieved : public cadmium::in_port<bool> {};
-	struct i_LP_recv : public cadmium::in_port<message_landing_point_t> {};
-	struct i_perception_status : public cadmium::in_port<bool> {};
-	struct i_pilot_takeover : public cadmium::in_port<bool> {};
-	struct i_PLP_ach : public cadmium::in_port<message_landing_point_t> {};
-	struct i_start_supervisor : public cadmium::in_port<message_start_supervisor_t> {};
-	struct i_waypoint : public cadmium::in_port<message_fcc_command_t> {};
-
-	/***** Define output ports for coupled model *****/
-	struct o_control_yielded : public cadmium::out_port<bool> {};
-	struct o_fcc_command_hover : public cadmium::out_port<message_fcc_command_t> {};
-	struct o_fcc_command_land : public cadmium::out_port<message_fcc_command_t> {};
-	struct o_fcc_command_orbit : public cadmium::out_port<message_fcc_command_t> {};
-	struct o_fcc_command_velocity : public cadmium::out_port<message_fcc_command_t> {};
-	struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
-	struct o_LP_expired : public cadmium::out_port<message_landing_point_t> {};
-	struct o_LP_new : public cadmium::out_port<message_landing_point_t> {};
-	struct o_mission_complete : public cadmium::out_port<bool> {};
-	struct o_notify_pilot : public cadmium::out_port<bool> {};
-	struct o_request_aircraft_state : public cadmium::out_port<bool> {};
-	struct o_set_mission_monitor_status : public cadmium::out_port<uint8_t> {};
-	struct o_start_mission : public cadmium::out_port<int> {};
-	struct o_update_boss : public cadmium::out_port<message_boss_mission_update_t> {};
-	struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
-	struct o_update_mission_item : public cadmium::out_port<bool> {};
-};
-
-/**
  * 	\class		Supervisor
  *	\brief		Definition of the Supervisor coupled model.
  *	\details	This class defines the Supervisor coupled model for use in the Cadmium DEVS
@@ -76,6 +40,42 @@ class Supervisor {
 	using TIME = NDTime;
 
 public:
+	/**
+	 *	\brief	For definition of the input and output ports see:
+	*	\ref 	Supervisor_input_ports "Input Ports" and
+	*	\ref 	Supervisor_output_ports "Output Ports"
+	* 	\note 	All input and output ports must be listed in this struct.
+	*/
+	struct defs {
+		/***** Define input port for coupled models *****/
+		struct i_aircraft_state : public cadmium::in_port<message_aircraft_state_t> {};
+		struct i_landing_achieved : public cadmium::in_port<bool> {};
+		struct i_LP_recv : public cadmium::in_port<message_landing_point_t> {};
+		struct i_perception_status : public cadmium::in_port<bool> {};
+		struct i_pilot_takeover : public cadmium::in_port<bool> {};
+		struct i_PLP_ach : public cadmium::in_port<message_landing_point_t> {};
+		struct i_start_supervisor : public cadmium::in_port<message_start_supervisor_t> {};
+		struct i_waypoint : public cadmium::in_port<message_fcc_command_t> {};
+
+		/***** Define output ports for coupled model *****/
+		struct o_control_yielded : public cadmium::out_port<bool> {};
+		struct o_fcc_command_hover : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_fcc_command_land : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_fcc_command_orbit : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_fcc_command_velocity : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_fcc_waypoint_update : public cadmium::out_port<message_fcc_command_t> {};
+		struct o_LP_expired : public cadmium::out_port<message_landing_point_t> {};
+		struct o_LP_new : public cadmium::out_port<message_landing_point_t> {};
+		struct o_mission_complete : public cadmium::out_port<bool> {};
+		struct o_notify_pilot : public cadmium::out_port<bool> {};
+		struct o_request_aircraft_state : public cadmium::out_port<bool> {};
+		struct o_set_mission_monitor_status : public cadmium::out_port<uint8_t> {};
+		struct o_start_mission : public cadmium::out_port<int> {};
+		struct o_update_boss : public cadmium::out_port<message_boss_mission_update_t> {};
+		struct o_update_gcs : public cadmium::out_port<message_update_gcs_t> {};
+		struct o_update_mission_item : public cadmium::out_port<bool> {};
+	};
+
 	// Instantiate the Coupled models.
 	Takeoff takeoff_instance = Takeoff();
 	On_Route on_route_instance = On_Route();
@@ -99,14 +99,14 @@ public:
 	 * 	\param 	i_waypoint			Port for receiving new waypoints during the on-route phase.
 	 */
  	cadmium::dynamic::modeling::Ports iports = {
-		typeid(Supervisor_defs::i_aircraft_state),
-		typeid(Supervisor_defs::i_landing_achieved),
-		typeid(Supervisor_defs::i_LP_recv),
-		typeid(Supervisor_defs::i_perception_status),
-		typeid(Supervisor_defs::i_pilot_takeover),
-		typeid(Supervisor_defs::i_PLP_ach),
-		typeid(Supervisor_defs::i_start_supervisor),
-		typeid(Supervisor_defs::i_waypoint)
+		typeid(defs::i_aircraft_state),
+		typeid(defs::i_landing_achieved),
+		typeid(defs::i_LP_recv),
+		typeid(defs::i_perception_status),
+		typeid(defs::i_pilot_takeover),
+		typeid(defs::i_PLP_ach),
+		typeid(defs::i_start_supervisor),
+		typeid(defs::i_waypoint)
 	};
 
 	/**
@@ -131,22 +131,22 @@ public:
 	 * 	\param 	o_update_mission_item			Port for updating the mission manager that the last mission item has been reached.
 	 */
  	cadmium::dynamic::modeling::Ports oports = {
-		typeid(Supervisor_defs::o_control_yielded),
-		typeid(Supervisor_defs::o_fcc_command_hover),
-		typeid(Supervisor_defs::o_fcc_command_land),
-		typeid(Supervisor_defs::o_fcc_command_orbit),
-		typeid(Supervisor_defs::o_fcc_command_velocity),
-		typeid(Supervisor_defs::o_fcc_waypoint_update),
-		typeid(Supervisor_defs::o_LP_expired),
-		typeid(Supervisor_defs::o_LP_new),
-		typeid(Supervisor_defs::o_mission_complete),
-		typeid(Supervisor_defs::o_notify_pilot),
-		typeid(Supervisor_defs::o_request_aircraft_state),
-		typeid(Supervisor_defs::o_set_mission_monitor_status),
-		typeid(Supervisor_defs::o_start_mission),
-		typeid(Supervisor_defs::o_update_boss),
-		typeid(Supervisor_defs::o_update_gcs),
-		typeid(Supervisor_defs::o_update_mission_item)
+		typeid(defs::o_control_yielded),
+		typeid(defs::o_fcc_command_hover),
+		typeid(defs::o_fcc_command_land),
+		typeid(defs::o_fcc_command_orbit),
+		typeid(defs::o_fcc_command_velocity),
+		typeid(defs::o_fcc_waypoint_update),
+		typeid(defs::o_LP_expired),
+		typeid(defs::o_LP_new),
+		typeid(defs::o_mission_complete),
+		typeid(defs::o_notify_pilot),
+		typeid(defs::o_request_aircraft_state),
+		typeid(defs::o_set_mission_monitor_status),
+		typeid(defs::o_start_mission),
+		typeid(defs::o_update_boss),
+		typeid(defs::o_update_gcs),
+		typeid(defs::o_update_mission_item)
 	};
 
 	/**
@@ -170,20 +170,20 @@ public:
 	 */
  	cadmium::dynamic::modeling::EICs eics = {
 		// takeoff
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Takeoff::defs::i_aircraft_state>("takeoff"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_perception_status, Takeoff::defs::i_perception_status>("takeoff"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_start_supervisor, Takeoff::defs::i_start_supervisor>("takeoff"),
+		cadmium::dynamic::translate::make_EIC<defs::i_aircraft_state, Takeoff::defs::i_aircraft_state>("takeoff"),
+		cadmium::dynamic::translate::make_EIC<defs::i_perception_status, Takeoff::defs::i_perception_status>("takeoff"),
+		cadmium::dynamic::translate::make_EIC<defs::i_start_supervisor, Takeoff::defs::i_start_supervisor>("takeoff"),
 
 		// on_route
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_waypoint, On_Route_defs::i_waypoint>("on_route"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, On_Route_defs::i_pilot_takeover>("on_route"),
+		cadmium::dynamic::translate::make_EIC<defs::i_waypoint, On_Route::defs::i_waypoint>("on_route"),
+		cadmium::dynamic::translate::make_EIC<defs::i_pilot_takeover, On_Route::defs::i_pilot_takeover>("on_route"),
 
 		// landing
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_aircraft_state, Landing::defs::i_aircraft_state>("landing"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_landing_achieved, Landing::defs::i_landing_achieved>("landing"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_LP_recv, Landing::defs::i_LP_recv>("landing"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_pilot_takeover, Landing::defs::i_pilot_takeover>("landing"),
-		cadmium::dynamic::translate::make_EIC<Supervisor_defs::i_PLP_ach, Landing::defs::i_PLP_ach>("landing")
+		cadmium::dynamic::translate::make_EIC<defs::i_aircraft_state, Landing::defs::i_aircraft_state>("landing"),
+		cadmium::dynamic::translate::make_EIC<defs::i_landing_achieved, Landing::defs::i_landing_achieved>("landing"),
+		cadmium::dynamic::translate::make_EIC<defs::i_LP_recv, Landing::defs::i_LP_recv>("landing"),
+		cadmium::dynamic::translate::make_EIC<defs::i_pilot_takeover, Landing::defs::i_pilot_takeover>("landing"),
+		cadmium::dynamic::translate::make_EIC<defs::i_PLP_ach, Landing::defs::i_PLP_ach>("landing")
 	};
 
 	/**
@@ -193,29 +193,29 @@ public:
 	 */
  	cadmium::dynamic::modeling::EOCs eocs = {
 		// takeoff
-        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("takeoff"),
-        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("takeoff"),
-        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("takeoff"),
-        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_start_mission, Supervisor_defs::o_start_mission>("takeoff"),
+        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_request_aircraft_state, defs::o_request_aircraft_state>("takeoff"),
+        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_set_mission_monitor_status, defs::o_set_mission_monitor_status>("takeoff"),
+        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_update_gcs, defs::o_update_gcs>("takeoff"),
+        cadmium::dynamic::translate::make_EOC<Takeoff::defs::o_start_mission, defs::o_start_mission>("takeoff"),
 
 		// on_route
-		cadmium::dynamic::translate::make_EOC<On_Route_defs::o_fcc_waypoint_update, Supervisor_defs::o_fcc_waypoint_update>("on_route"),
+		cadmium::dynamic::translate::make_EOC<On_Route::defs::o_fcc_waypoint_update, defs::o_fcc_waypoint_update>("on_route"),
 
 		// landing
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_request_aircraft_state, Supervisor_defs::o_request_aircraft_state>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_control_yielded, Supervisor_defs::o_control_yielded>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_hover, Supervisor_defs::o_fcc_command_hover>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_land, Supervisor_defs::o_fcc_command_land>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_orbit, Supervisor_defs::o_fcc_command_orbit>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_velocity, Supervisor_defs::o_fcc_command_velocity>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_LP_expired, Supervisor_defs::o_LP_expired>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_LP_new, Supervisor_defs::o_LP_new>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_mission_complete, Supervisor_defs::o_mission_complete>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, Supervisor_defs::o_notify_pilot>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_update_boss, Supervisor_defs::o_update_boss>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_update_gcs, Supervisor_defs::o_update_gcs>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_set_mission_monitor_status, Supervisor_defs::o_set_mission_monitor_status>("landing"),
-		cadmium::dynamic::translate::make_EOC<Landing::defs::o_update_mission_item, Supervisor_defs::o_update_mission_item>("landing")
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_request_aircraft_state, defs::o_request_aircraft_state>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_control_yielded, defs::o_control_yielded>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_hover, defs::o_fcc_command_hover>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_land, defs::o_fcc_command_land>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_orbit, defs::o_fcc_command_orbit>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_fcc_command_velocity, defs::o_fcc_command_velocity>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_LP_expired, defs::o_LP_expired>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_LP_new, defs::o_LP_new>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_mission_complete, defs::o_mission_complete>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_notify_pilot, defs::o_notify_pilot>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_update_boss, defs::o_update_boss>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_update_gcs, defs::o_update_gcs>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_set_mission_monitor_status, defs::o_set_mission_monitor_status>("landing"),
+		cadmium::dynamic::translate::make_EOC<Landing::defs::o_update_mission_item, defs::o_update_mission_item>("landing")
 	};
 
 	/**
@@ -225,7 +225,7 @@ public:
 	 */
  	cadmium::dynamic::modeling::ICs ics = {
 		// on_route
-		cadmium::dynamic::translate::make_IC<Takeoff::defs::o_start_mission, On_Route_defs::i_start_mission>("takeoff", "on_route"),
+		cadmium::dynamic::translate::make_IC<Takeoff::defs::o_start_mission, On_Route::defs::i_start_mission>("takeoff", "on_route"),
 
 		// landing
 		cadmium::dynamic::translate::make_IC<Takeoff::defs::o_start_mission, Landing::defs::i_start_mission>("takeoff", "landing")

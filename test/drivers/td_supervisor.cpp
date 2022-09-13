@@ -109,14 +109,14 @@ int main() {
 
 		// This will connect our outputs from our input reader to the file
 	 	cadmium::dynamic::modeling::ICs ics_TestDriver = {
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_aircraft_state_t>::out, Supervisor_defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor_defs::i_perception_status>("ir_perception_status", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_start_supervisor_t>::out, Supervisor_defs::i_start_supervisor>("ir_start_supervisor", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out, Supervisor_defs::i_waypoint>("ir_waypoint", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor_defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_LP_recv>("ir_LP_recv", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor_defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_landing_point_t>::out, Supervisor_defs::i_PLP_ach>("ir_PLP_ach", "supervisor")
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_aircraft_state_t>::out, Supervisor::defs::i_aircraft_state>("ir_aircraft_state", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor::defs::i_perception_status>("ir_perception_status", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_start_supervisor_t>::out, Supervisor::defs::i_start_supervisor>("ir_start_supervisor", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_fcc_command_t>::out, Supervisor::defs::i_waypoint>("ir_waypoint", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor::defs::i_landing_achieved>("ir_landing_achieved", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_landing_point_t>::out, Supervisor::defs::i_LP_recv>("ir_LP_recv", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Supervisor::defs::i_pilot_takeover>("ir_pilot_takeover", "supervisor"),
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<message_landing_point_t>::out, Supervisor::defs::i_PLP_ach>("ir_PLP_ach", "supervisor")
 		};
 
 		shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test_driver = make_shared<cadmium::dynamic::modeling::coupled<TIME>>(
