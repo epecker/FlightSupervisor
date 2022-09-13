@@ -270,7 +270,7 @@ public:
 	}
 
 private:
-	/// Varible for storing the location at which the helicopter should hover at.
+	/// Variable for storing the location at which the helicopter should hover at.
 	message_landing_point_t hover_location;
 
 };
