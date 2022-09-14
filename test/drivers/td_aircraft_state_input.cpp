@@ -86,7 +86,7 @@ int main() {
 
 		// This will connect our outputs from our input reader to the file
 		cadmium::dynamic::modeling::ICs ics_TestDriver = {
-			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Aircraft_State_Input_defs::i_request>("ir_request", "aircraft_state_input")
+			cadmium::dynamic::translate::make_IC<cadmium::basic_models::pdevs::iestream_input_defs<bool>::out, Aircraft_State_Input<TIME>::defs::i_request>("ir_request", "aircraft_state_input")
 		};
 
 		std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> test_driver = std::make_shared<cadmium::dynamic::modeling::coupled<TIME>>(

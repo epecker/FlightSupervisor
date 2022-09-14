@@ -116,7 +116,7 @@ public:
 		cadmium::dynamic::translate::make_EIC<Takeoff::defs::i_start_supervisor, Mission_Initialization<TIME>::defs::i_start_supervisor>("mission_initialization"),
 
 		// takeoff to cache_input<bool>
-		cadmium::dynamic::translate::make_EIC<Takeoff::defs::i_perception_status, Cache_Input_defs<bool>::i_new_input>("cache_input")
+		cadmium::dynamic::translate::make_EIC<Takeoff::defs::i_perception_status, Cache_Input<bool, TIME>::defs::i_new_input>("cache_input")
 	};
 
 	/**
@@ -139,10 +139,10 @@ public:
 	 */
  	cadmium::dynamic::modeling::ICs ics = {
 		// mission_initialization
-		cadmium::dynamic::translate::make_IC<Mission_Initialization<TIME>::defs::o_request_perception_status, Cache_Input_defs<bool>::i_get_input>("mission_initialization", "cache_input"),
+		cadmium::dynamic::translate::make_IC<Mission_Initialization<TIME>::defs::o_request_perception_status, Cache_Input<bool, TIME>::defs::i_get_input>("mission_initialization", "cache_input"),
 
 		// cache_input
-		cadmium::dynamic::translate::make_IC<Cache_Input_defs<bool>::o_cached_input, Mission_Initialization<TIME>::defs::i_perception_status>("cache_input", "mission_initialization")
+		cadmium::dynamic::translate::make_IC<Cache_Input<bool, TIME>::defs::o_cached_input, Mission_Initialization<TIME>::defs::i_perception_status>("cache_input", "mission_initialization")
 	};
 };
 

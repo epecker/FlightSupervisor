@@ -29,17 +29,6 @@
 #include <string>
 
 /**
- *	\brief	For definition of the input and output ports see:
- *	\ref 	Aircraft_State_Input_input_ports "Input Ports" and
- *	\ref 	Aircraft_State_Input_output_ports "Output Ports"
- * 	\note 	All input and output ports must be listed in this struct.
- */
-struct Aircraft_State_Input_defs {
-	struct o_message : public cadmium::out_port<message_aircraft_state_t> { };
-	struct i_request : public cadmium::in_port<bool> { };
-};
-
-/**
  *	\class		Aircraft_State_Input
  *	\brief		Definition of the Aircraft State Input atomic model.
  *	\details	This class defines the Aircraft State Input atomic model for use in the Cadmium DEVS
@@ -58,12 +47,23 @@ public:
 	);
 
 	/**
+	 *	\brief	For definition of the input and output ports see:
+	*	\ref 	Aircraft_State_Input_input_ports "Input Ports" and
+	*	\ref 	Aircraft_State_Input_output_ports "Output Ports"
+	* 	\note 	All input and output ports must be listed in this struct.
+	*/
+	struct defs {
+		struct o_message : public cadmium::out_port<message_aircraft_state_t> { };
+		struct i_request : public cadmium::in_port<bool> { };
+	};
+
+	/**
 	 * 	\anchor	Aircraft_State_Input_input_ports
 	 *	\par	Input Ports
 	 * 	Definition of the input ports for the model.
 	 * 	\param 	i_request	Port for receiving a request to get an aircraft state.
 	 */
-	using input_ports = std::tuple<typename Aircraft_State_Input_defs::i_request>;
+	using input_ports = std::tuple<typename defs::i_request>;
 
 	/**
 	 *	\anchor	Aircraft_State_Input_output_ports
@@ -71,7 +71,7 @@ public:
 	 * 	Definition of the output ports for the model.
 	 * 	\param	o_message	Port for sending aircraft state messages.
 	 */
-	using output_ports = std::tuple<typename Aircraft_State_Input_defs::o_message>;
+	using output_ports = std::tuple<typename defs::o_message>;
 
 	/**
 	 *	\anchor	Aircraft_State_Input_state_type
@@ -119,7 +119,7 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		bool received_request = !cadmium::get_messages<typename Aircraft_State_Input_defs::i_request>(mbs).empty();
+		bool received_request = !cadmium::get_messages<typename defs::i_request>(mbs).empty();
 		if (received_request) {
 			state.current_state = States::SEND;
 		}
@@ -147,7 +147,7 @@ public:
 					sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
 			bag_port_message.push_back(message);
-			cadmium::get_messages<typename Aircraft_State_Input_defs::o_message>(bags) = bag_port_message;
+			cadmium::get_messages<typename defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}
