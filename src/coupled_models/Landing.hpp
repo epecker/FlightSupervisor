@@ -4,6 +4,7 @@
  *	\details	This header file defines the Landing coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor in
 				the landing phase of flight.
+ *	\image		html coupled_models/landing.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -45,6 +46,7 @@
  *	\details	This class defines the Landing coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor in
 				the landing phase of flight.
+ *	\image		html coupled_models/landing.png
  */
 class Landing {
 	using TIME = NDTime;
