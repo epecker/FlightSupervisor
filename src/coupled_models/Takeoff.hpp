@@ -4,6 +4,7 @@
  *	\details	This header file defines the Takeoff coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor in
 				the Takeoff phase of flight.
+ *	\image		html coupled_models/takeoff.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -35,6 +36,7 @@
  *	\details	This class defines the Takeoff coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor in
 				the Takeoff phase of flight.
+ *	\image		html coupled_models/takeoff.png
  */
 class Takeoff {
 	using TIME = NDTime;

@@ -4,6 +4,7 @@
  *	\details	This header file defines the On_Route coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when
 				a waypoint is met while on-route.
+ *	\image		html coupled_models/on_route.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -30,6 +31,7 @@
  *	\details	This class defines the On_Route coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when
 				a waypoint is met while on-route.
+ *	\image		html coupled_models/on_route.png
  */
 class On_Route {
 	using TIME = NDTime;

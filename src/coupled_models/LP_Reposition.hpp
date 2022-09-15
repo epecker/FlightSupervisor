@@ -1,9 +1,10 @@
 /**
  * 	\file		LP_Reposition.hpp
- *	\brief		Definition of the LP_Reposition coupled model.
+ *	\brief		Definition of the LP Reposition coupled model.
  *	\details	This header file defines the LP_Reposition coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor
 				when repositioning to a landing point.
+ *	\image		html coupled_models/lp_reposition.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -36,10 +37,11 @@
 
 /**
  * 	\class		LP_Reposition
- *	\brief		Definition of the Landing coupled model.
+ *	\brief		Definition of the LP Reposition coupled model.
  *	\details	This header file defines the LP_Reposition coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor
 				when repositioning to a landing point.
+ *	\image		html coupled_models/lp_reposition.png
  */
 class LP_Reposition {
 	using TIME = NDTime;
@@ -85,7 +87,8 @@ public:
 	 *	\par	Input Ports
 	 * 	Definition of the input ports for the model.
 	 * 	\param 	i_aircraft_state		Port for receiving the current state of the aircraft.
-	 * 	\param 	i_control_yielded		Port for receiving signal indicating control has been handed over to the pilot
+	 * 	\param 	i_control_yielded		Port for receiving signal indicating control has been handed over to the pilot.
+	 * 	\param 	i_landing_achieved		Port for receiving signal indicating that the aircraft has successfully landed.
 	 * 	\param 	i_hover_criteria_met	Port for receiving updates on whether the previously commanded hover was achieved.
 	 * 	\param 	i_lp_new				Port for receiving new valid landing points that should be repositioned to.
 	 * 	\param 	i_pilot_takeover		Port for receiving signal indicating that the pilot has taken control from the supervisor.

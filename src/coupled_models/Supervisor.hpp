@@ -3,6 +3,7 @@
  *	\brief		Definition of the Supervisor coupled model.
  *	\details	This header file defines the Supervisor coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor.
+ *	\image		html coupled_models/supervisor.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -35,6 +36,7 @@
  *	\brief		Definition of the Supervisor coupled model.
  *	\details	This class defines the Supervisor coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor.
+ *	\image		html coupled_models/supervisor.png
  */
 class Supervisor {
 	using TIME = NDTime;
