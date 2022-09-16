@@ -2,8 +2,9 @@
  * 	\file		Command_Reposition.hpp
  *	\brief		Definition of the Command Reposition atomic model.
  *	\details	This header file defines the Command Reposition atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				repositioning to a landing point.
+ *	\image		html atomic_models/command_reposition.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -38,8 +39,9 @@
  *	\details	This class defines the Command Reposition coupled model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when
 				repositioning to a landing point.
+ *	\image		html atomic_models/command_reposition.png
  */
-template<typename TIME> 
+template<typename TIME>
 class Command_Reposition {
 public:
 	/**
@@ -88,7 +90,7 @@ public:
 	/**
 	 * 	\anchor	Command_Reposition_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param 	i_aircraft_state 		Port for receiving the current state of the aircraft.
 	 * 	\param 	i_hover_criteria_met 	Port for receiving updates on whether the previously commanded hover was achieved.
 	 * 	\param 	i_pilot_handover 		Port for receiving signal indicating control should be handed over to the pilot.
@@ -108,7 +110,7 @@ public:
 	/**
 	 *	\anchor	Command_Reposition_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 * 	\param	o_cancel_hover 					Port for cancelling a previously requested stabilization.
 	 * 	\param	o_fcc_command_velocity 			Port for sending velocity commands to the FCC.
 	 * 	\param	o_lp_criteria_met 				Port for notifying that the helicopter is now hovering over an LP.
@@ -132,7 +134,7 @@ public:
 	/**
 	 *	\anchor	Command_Reposition_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {

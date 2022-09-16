@@ -2,8 +2,9 @@
  * 	\file		Landing_Routine.hpp
  *	\brief		Definition of the Landing Routine atomic model.
  *	\details	This header file defines the Landing Routine atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				performing a landing after coming to a hover over a landing point.
+ *	\image		html atomic_models/landing_routine.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -34,12 +35,11 @@
  * 	\class		Landing_Routine
  *	\brief		Definition of the Landing Routine atomic model.
 *	\details	This class defines the Landing Routine atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				performing a landing after coming to a hover over a landing point.
-*	\author		Tanner Trautrim
-*	\author		James Horner
+ *	\image		html atomic_models/landing_routine.png
 */
-template<typename TIME> 
+template<typename TIME>
 class Landing_Routine {
 public:
 	/**
@@ -78,7 +78,7 @@ public:
 	/**
 	 * 	\anchor	Landing_Routine_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param	i_land				Port for receiving a request to land at a landing point.
 	 * 	\param	i_landing_achieved	Port for receiving signal indicating that the aircraft has successfully landed.
 	 * 	\param 	i_pilot_takeover 	Port for receiving signal indicating that the pilot has taken control from the supervisor.
@@ -94,7 +94,7 @@ public:
 	/**
 	 *	\anchor	Landing_Routine_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 * 	\param	o_fcc_command_land		Port for sending land commands to the FCC.
 	 * 	\param	o_mission_complete		Port for declaring the mission as being complete after landing.
 	 * 	\param	o_update_boss 			Port for sending updates to BOSS.
@@ -112,7 +112,7 @@ public:
 	/**
 	 *	\anchor	Landing_Routine_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {

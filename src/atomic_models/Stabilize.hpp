@@ -2,8 +2,9 @@
  * 	\file		Stabilize.hpp
  *	\brief		Definition of the Stabilize atomic model.
  *	\details	This header file defines the Stabilize atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				stabilizing at a given hover criteria.
+ *	\image		html atomic_models/stabilize.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -36,10 +37,11 @@
  * 	\class		Stabilize
  *	\brief		Definition of the Stabilize atomic model.
  *	\details	This class defines the Stabilize atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				stabilizing at a given hover criteria.
+ *	\image		html atomic_models/stabilize.png
  */
-template<typename TIME> 
+template<typename TIME>
 class Stabilize {
 public:
 	/**

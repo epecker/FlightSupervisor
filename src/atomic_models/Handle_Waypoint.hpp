@@ -2,8 +2,9 @@
  * 	\file 		Handle_Waypoint.hpp
  *	\brief		Definition of the Handle Waypoint atomic model.
  *	\details	This header file defines the Handle Waypoint atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				a waypoint is met while on-route.
+ *	\image		html atomic_models/handle_waypoint.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -30,10 +31,9 @@
  * 	\class 		Handle_Waypoint
  *	\brief		Definition of the Handle Waypoint atomic model.
  *	\details	This class defines the Handle Waypoint atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				a waypoint is met while on-route.
- *	\author		Tanner Trautrim
- *	\author		James Horner
+ *	\image		html atomic_models/handle_waypoint.png
  */
 template<typename TIME>
 class Handle_Waypoint {
@@ -66,7 +66,7 @@ public:
 	/**
 	 * 	\anchor	Handle_Waypoint_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param	i_pilot_takeover	Port for receiving signal indicating that the pilot has taken control from the supervisor.
 	 * 	\param	i_start_mission		Port for receiving signal indicating the mission has started.
 	 * 	\param	i_waypoint			Port for receiving new waypoints during the on-route phase.
@@ -80,7 +80,7 @@ public:
 	/**
 	 *	\anchor	Handle_Waypoint_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 * 	\param	o_fcc_waypoint_update	Port for sending waypoint commands to the FCC.
 	 */
 	using output_ports = std::tuple<
@@ -90,7 +90,7 @@ public:
 	/**
 	 *	\anchor	Handle_Waypoint_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
