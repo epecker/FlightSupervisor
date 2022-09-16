@@ -2,8 +2,9 @@
  * 	\file		Handover_Control.hpp
  *	\brief		Definition of the Handover Control atomic model.
  *	\details	This header file defines the Handover Control atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				control of the aircraft should be handed over to the pilot.
+ *	\image		html atomic_models/handover_control.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -25,17 +26,18 @@
 
 // System Libraries
 #include <limits> // Used to set the time advance to infinity
-#include <cassert> 
+#include <cassert>
 #include <string>
 
 /**
  * 	\file		Handover_Control.hpp
  *	\brief		Definition of the Handover Control atomic model.
  *	\details	This class defines the Handover Control atomic model for use in the Cadmium DEVS
-				simulation software. The model represents the behaviour of the Supervisor when 
+				simulation software. The model represents the behaviour of the Supervisor when
 				control of the aircraft should be handed over to the pilot.
+ *	\image		html atomic_models/handover_control.png
 */
-template<typename TIME> 
+template<typename TIME>
 class Handover_Control {
 public:
 	/**
@@ -73,7 +75,7 @@ public:
 	/**
 	 * 	\anchor	Handover_Control_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param 	i_hover_criteria_met 	Port for receiving updates on whether the previously commanded hover was achieved.
 	 * 	\param 	i_pilot_handover 		Port for receiving signal indicating control should be handed over to the pilot.
 	 * 	\param 	i_pilot_takeover 		Port for receiving signal indicating that the pilot has taken control from the supervisor.
@@ -89,7 +91,7 @@ public:
 	/**
 	 *	\anchor	Handover_Control_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 * 	\param	o_notify_pilot		Port for notifying the pilot that they should take control of the aircraft.
 	 * 	\param	o_control_yielded	Port for sending an acknowledgement that the supervisor has relinquished control of the aircraft.
 	 * 	\param	o_stabilize 		Port for requesting the helicopter hover at a specific location.
@@ -103,7 +105,7 @@ public:
 	/**
 	 *	\anchor	Handover_Control_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {

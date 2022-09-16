@@ -5,6 +5,7 @@
 				simulation software. The model represents the behaviour of the Supervisor at the start
 				of the landing phase, when either the planned landing point is achieved or a landing point
 				is received.
+ *	\image		html atomic_models/lp_manager.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -41,6 +42,7 @@
 				simulation software. The model represents the behaviour of the Supervisor at the start
 				of the landing phase, when either the planned landing point is achieved or a landing point
 				is received.
+ *	\image		html atomic_models/lp_manager.png
  */
 template<typename TIME>
 class LP_Manager {
@@ -483,8 +485,8 @@ private:
 
 	/**
 	 *	\brief 		Function set_lp_if_valid is used to set the current valid landing point.
-	 *	\details	The function checks if any landing points have been received, if none have the most 
-	 * 				recent is selected. If there have been multiple valid LPs, the most recent valid LP is 
+	 *	\details	The function checks if any landing points have been received, if none have the most
+	 * 				recent is selected. If there have been multiple valid LPs, the most recent valid LP is
 	 * 				chosen. An LP is considered valid if it has a large enough separation from the previous LP.
 	 * 	\param		mbs	Bag of messages received on the input ports received from Cadmium simulation engine.
 	 */

@@ -4,6 +4,7 @@
  *	\details	This header file defines the Mission Initialization atomic model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor at the beginning
 				of the mission when the autonomy system is being initialized.
+ *	\image		html atomic_models/mission_initialization.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -34,7 +35,7 @@
  *	\details	This class defines the Mission Initialization atomic model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor at the beginning
 				of the mission when the autonomy system is being initialized.
- *	\author		Tanner Trautrim
+ *	\image		html atomic_models/mission_initialization.png
  */
 template<typename TIME>
 class Mission_Initialization {
@@ -78,7 +79,7 @@ public:
 	/**
 	 * 	\anchor	Mission_Initialization_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param 	i_aircraft_state 	Port for receiving the current state of the aircraft.
 	 * 	\param	i_perception_status	Port for receiving the status of the perception system.
 	 * 	\param 	i_start_mission 	Port for receiving signal to start the supervisor.
@@ -92,7 +93,7 @@ public:
 	/**
 	 *	\anchor	Mission_Initialization_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 * 	\param	o_request_perception_status		Port for requesting the current state of the perception system.
 	 * 	\param	o_request_aircraft_state 		Port for requesting the current aircraft state.
 	 * 	\param	o_set_mission_monitor_status 	Port for telling the mission monitor to stop monitoring mission progress.
@@ -110,7 +111,7 @@ public:
 	/**
 	 *	\anchor	Handle_Waypoint_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 */
 	struct state_type {
@@ -307,7 +308,7 @@ public:
 	}
 
 private:
-    /// Variable for storing the startup data about the mission. 
+    /// Variable for storing the startup data about the mission.
     message_start_supervisor_t mission_data;
 	/// Variable for storing whether the perception system is healthy or not.
 	bool perception_healthy;

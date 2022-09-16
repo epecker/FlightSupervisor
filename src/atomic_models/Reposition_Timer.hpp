@@ -4,6 +4,7 @@
  *	\details	This header file defines the Reposition Timer atomic model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when valid LPs
                 are found and must be repositioned to within a specified amount of time.
+ *	\image		html atomic_models/reposition_timer.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -36,6 +37,7 @@
  *	\details	This class defines the Reposition Timer atomic model for use in the Cadmium DEVS
 				simulation software. The model represents the behaviour of the Supervisor when valid LPs
                 are found and must be repositioned to within a specified amount of time.
+ *	\image		html atomic_models/reposition_timer.png
  */
 template<typename TIME>
 class Reposition_Timer {
@@ -81,7 +83,7 @@ public:
 	/**
 	 * 	\anchor	Reposition_Timer_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param	i_control_yielded	[input] Port for receiving signal indicating control has been handed over to the pilot
      *  \param  i_lp_crit_met       [input] Port for receiving signal indicating that the helicopter is now hovering over a landing point.
      *  \param  i_lp_new            [input] Port for receiving new valid landing points that should be repositioned to.
@@ -99,7 +101,7 @@ public:
 	/**
 	 *	\anchor	Reposition_Timer_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
      *  \param  o_land                  Port for requesting that the landing be attempted at a landing point.
 	 * 	\param	o_cancel_hover 			Port for cancelling a previously requested stabilization.
 	 * 	\param	o_pilot_handover		Port for requesting that control be handed over to the pilot.
@@ -119,7 +121,7 @@ public:
 	/**
 	 *	\anchor	Reposition_Timer_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 */
     struct state_type {
