@@ -4,6 +4,7 @@
  *	\details	This header file defines the UDP Input Asynchronous atomic model for use in the Cadmium DEVS
 				simulation software. UDP Input Asynchronous is an atomic model for receiving UDP packets and
 				forwarding them as Cadmium events.
+ *	\image		html io_models/udp_input_async.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -39,6 +40,7 @@
  *	\details	This class defines the UDP Input Asynchronous atomic model for use in the Cadmium DEVS
 				simulation software. UDP Input Asynchronous is an atomic model for receiving UDP packets and
 				forwarding them as Cadmium events.
+ *	\image		html io_models/udp_input_async.png
  *	\tparam		MSG Template parameter for the message type.
  */
 template<typename MSG, typename TIME>

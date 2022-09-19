@@ -3,6 +3,7 @@
  *	\brief		Definition of the Packet Builder atomic model.
  *	\details	This header file defines the Packet Builder atomic model for use in the Cadmium DEVS
 				simulation software. This model converts input messages into char buffers.
+ *	\image		html io_models/packet_builder.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -40,6 +41,7 @@
  *	\brief		Definition of the Packet Builder atomic model.
  *	\details	This class defines the Packet Builder atomic model for use in the Cadmium DEVS
 				simulation software. This model converts input messages into char buffers.
+ *	\image		html io_models/packet_builder.png
  */
 template<typename TYPE, typename TIME>
 class Packet_Builder {

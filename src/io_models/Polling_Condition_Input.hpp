@@ -3,6 +3,7 @@
  *	\brief		Definition of the Polling Condition Input atomic model.
  *	\details	This header file defines the Polling Condition Input atomic model for use in the Cadmium DEVS
 				simulation software. The model polls shared memory when requested.
+ *	\image		html io_models/polling_condition_input.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -33,6 +34,7 @@
  *	\brief		Definition of the Polling Condition Input atomic model.
  *	\details	This class defines the Polling Condition Input atomic model for use in the Cadmium DEVS
 				simulation software. The model polls shared memory when requested.
+ *	\image		html io_models/polling_condition_input.png
  */
 template<typename START_TYPE, typename QUIT_TYPE, typename TIME>
 class Polling_Condition_Input {

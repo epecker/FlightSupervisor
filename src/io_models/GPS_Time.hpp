@@ -3,6 +3,7 @@
  *	\brief		Definition of the GPS Time atomic model.
  *	\details	This header file defines the GPS Time atomic model for use in the Cadmium DEVS
 				simulation software. The model sits idle and is used to add gps times to the log.
+ *	\image		html io_models/gps_time.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -26,6 +27,7 @@
  *	\brief		Definition of the GPS Time atomic model.
  *	\details	This class defines the GPS Time atomic model for use in the Cadmium DEVS
 				simulation software. The model sits idle and is used to add gps times to the log.
+ *	\image		html io_models/gps_time.png
  */
 template<typename TIME>
 class GPS_Time {

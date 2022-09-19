@@ -3,6 +3,7 @@
  *	\brief		Definition of the Aircraft State Input atomic model.
  *	\details	This header file defines the Aircraft State Input atomic model for use in the Cadmium DEVS
 				simulation software. The model connects to shared memory and outputs the aircraft state.
+ *	\image		html io_models/aircraft_state_input.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -33,6 +34,7 @@
  *	\brief		Definition of the Aircraft State Input atomic model.
  *	\details	This class defines the Aircraft State Input atomic model for use in the Cadmium DEVS
 				simulation software. The model connects to shared memory and outputs the aircraft state.
+ *	\image		html io_models/aircraft_state_input.png
  */
 template<typename TIME>
 class Aircraft_State_Input {
