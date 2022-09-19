@@ -2,8 +2,9 @@
  * 	\file		RUDP_Output.hpp
  *	\brief		Definition of the RUDP Output atomic model.
  *	\details	This header file defines the RUDP Output atomic model for use in the Cadmium DEVS
-				simulation software. RUDP Output is an atomic model for sending packets using 
+				simulation software. RUDP Output is an atomic model for sending packets using
 				RUDP (Reliable-UDP) to an address and port.
+ *	\image		html io_models/udp_output.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -26,8 +27,9 @@
  * 	\class		RUDP_Output
  *	\brief		Definition of the RUDP Output atomic model.
  *	\details	This class defines the RUDP Output atomic model for use in the Cadmium DEVS
-				simulation software. RUDP Output is an atomic model for sending packets using 
+				simulation software. RUDP Output is an atomic model for sending packets using
 				RUDP (Reliable-UDP) to an address and port.
+ *	\image		html io_models/udp_output.png
  */
 template<typename TIME>
 class RUDP_Output {
@@ -54,7 +56,7 @@ public:
 	/**
 	 * 	\anchor	RUDP_Output_input_ports
 	 *	\par	Input Ports
-	 * 	Defintion of the input ports for the model.
+	 * 	Definition of the input ports for the model.
 	 * 	\param	i_message	Port for receiving byte vectors to send to a predefined address and port.
 	 */
     using input_ports=std::tuple<typename RUDP_Output::defs::i_message>;
@@ -62,14 +64,14 @@ public:
 	/**
 	 *	\anchor	RUDP_Output_output_ports
 	 * 	\par 	Output Ports
-	 * 	Defintion of the output ports for the model.
+	 * 	Definition of the output ports for the model.
 	 */
     using output_ports=std::tuple<>;
 
 	/**
 	 *	\anchor	RUDP_Output_state_type
 	 *	\par	State
-	 * 	Defintion of the states of the atomic model.
+	 * 	Definition of the states of the atomic model.
 	 * 	\param 	current_state 	Current state of atomic model.
 	 * 	\param	messages		Queue of byte vectors to send to the predefined address and port.
 	 */

@@ -2,8 +2,9 @@
  * 	\file		Supervisor_UDP_Input.hpp
  *	\brief		Definition of the Supervisor UDP Input atomic model.
  *	\details	This header file defines the Supervisor UDP Input atomic model for use in the Cadmium DEVS
-				simulation software. Supervisor UDP Input is an atomic model for receiving UDP packets via RUDP and 
-				forwarding them as Cadmim events into the Supervisor.
+				simulation software. Supervisor UDP Input is an atomic model for receiving UDP packets via RUDP and
+				forwarding them as Cadmium events into the Supervisor.
+ *	\image		html io_models/supervisor_udp_input.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -48,9 +49,10 @@
  * 	\class		Supervisor_UDP_Input
  *	\brief		Definition of the Supervisor UDP Input atomic model.
  *	\details	This class defines the Supervisor UDP Input atomic model for use in the Cadmium DEVS
-				simulation software. RUDP Output is an atomic model for receiving UDP packets via RUDP and 
-				forwarding them as Cadmim events into the Supervisor. See the 
+				simulation software. RUDP Output is an atomic model for receiving UDP packets via RUDP and
+				forwarding them as Cadmium events into the Supervisor. See the
 				\ref Supervisor_UDP_Input_child_thread "child thread" implementation for more details.
+ *	\image		html io_models/supervisor_udp_input.png
  */
 template<typename TIME>
 class Supervisor_UDP_Input {
@@ -286,15 +288,15 @@ private:
 	/**
 	 * 	\anchor		Supervisor_UDP_Input_child_thread
 	 *	\brief		Function receive_packet_thread is used as a child thread for receiving UDP packets via RUDP.
-	 * 	\details	The thread is started in the model constructor and constantly receives packets via RUDP until 
-	 * 				the model is passivated. The packets received by the thread are expected to follow a predefined 
+	 * 	\details	The thread is started in the model constructor and constantly receives packets via RUDP until
+	 * 				the model is passivated. The packets received by the thread are expected to follow a predefined
 	 * 				protocol in order to be parsed and forwarded onto the Supervisor.
 	 *	\par		Interface Details
 	 * 				The model only accepts RUDP packets sent with a Mavlink-like structure:
 	 * 				[uint8_t System ID][uint8_t Component ID][uint8_t Signal ID][Payload]
 	 *				The combination of the System, Component, and Signal IDs are used to infer the datatype of
-	 *				the payload and direct the cast payload to the correct port of the Supervisor. The Component and 
-	 * 				Signal IDs can be found in the component_macros header file. The to direct a packet to a port 
+	 *				the payload and direct the cast payload to the correct port of the Supervisor. The Component and
+	 * 				Signal IDs can be found in the component_macros header file. The to direct a packet to a port
 	 * 				configure the IDs as follows:
 	 *	\param		start_supervisor	System ID: Helicopter (1),	Component ID: Mission Manager 	(3),	Signal ID: start_supervisor 	(1),	Payload: message_start_supervisor_t
 	 *	\param 		perception_status	System ID: Helicopter (1),	Component ID: Perception System	(2),	Signal ID: perception_status	(2),	Payload: bool

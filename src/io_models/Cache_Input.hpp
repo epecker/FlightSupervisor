@@ -3,6 +3,7 @@
  *	\brief		Definition of the Cache Input atomic model.
  *	\details	This header file defines the Cache Input atomic model for use in the Cadmium DEVS
 				simulation software. The model receives inputs and caches them for later access.
+ *	\image		html io_models/cache_input.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -29,6 +30,7 @@
  *	\brief		Definition of the Cache Input atomic model.
  *	\details	This class defines the Cache Input atomic model for use in the Cadmium DEVS
 				simulation software. The model receives inputs and caches them for later access.
+ *	\image		html io_models/cache_input.png
  */
 template<typename MSG, typename TIME>
 class Cache_Input {

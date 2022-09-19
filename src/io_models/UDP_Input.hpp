@@ -4,6 +4,7 @@
  *	\details	This header file defines the UDP Input atomic model for use in the Cadmium DEVS
 				simulation software. UDP Input is an atomic model for receiving UDP packets and
 				forwarding them as Cadmium events.
+ *	\image		html io_models/udp_input.png
  *	\author		Tanner Trautrim
  *	\author		James Horner
  */
@@ -40,6 +41,7 @@
  *	\details	This class defines the UDP Input atomic model for use in the Cadmium DEVS
 				simulation software. UDP Input is an atomic model for receiving UDP packets and
 				forwarding them as Cadmium events.
+ *	\image		html io_models/udp_input.png
  *	\tparam		MSG Template parameter for the message type.
  */
 template<typename MSG, typename TIME>
