@@ -20,7 +20,7 @@
 #include "io_models/Packet_Builder.hpp"
 #include "io_models/UDP_Output.hpp"
 #include "io_models/RUDP_Output.hpp"
-#include "io_models/GPS_Time.h"
+#include "io_models/GPS_Time.hpp"
 
 //Coupled model headers
 #include "coupled_models/Supervisor.hpp"
