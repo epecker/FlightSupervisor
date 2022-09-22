@@ -35,7 +35,6 @@ int main() {
 
 	std::string out_messages_file = out_directory + std::string("/output_messages.txt");
 	std::string out_state_file = out_directory + std::string("/output_state.txt");
-	std::string out_info_file = out_directory + std::string("/output_info.txt");
 
 	// Create the output location
 	boost::filesystem::create_directories(out_directory.c_str()); // Creates if it does not exist. Does nothing if it does.
@@ -159,7 +158,6 @@ int main() {
 	/*************** Loggers *******************/
     static std::ofstream out_messages;
     static std::ofstream out_state;
-    static std::ofstream out_info;
 
 	out_messages = std::ofstream(out_messages_file);
 	struct oss_sink_messages {
@@ -175,27 +173,14 @@ int main() {
 		}
 	};
 
-	out_info = std::ofstream(out_info_file);
-	struct oss_sink_info {
-		static std::ostream& sink() {
-			return out_info;
-		}
-	};
-
 	using state = cadmium::logger::logger<cadmium::logger::logger_state, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
 	using log_messages = cadmium::logger::logger<cadmium::logger::logger_messages, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
 	using global_time_mes = cadmium::logger::logger<cadmium::logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_messages>;
 	using global_time_sta = cadmium::logger::logger<cadmium::logger::logger_global_time, cadmium::dynamic::logger::formatter<TIME>, oss_sink_state>;
-	using info = cadmium::logger::logger<cadmium::logger::logger_info, cadmium::dynamic::logger::formatter<TIME>, oss_sink_info>;
-	using logger_supervisor = cadmium::logger::multilogger<state, log_messages, global_time_mes, global_time_sta, info>;
-
-	auto start = hclock::now(); //to measure simulation execution time
+	using logger_supervisor = cadmium::logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
 	cadmium::dynamic::engine::runner<NDTime, logger_supervisor> r(test_driver, { TIME("00:00:00:000:000") });
 	r.run_until_passivate();
-
-	auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
-	std::cout << "Simulation took: " << elapsed << " seconds" << std::endl;
 
 	return 0;
 }
