@@ -44,64 +44,99 @@ struct message_boss_mission_update_t {
             vertAcceptRadiusM(0),
             previewLength(0) {}
 
-    message_boss_mission_update_t(
-            int i_lpNo,
-            double i_lpLat,
-            double i_lpLon,
-            int i_missionNo,
-            int i_missionItemNo,
-            int i_isMissionStarted,
-            int i_isLandingLeg,
-            double i_lat,
-            double i_lon,
-            float i_alt,
-            float i_yaw,
-            float i_speed,
-            float i_horzAcceptRadiusM,
-            float i_vertAcceptRadiusM,
-            int i_previewLength,
-            const double i_latNext[WPT_PREVIEW_LENGTH],
-            const double i_lonNext[WPT_PREVIEW_LENGTH],
-            char i_description[10]
-    ) : lpNo(i_lpNo),
-        lpLat(i_lpLat),
-        lpLon(i_lpLon),
-        missionNo(i_missionNo),
-        missionItemNo(i_missionItemNo),
-        isMissionStarted(i_isMissionStarted),
-        isLandingLeg(i_isLandingLeg),
-        lat(i_lat),
-        lon(i_lon),
-        alt(i_alt),
-        yaw(i_yaw),
-        speed(i_speed),
-        horzAcceptRadiusM(i_horzAcceptRadiusM),
-        vertAcceptRadiusM(i_vertAcceptRadiusM),
-        previewLength(i_previewLength) {
-        for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
-            latNext[i] = i_latNext[i];
-            lonNext[i] = i_lonNext[i];
-        }
-        strncpy(description, i_description, 10);
-    }
+	message_boss_mission_update_t(
+			int i_lpNo,
+			double i_lpLat,
+			double i_lpLon,
+			int i_missionNo,
+			int i_missionItemNo,
+			int i_isMissionStarted,
+			int i_isLandingLeg,
+			double i_lat,
+			double i_lon,
+			float i_alt,
+			float i_yaw,
+			float i_speed,
+			float i_horzAcceptRadiusM,
+			float i_vertAcceptRadiusM,
+			int i_previewLength,
+			const double i_latNext[WPT_PREVIEW_LENGTH],
+			const double i_lonNext[WPT_PREVIEW_LENGTH],
+			char i_description[10]
+	) :
+			lpNo(i_lpNo),
+			lpLat(i_lpLat),
+			lpLon(i_lpLon),
+			missionNo(i_missionNo),
+			missionItemNo(i_missionItemNo),
+			isMissionStarted(i_isMissionStarted),
+			isLandingLeg(i_isLandingLeg),
+			lat(i_lat),
+			lon(i_lon),
+			alt(i_alt),
+			yaw(i_yaw),
+			speed(i_speed),
+			horzAcceptRadiusM(i_horzAcceptRadiusM),
+			vertAcceptRadiusM(i_vertAcceptRadiusM),
+			previewLength(i_previewLength) {
+		for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
+			latNext[i] = i_latNext[i];
+			lonNext[i] = i_lonNext[i];
+		}
+		strncpy(description, i_description, 10);
+	}
 
-    void update_message(const std::string& msg, bool is_landing_phase, int mission_number) {
-        isMissionStarted = 1;
-        isLandingLeg = is_landing_phase? 1 : 0;
-        missionNo = mission_number;
-        strncpy(description, msg.c_str(), 10);
-    }
+	message_boss_mission_update_t(
+			int id,
+			double latitude,
+			double longitude,
+			int missionNumber,
+			int missionItemNumber,
+			float altitude,
+			float heading,
+			float velocity,
+			const std::string &msg
+	) :
+			lpNo(id),
+			lpLat(latitude),
+			lpLon(longitude),
+			missionNo(missionNumber),
+			missionItemNo(missionItemNumber),
+			isMissionStarted(1),
+			isLandingLeg(1),
+			lat(0),
+			lon(0),
+			alt(altitude),
+			yaw(heading),
+			speed(velocity),
+			horzAcceptRadiusM(0),
+			vertAcceptRadiusM(0),
+			previewLength(0) {
+		strncpy(description, msg.c_str(), 10);
+	}
 
-    void update_landing_point(int id, double latitude, double longitude, float altitude, float heading, const std::string& msg) {
-        lpNo = id;
-        lpLat = latitude;
-        lpLon = longitude;
-        isMissionStarted = 1;
-        isLandingLeg = 1;
-        alt = altitude;
-        yaw = heading;
-        strncpy(description, msg.c_str(), 10);
-    }
+	message_boss_mission_update_t(
+			int missionNumber,
+			float altitude,
+			const std::string &msg
+	) :
+			lpNo(0),
+			lpLat(0),
+			lpLon(0),
+			missionNo(missionNumber),
+			missionItemNo(0),
+			isMissionStarted(1),
+			isLandingLeg(0),
+			lat(0),
+			lon(0),
+			alt(altitude),
+			yaw(0),
+			speed(0),
+			horzAcceptRadiusM(0),
+			vertAcceptRadiusM(0),
+			previewLength(0) {
+		strncpy(description, msg.c_str(), 10);
+	}
 };
 #pragma pack(pop)
 
@@ -110,30 +145,30 @@ struct message_boss_mission_update_t {
 /***************************************************/
 
 std::ostream &operator<<(std::ostream &os, const message_boss_mission_update_t &msg) {
-    os  << msg.lpNo << " "
-        << std::fixed << std::setprecision(7)
-        << msg.lpLat << " "
-        << msg.lpLon << " "
-        << msg.missionNo << " "
-        << msg.missionItemNo << " "
-        << msg.isMissionStarted << " "
-        << msg.isLandingLeg << " "
-        << msg.lat << " "
-        << msg.lon << " "
-        << std::fixed << std::setprecision(2)
-        << msg.alt << " "
-        << msg.yaw << " "
-        << msg.speed << " "
-        << msg.horzAcceptRadiusM << " "
-        << msg.vertAcceptRadiusM << " "
-        << msg.previewLength << " "
-        << std::fixed << std::setprecision(7);
-    for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
-        os << msg.latNext[i] << " "
-           << msg.lonNext[i] << " ";
-    }
-    os << msg.description;
-    return os;
+	os << msg.lpNo << " "
+	   << std::fixed << std::setprecision(7)
+	   << msg.lpLat << " "
+	   << msg.lpLon << " "
+	   << msg.missionNo << " "
+	   << msg.missionItemNo << " "
+	   << msg.isMissionStarted << " "
+	   << msg.isLandingLeg << " "
+	   << msg.lat << " "
+	   << msg.lon << " "
+	   << std::fixed << std::setprecision(2)
+	   << msg.alt << " "
+	   << msg.yaw << " "
+	   << msg.speed << " "
+	   << msg.horzAcceptRadiusM << " "
+	   << msg.vertAcceptRadiusM << " "
+	   << msg.previewLength << " "
+	   << std::fixed << std::setprecision(7);
+	for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
+		os << msg.latNext[i] << " "
+		   << msg.lonNext[i] << " ";
+	}
+	os << msg.description;
+	return os;
 }
 
 /***************************************************/
@@ -141,27 +176,27 @@ std::ostream &operator<<(std::ostream &os, const message_boss_mission_update_t &
 /***************************************************/
 
 std::istream &operator>>(std::istream &is, message_boss_mission_update_t &msg) {
-    is >> msg.lpNo;
-    is >> msg.lpLat;
-    is >> msg.lpLon;
-    is >> msg.missionNo;
-    is >> msg.missionItemNo;
-    is >> msg.isMissionStarted;
-    is >> msg.isLandingLeg;
-    is >> msg.lat;
-    is >> msg.lon;
-    is >> msg.alt;
-    is >> msg.yaw;
-    is >> msg.speed;
-    is >> msg.horzAcceptRadiusM;
-    is >> msg.vertAcceptRadiusM;
-    is >> msg.previewLength;
-    for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
-        is >> msg.latNext[i];
-        is >> msg.lonNext[i];
-    }
-    is >> msg.description;
-    return is;
+	is >> msg.lpNo
+	   >> msg.lpLat
+	   >> msg.lpLon
+	   >> msg.missionNo
+	   >> msg.missionItemNo
+	   >> msg.isMissionStarted
+	   >> msg.isLandingLeg
+	   >> msg.lat
+	   >> msg.lon
+	   >> msg.alt
+	   >> msg.yaw
+	   >> msg.speed
+	   >> msg.horzAcceptRadiusM
+	   >> msg.vertAcceptRadiusM
+	   >> msg.previewLength;
+	for (int i = 0; i < WPT_PREVIEW_LENGTH; i++) {
+		is >> msg.latNext[i]
+		   >> msg.lonNext[i];
+	}
+	is >> msg.description;
+	return is;
 }
 
 #endif // MESSAGE_BOSS_MISSION_UPDATE_T_HPP

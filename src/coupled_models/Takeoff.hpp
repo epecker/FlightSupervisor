@@ -74,9 +74,9 @@ public:
 	 * 	\param 	i_start_supervisor	Port for receiving signal to start the supervisor.
 	 */
  	cadmium::dynamic::modeling::Ports iports = {
-		typeid(Takeoff::defs::i_aircraft_state),
-		typeid(Takeoff::defs::i_perception_status),
-		typeid(Takeoff::defs::i_start_supervisor)
+		typeid(defs::i_aircraft_state),
+		typeid(defs::i_perception_status),
+		typeid(defs::i_start_supervisor)
 	};
 
 	/**
@@ -89,10 +89,10 @@ public:
 	 * 	\param 	o_update_gcs					Port for sending updates to the GCS.
 	 */
  	cadmium::dynamic::modeling::Ports oports = {
-		typeid(Takeoff::defs::o_request_aircraft_state),
-		typeid(Takeoff::defs::o_set_mission_monitor_status),
-		typeid(Takeoff::defs::o_start_mission),
-		typeid(Takeoff::defs::o_update_gcs)
+		typeid(defs::o_request_aircraft_state),
+		typeid(defs::o_set_mission_monitor_status),
+		typeid(defs::o_start_mission),
+		typeid(defs::o_update_gcs)
 	};
 
 	/**
@@ -114,11 +114,11 @@ public:
 	 */
  	cadmium::dynamic::modeling::EICs eics = {
 		// mission_initialization
-		cadmium::dynamic::translate::make_EIC<Takeoff::defs::i_aircraft_state, Mission_Initialization<TIME>::defs::i_aircraft_state>("mission_initialization"),
-		cadmium::dynamic::translate::make_EIC<Takeoff::defs::i_start_supervisor, Mission_Initialization<TIME>::defs::i_start_supervisor>("mission_initialization"),
+		cadmium::dynamic::translate::make_EIC<defs::i_aircraft_state, Mission_Initialization<TIME>::defs::i_aircraft_state>("mission_initialization"),
+		cadmium::dynamic::translate::make_EIC<defs::i_start_supervisor, Mission_Initialization<TIME>::defs::i_start_supervisor>("mission_initialization"),
 
 		// takeoff to cache_input<bool>
-		cadmium::dynamic::translate::make_EIC<Takeoff::defs::i_perception_status, Cache_Input<bool, TIME>::defs::i_new_input>("cache_input")
+		cadmium::dynamic::translate::make_EIC<defs::i_perception_status, Cache_Input<bool, TIME>::defs::i_new_input>("cache_input")
 	};
 
 	/**
@@ -128,10 +128,10 @@ public:
 	 */
  	cadmium::dynamic::modeling::EOCs eocs = {
 		// mission_initialization
-		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_request_aircraft_state, Takeoff::defs::o_request_aircraft_state>("mission_initialization"),
-		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_set_mission_monitor_status, Takeoff::defs::o_set_mission_monitor_status>("mission_initialization"),
-		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_start_mission, Takeoff::defs::o_start_mission>("mission_initialization"),
-		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_update_gcs, Takeoff::defs::o_update_gcs>("mission_initialization"),
+		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_request_aircraft_state, defs::o_request_aircraft_state>("mission_initialization"),
+		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_set_mission_monitor_status, defs::o_set_mission_monitor_status>("mission_initialization"),
+		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_start_mission, defs::o_start_mission>("mission_initialization"),
+		cadmium::dynamic::translate::make_EOC<Mission_Initialization<TIME>::defs::o_update_gcs, defs::o_update_gcs>("mission_initialization"),
 	};
 
 	/**

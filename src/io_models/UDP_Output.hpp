@@ -59,7 +59,7 @@ public:
 	 * 	Definition of the input ports for the model.
 	 * 	\param	i_message	Port for receiving byte vectors to send to a predefined address and port.
 	 */
-    using input_ports=std::tuple<typename UDP_Output::defs::i_message>;
+    using input_ports=std::tuple<typename defs::i_message>;
 
 	/**
 	 *	\anchor	RUDP_Output_output_ports
@@ -95,14 +95,13 @@ public:
 	 * \param	address			String IP version 4 address of the receiver.
 	 * \param	port			unsigned short port number of the receiver.
 	 */
-    UDP_Output(const std::string& address, unsigned short port, bool broadcast) {
-        state.current_state = States::IDLE;
-		this->broadcast = broadcast;
+    UDP_Output(const std::string& address, unsigned short port, bool enable_broadcast) {
+		state.current_state = States::IDLE;
+		broadcast = enable_broadcast;
 		if (broadcast) {
-        	network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::broadcast(), port);
-		}
-		else {
-        	network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port);
+			network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::broadcast(), port);
+		} else {
+			network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), port);
 		}
     }
 
@@ -116,9 +115,10 @@ public:
 
 	/// External transitions of the model
     void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		if (cadmium::get_messages<typename UDP_Output::defs::i_message>(mbs).size() >= 1){
+		bool received_message = !cadmium::get_messages<typename defs::i_message>(mbs).empty();
+		if (received_message){
 			state.current_state = States::SENDING;
-			for (std::vector<char> m : cadmium::get_messages<typename UDP_Output::defs::i_message>(mbs)) {
+			for (std::vector<char> m : cadmium::get_messages<typename defs::i_message>(mbs)) {
 				state.messages.push_back(m);
 			}
 		}

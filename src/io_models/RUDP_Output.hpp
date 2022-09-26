@@ -59,7 +59,7 @@ public:
 	 * 	Definition of the input ports for the model.
 	 * 	\param	i_message	Port for receiving byte vectors to send to a predefined address and port.
 	 */
-    using input_ports=std::tuple<typename RUDP_Output::defs::i_message>;
+    using input_ports=std::tuple<typename defs::i_message>;
 
 	/**
 	 *	\anchor	RUDP_Output_output_ports
@@ -92,8 +92,9 @@ public:
 			connection->setEndpointRemote(PEREGRINE_IP, MAVLINK_OVER_UDP_PORT);
 			connection->setSendRetriesLimit(10);
 		}
-		catch (std::runtime_error error) {
-			assert(false && error.what());
+		catch (std::runtime_error& error) {
+			std::cout << error.what();
+			assert(false);
 		}
     }
 
@@ -112,8 +113,9 @@ public:
 			connection->setEndpointRemote(address, port);
 			connection->setSendRetriesLimit(retries_limit);
 		}
-		catch (std::runtime_error error) {
-			assert(false && error.what());
+		catch (std::runtime_error& error) {
+			std::cout << error.what();
+			assert(false);
 		}
     }
 
@@ -127,9 +129,10 @@ public:
 
 	/// External transitions of the model
     void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		if (cadmium::get_messages<typename RUDP_Output::defs::i_message>(mbs).size() >= 1){
+		bool received_message = !cadmium::get_messages<typename defs::i_message>(mbs).empty();
+		if (received_message){
 			state.current_state = States::SENDING;
-			for (std::vector<char> m : cadmium::get_messages<typename RUDP_Output::defs::i_message>(mbs)) {
+			for (std::vector<char> m : cadmium::get_messages<typename defs::i_message>(mbs)) {
 				state.messages.push_back(m);
 			}
 		}
@@ -143,8 +146,6 @@ public:
 
 	/// Function for generating output from the model before internal transitions.
     [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
-		typename cadmium::make_message_bags<output_ports>::type bags;
-
         switch(state.current_state) {
             case States::SENDING:
                 send_packets();
@@ -152,7 +153,7 @@ public:
             default:
                 break;
         }
-        return bags;
+        return {};
     }
 
 	/// Function to declare the time advance value for each state of the model.
@@ -187,7 +188,7 @@ private:
 			try {
             	connection->send(m.data(), m.size());
 			}
-            catch (std::runtime_error error) {
+            catch (std::runtime_error& error) {
                 std::cout << "[RUDP Output] (ERROR) Error sending packet using RUDP Output model: " << error.what() << std::endl;
             }
         }

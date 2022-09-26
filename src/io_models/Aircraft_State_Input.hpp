@@ -113,7 +113,6 @@ public:
 			case States::SEND:
 				state.current_state = States::IDLE;
 				break;
-
 			default:
 				break;
 		}
@@ -136,10 +135,9 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<message_aircraft_state_t> bag_port_message;
 
 		if (state.current_state == States::SEND) {
-			message_aircraft_state_t message = message_aircraft_state_t(
+			cadmium::get_messages<typename defs::o_message>(bags).emplace_back(
 					model.sharedMemoryStruct->hg1700.time,
 					model.sharedMemoryStruct->hg1700.lat,
 					model.sharedMemoryStruct->hg1700.lng,
@@ -148,8 +146,6 @@ public:
 					model.sharedMemoryStruct->hg1700.hdg,
 					sqrt(pow(model.sharedMemoryStruct->hg1700.ve, 2) + pow(model.sharedMemoryStruct->hg1700.vn, 2))
 			);
-			bag_port_message.push_back(message);
-			cadmium::get_messages<typename defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}

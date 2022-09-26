@@ -162,25 +162,24 @@ public:
             return;
         }
 
-        bool received_pilot_handover;
-		bool received_hover_crit_met;
 		switch (state.current_state) {
-			case States::WAIT_PILOT_HANDOVER:
-				received_pilot_handover = !cadmium::get_messages<typename defs::i_pilot_handover>(mbs).empty();
+			case States::WAIT_PILOT_HANDOVER: {
+				bool received_pilot_handover = !cadmium::get_messages<typename defs::i_pilot_handover>(mbs).empty();
 				if (received_pilot_handover) {
 					// Set the hover location to the newest input (found at the back of the vector of inputs)
 					hover_location = cadmium::get_messages<typename defs::i_pilot_handover>(mbs).back();
 					state.current_state = States::HOVER;
 				}
 				break;
-			case States::STABILIZING:
-				received_hover_crit_met = !cadmium::get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
-                if (received_hover_crit_met) {
+			}
+			case States::STABILIZING: {
+				bool received_hover_crit_met = !cadmium::get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
+				if (received_hover_crit_met) {
 					state.current_state = States::NOTIFY_PILOT;
 				}
 				break;
+			}
 			case States::WAIT_FOR_PILOT:
-				received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 				if (received_pilot_takeover) {
 					state.current_state = States::YIELD_CONTROL;
 				}
@@ -206,36 +205,30 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<bool> bag_port_out;
-		std::vector<message_hover_criteria_t> bag_port_hover_out;
-		message_hover_criteria_t hover_criteria;
 
 		switch (state.current_state) {
 			case States::HOVER:
-				hover_criteria = message_hover_criteria_t(
-					hover_location.lat,
-					hover_location.lon,
-					hover_location.alt,
-					nanf(""),
-					DEFAULT_LAND_CRITERIA_HOR_DIST,
-					DEFAULT_LAND_CRITERIA_VERT_DIST,
-					DEFAULT_LAND_CRITERIA_VEL,
-					DEFAULT_LAND_CRITERIA_HDG,
-					DEFAULT_LAND_CRITERIA_TIME,
-					0,
-					0,
-					0
+				// Send a hover criteria message
+				cadmium::get_messages<typename defs::o_stabilize>(bags).emplace_back(
+						hover_location.lat,
+						hover_location.lon,
+						hover_location.alt,
+						nanf(""),
+						DEFAULT_LAND_CRITERIA_HOR_DIST,
+						DEFAULT_LAND_CRITERIA_VERT_DIST,
+						DEFAULT_LAND_CRITERIA_VEL,
+						DEFAULT_LAND_CRITERIA_HDG,
+						DEFAULT_LAND_CRITERIA_TIME,
+						0,
+						0,
+						0
 				);
-				bag_port_hover_out.push_back(hover_criteria);
-				cadmium::get_messages<typename defs::o_stabilize>(bags) = bag_port_hover_out;
 				break;
 			case States::NOTIFY_PILOT:
-				bag_port_out.push_back(true);
-				cadmium::get_messages<typename defs::o_notify_pilot>(bags) = bag_port_out;
+				cadmium::get_messages<typename defs::o_notify_pilot>(bags).emplace_back(true);
 				break;
 			case States::YIELD_CONTROL:
-				bag_port_out.push_back(true);
-				cadmium::get_messages<typename defs::o_control_yielded>(bags) = bag_port_out;
+				cadmium::get_messages<typename defs::o_control_yielded>(bags).emplace_back(true);
 				break;
 			default:
 				break;
