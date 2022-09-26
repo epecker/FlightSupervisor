@@ -215,57 +215,46 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<bool> bool_port_out;
-		std::vector<message_update_gcs_t> gcs_messages;
-		std::vector<uint8_t> mission_monitor_messages;
 
 		switch (state.current_state) {
-			case States::CHECK_AUTONOMY:
-				{
-					if (mission_data.autonomy_armed) {
-						bool_port_out.push_back(true);
-						cadmium::get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags) = bool_port_out;
-					}
+			case States::CHECK_AUTONOMY: {
+				if (mission_data.autonomy_armed) {
+					cadmium::get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags).emplace_back(true);
 				}
 				break;
-			case States::OUTPUT_PERCEPTION_STATUS:
-				{
-					message_update_gcs_t temp_gcs_update;
-					if (perception_healthy) {
-						temp_gcs_update.text = "The perceptions system is ready for operation!";
-					} else {
-						temp_gcs_update.text = "The perception system is not operational!";
-					}
-					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
-					gcs_messages.emplace_back(temp_gcs_update);
-					cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
+			}
+			case States::OUTPUT_PERCEPTION_STATUS: {
+				std::string update_text;
+				if (perception_healthy) {
+					update_text = "The perceptions system is ready for operation!";
+				} else {
+					update_text = "The perception system is not operational!";
 				}
+				cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags).emplace_back(
+						update_text,
+						Mav_Severities_E::MAV_SEVERITY_ALERT
+				);
 				break;
-			case States::REQUEST_AIRCRAFT_STATE:
-				{
-					bool_port_out.push_back(true);
-					cadmium::get_messages<typename Mission_Initialization::defs::o_request_aircraft_state>(bags) = bool_port_out;
-				}
+			}
+			case States::REQUEST_AIRCRAFT_STATE: {
+				cadmium::get_messages<typename Mission_Initialization::defs::o_request_aircraft_state>(bags).emplace_back(true);
 				break;
-			case States::OUTPUT_TAKEOFF_POSITION:
-				{
-					mission_monitor_messages.emplace_back(1);
-					cadmium::get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
+			}
+			case States::OUTPUT_TAKEOFF_POSITION: {
+				cadmium::get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags).emplace_back(1);
 
-					if (aircraft_height > 10.0) {
-						message_update_gcs_t temp_gcs_update;
-						temp_gcs_update.text = "Starting Mission in air!";
-						temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_ALERT;
-						gcs_messages.emplace_back(temp_gcs_update);
-						cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags) = gcs_messages;
-					}
+				if (aircraft_height > 10.0) {
+					cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags).emplace_back(
+							"Starting Mission in air!",
+							Mav_Severities_E::MAV_SEVERITY_ALERT
+					);
 				}
 				break;
-			case States::START_MISSION:
-				{
-					cadmium::get_messages<typename Mission_Initialization::defs::o_start_mission>(bags).push_back(mission_data.mission_number);
-				}
+			}
+			case States::START_MISSION: {
+				cadmium::get_messages<typename Mission_Initialization::defs::o_start_mission>(bags).push_back(mission_data.mission_number);
 				break;
+			}
 			default:
 				break;
 		}

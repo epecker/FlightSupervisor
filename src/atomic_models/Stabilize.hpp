@@ -272,38 +272,31 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<bool> message_out;
-		std::vector<message_fcc_command_t> message_fcc_out;
-		std::vector<message_update_gcs_t> message_gcs_out;
 
 		switch (state.current_state) {
 			case States::REQUEST_AIRCRAFT_STATE:
-				message_out.push_back(true);
-				cadmium::get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
+				cadmium::get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags).emplace_back(true);
 				break;
-			case States::INIT_HOVER:
-			{
+			case States::INIT_HOVER: {
 				message_fcc_command_t mfc = message_fcc_command_t();
 				mfc.reposition(
 						aircraft_state.gps_time,
 						hover_criteria.desiredLat * (1E7),
 						hover_criteria.desiredLon * (1E7),
 						hover_criteria.desiredAltMSL * FT_TO_METERS
-						);
-				message_fcc_out.push_back(mfc);
-				cadmium::get_messages<typename Stabilize::defs::o_fcc_command_hover>(bags) = message_fcc_out;
+				);
+				cadmium::get_messages<typename Stabilize::defs::o_fcc_command_hover>(bags).push_back(mfc);
+				break;
 			}
-			break;
 			case States::STABILIZING:
 				if (state.time_tolerance_met && state.in_tolerance) {
-					message_update_gcs_t temp_gcs_update("Came to hover!", Mav_Severities_E::MAV_SEVERITY_INFO);
-					message_out.push_back(true);
-					message_gcs_out.push_back(temp_gcs_update);
-					cadmium::get_messages<typename Stabilize::defs::o_hover_criteria_met>(bags) = message_out;
-					cadmium::get_messages<typename Stabilize::defs::o_update_gcs>(bags) = message_gcs_out;
+					cadmium::get_messages<typename Stabilize::defs::o_hover_criteria_met>(bags).emplace_back(true);
+					cadmium::get_messages<typename Stabilize::defs::o_update_gcs>(bags).emplace_back(
+							"Came to hover!",
+							Mav_Severities_E::MAV_SEVERITY_INFO
+					);
 				} else {
-					message_out.push_back(true);
-					cadmium::get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags) = message_out;
+					cadmium::get_messages<typename Stabilize::defs::o_request_aircraft_state>(bags).emplace_back(true);
 				}
 				break;
 			default:

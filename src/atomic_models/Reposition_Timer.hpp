@@ -267,59 +267,58 @@ public:
 	/// Function for generating output from the model before internal transitions.
     [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
         typename cadmium::make_message_bags<output_ports>::type bags;
-        std::vector<bool> bag_port_out;
-        std::vector<message_landing_point_t> bag_port_lp_out;
-        std::vector<message_boss_mission_update_t> boss_messages;
-        std::vector<message_update_gcs_t> gcs_messages;
 
         switch (state.current_state) {
-            case States::NOTIFY_UPDATE: {
-                if (last_lp == 0) {
-                    std::string message = "LP found. Holding for " + std::to_string(upd_time.getSeconds()) + "s";
-                    message_update_gcs_t temp_gcs_update{message, Mav_Severities_E::MAV_SEVERITY_ALERT};
-                    cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).push_back(temp_gcs_update);
-                }
+			case States::NOTIFY_UPDATE: {
+				if (last_lp == 0) {
+					// Update the ground control computer
+					cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).emplace_back(
+							"LP found. Holding for " + std::to_string(upd_time.getSeconds()) + "s",
+							Mav_Severities_E::MAV_SEVERITY_ALERT
+					);
+				}
 
-                if (landing_point.id != last_lp) {
-                    message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_landing_point(
-                            landing_point.id,
-                            landing_point.lat,
-                            landing_point.lon,
-                            landing_point.alt * FT_TO_METERS,
-                            landing_point.hdg,
-                            "LP UPD");
-                    temp_boss.missionNo = mission_number;
-                    temp_boss.missionItemNo = landing_point.missionItemNo;
-                    cadmium::get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).push_back(temp_boss);
-                    last_lp = landing_point.id;
-                }
-
-                break;
-            }
+				if (landing_point.id != last_lp) {
+					last_lp = landing_point.id;
+					// Update the boss displays landing point location
+					cadmium::get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).emplace_back(
+							landing_point.id,
+							landing_point.lat,
+							landing_point.lon,
+							mission_number,
+							landing_point.missionItemNo,
+							landing_point.alt * FT_TO_METERS,
+							landing_point.hdg,
+							0,
+							"LP UPD"
+					);
+				}
+				break;
+			}
             case States::REQUEST_LAND: {
                 cadmium::get_messages<typename Reposition_Timer::defs::o_land>(bags).push_back(landing_point);
                 break;
             }
             case States::LP_REPO: {
-                message_boss_mission_update_t temp_boss{};
-                temp_boss.update_message("MAN CTRL", false, mission_number);
-				temp_boss.alt = landing_point.alt * FT_TO_METERS;
+				// Update BOSS display message
+				cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
+						mission_number,
+						landing_point.alt * FT_TO_METERS,
+						"LZ SCAN"
+				);
 
-                message_update_gcs_t temp_gcs("Repo timer expired, hovering over the last LP", Mav_Severities_E::MAV_SEVERITY_ALERT);
-                boss_messages.push_back(temp_boss);
-                gcs_messages.push_back(temp_gcs);
-                bag_port_lp_out.push_back(landing_point);
-                bag_port_out.push_back(true);
-                cadmium::get_messages<typename Reposition_Timer::defs::o_cancel_hover>(bags) = bag_port_out;
-                cadmium::get_messages<typename Reposition_Timer::defs::o_update_boss>(bags) = boss_messages;
-                cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags) = gcs_messages;
-                cadmium::get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags) = bag_port_lp_out;
+				// Update the ground control computer
+				cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).emplace_back(
+						"Repo timer expired, hovering over the last LP",
+						Mav_Severities_E::MAV_SEVERITY_ALERT
+				);
+
+                cadmium::get_messages<typename Reposition_Timer::defs::o_cancel_hover>(bags).emplace_back(true);
+                cadmium::get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags).push_back(landing_point);
                 break;
             }
             case States::NEW_LP_REPO:
-                bag_port_lp_out.push_back(landing_point);
-                cadmium::get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags) = bag_port_lp_out;
+                cadmium::get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags).push_back(landing_point);
                 break;
             default:
                 break;

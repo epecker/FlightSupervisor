@@ -289,88 +289,75 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<bool> bag_port_out;
-		std::vector<message_landing_point_t> bag_port_LP_out;
-		std::vector<message_fcc_command_t> bag_port_fcc_out;
-		std::vector<message_hover_criteria_t> bag_port_hover_out;
-		std::vector<uint8_t> mission_monitor_messages;
-		std::vector<message_boss_mission_update_t> boss_messages;
-		std::vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
 			case States::REQUEST_STATE:
-				{
-					bag_port_out.push_back(true);
-					cadmium::get_messages<typename Command_Reposition::defs::o_request_aircraft_state>(bags) = bag_port_out;
-				}
+				cadmium::get_messages<typename Command_Reposition::defs::o_request_aircraft_state>(bags).emplace_back(true);
 				break;
-			case States::COMMAND_VEL:
-			{
-				message_fcc_command_t mfc = message_fcc_command_t();
+			case States::COMMAND_VEL: {
 				float distance, altitude;
-				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon, aircraft_state.alt_MSL * FT_TO_METERS, landing_point.lat, landing_point.lon, landing_point.alt * METERS_TO_FT, &distance, &altitude);
+				get_distance_to_point_global_wgs84(aircraft_state.lat, aircraft_state.lon,
+												   aircraft_state.alt_MSL * FT_TO_METERS, landing_point.lat,
+												   landing_point.lon, landing_point.alt * METERS_TO_FT, &distance,
+												   &altitude);
 				velocity = distance / REPO_TRANSIT_TIME;
 
 				if (velocity > MAX_REPO_VEL * KTS_TO_MPS) {
 					velocity = MAX_REPO_VEL * KTS_TO_MPS;
 				} else if (velocity < MIN_REPO_VEL * KTS_TO_MPS) {
-                    velocity = MIN_REPO_VEL * KTS_TO_MPS;
-                }
+					velocity = MIN_REPO_VEL * KTS_TO_MPS;
+				}
 
+				message_fcc_command_t mfc = message_fcc_command_t();
 				mfc.change_velocity(velocity, aircraft_state.gps_time);
-				bag_port_fcc_out.push_back(mfc);
-				cadmium::get_messages<typename Command_Reposition::defs::o_fcc_command_velocity>(bags) = bag_port_fcc_out;
-			}
+				cadmium::get_messages<typename Command_Reposition::defs::o_fcc_command_velocity>(bags).push_back(mfc);
 				break;
-			case States::COMMAND_HOVER:
-			{
-				message_hover_criteria_t mhc;
-				mhc.desiredLat = landing_point.lat;
-				mhc.desiredLon = landing_point.lon;
-				mhc.desiredAltMSL = landing_point.alt;
-				mhc.desiredHdgDeg = landing_point.hdg;
-				mhc.horDistTolFt = DEFAULT_LAND_CRITERIA_HOR_DIST;
-				mhc.vertDistTolFt = DEFAULT_LAND_CRITERIA_VERT_DIST;
-				mhc.velTolKts = DEFAULT_LAND_CRITERIA_VEL;
-				mhc.hdgToleranceDeg = DEFAULT_LAND_CRITERIA_HDG;
-				mhc.timeTol = DEFAULT_LAND_CRITERIA_TIME;
-				mhc.timeCritFirstMet = -1;
-				mhc.hoverCompleted = 0;
-				mhc.manCtrlRequiredAfterCritMet = 0;
-
-                message_update_gcs_t temp_gcs_update{"Repositioning to LP!", Mav_Severities_E::MAV_SEVERITY_ALERT};
-
-                message_boss_mission_update_t temp_boss_update{};
-                temp_boss_update.update_landing_point(
-                        landing_point.id,
-                        landing_point.lat,
-                        landing_point.lon,
-                        landing_point.alt * FT_TO_METERS,
-                        landing_point.hdg,
-                        "LP REP"
-                        );
-                temp_boss_update.missionNo = mission_number;
-                temp_boss_update.missionItemNo = landing_point.missionItemNo;
-                temp_boss_update.speed = velocity * MPS_TO_KTS;
-				bag_port_hover_out.push_back(mhc);
-
-				mission_monitor_messages.emplace_back(0);
-				boss_messages.push_back(temp_boss_update);
-				gcs_messages.push_back(temp_gcs_update);
-
-				cadmium::get_messages<typename Command_Reposition::defs::o_stabilize>(bags) = bag_port_hover_out;
-				cadmium::get_messages<typename Command_Reposition::defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
-				cadmium::get_messages<typename Command_Reposition::defs::o_update_boss>(bags) = boss_messages;
-				cadmium::get_messages<typename Command_Reposition::defs::o_update_gcs>(bags) = gcs_messages;
 			}
+			case States::COMMAND_HOVER: {
+				cadmium::get_messages<typename Command_Reposition::defs::o_set_mission_monitor_status>(bags)
+						.emplace_back(0);
+
+				// Send a hover criteria message
+				cadmium::get_messages<typename Command_Reposition::defs::o_stabilize>(bags).emplace_back(
+								landing_point.lat,
+								landing_point.lon,
+								landing_point.alt,
+								landing_point.hdg,
+								DEFAULT_LAND_CRITERIA_HOR_DIST,
+								DEFAULT_LAND_CRITERIA_VERT_DIST,
+								DEFAULT_LAND_CRITERIA_VEL,
+								DEFAULT_LAND_CRITERIA_HDG,
+								DEFAULT_LAND_CRITERIA_TIME,
+								-1,
+								0,
+								0
+						);
+
+				// Update the boss displays landing point location
+				cadmium::get_messages<typename Command_Reposition::defs::o_update_boss>(bags).emplace_back(
+								landing_point.id,
+								landing_point.lat,
+								landing_point.lon,
+								mission_number,
+								landing_point.missionItemNo,
+								landing_point.alt * FT_TO_METERS,
+								landing_point.hdg,
+								velocity * MPS_TO_KTS,
+								"LP REP"
+						);
+
+				// Update the ground control computer
+				cadmium::get_messages<typename Command_Reposition::defs::o_update_gcs>(bags).emplace_back(
+								"Repositioning to LP!",
+								Mav_Severities_E::MAV_SEVERITY_ALERT
+						);
 				break;
+			}
 			case States::CANCEL_HOVER:
-				bag_port_out.push_back(true);
-				cadmium::get_messages<typename Command_Reposition::defs::o_cancel_hover>(bags) = bag_port_out;
+				cadmium::get_messages<typename Command_Reposition::defs::o_cancel_hover>(bags).emplace_back(true);
 				break;
 			case States::LP_CRITERIA_MET:
-				bag_port_LP_out.emplace_back(landing_point);
-				cadmium::get_messages<typename Command_Reposition::defs::o_lp_criteria_met>(bags) = bag_port_LP_out;
+				cadmium::get_messages<typename Command_Reposition::defs::o_lp_criteria_met>(bags).push_back(landing_point);
 				break;
 			default:
 				break;

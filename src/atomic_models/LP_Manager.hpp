@@ -331,19 +331,11 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<message_landing_point_t> lp_messages;
-		std::vector<message_landing_point_t> plp_messages;
-		std::vector<bool> bool_messages;
-		std::vector<message_boss_mission_update_t> boss_messages;
-		std::vector<message_update_gcs_t> gcs_messages;
-		std::vector<uint8_t> mission_monitor_messages;
-		std::vector<message_fcc_command_t> fcc_messages;
 
 		switch (state.current_state) {
-			case States::START_LZE_SCAN:
-				{
-					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
-					temp_fcc_command.orbit(
+			case States::START_LZE_SCAN: {
+				message_fcc_command_t fcc_command = message_fcc_command_t();
+				fcc_command.orbit(
 						aircraft_state.gps_time,
 						plp.lat * (1E7),
 						plp.lon * (1E7),
@@ -351,69 +343,69 @@ public:
 						DEFAULT_ORBIT_RADIUS,
 						DEFAULT_ORBIT_VELOCITY,
 						DEFAULT_ORBIT_YAW_BEHAVIOUR
-					);
+				);
+				cadmium::get_messages<typename defs::o_fcc_command_orbit>(bags).push_back(fcc_command);
 
-					message_update_gcs_t temp_gcs_update;
-					temp_gcs_update.text = "Starting an orbit to scan LZ";
-					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
+				// Update the ground control computer
+				cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
+						"Starting an orbit to scan LZ",
+						Mav_Severities_E::MAV_SEVERITY_INFO
+				);
 
-					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_message("LZ SCAN", false, mission_number);
-					temp_boss.alt = plp.alt * FT_TO_METERS;
+				// Update BOSS display message
+				cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
+						mission_number,
+						plp.alt * FT_TO_METERS,
+						"LZ SCAN"
+				);
 
-					fcc_messages.push_back(temp_fcc_command);
-					boss_messages.push_back(temp_boss);
-					gcs_messages.push_back(temp_gcs_update);
-					mission_monitor_messages.emplace_back(0);
-
-					cadmium::get_messages<typename defs::o_fcc_command_orbit>(bags) = fcc_messages;
-					cadmium::get_messages<typename defs::o_update_boss>(bags) = boss_messages;
-					cadmium::get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
-					cadmium::get_messages<typename defs::o_set_mission_monitor_status>(bags) = mission_monitor_messages;
-				}
+				cadmium::get_messages<typename defs::o_set_mission_monitor_status>(bags).emplace_back(0);
 				break;
+			}
 			case States::LZE_SCAN:
 				{
-					message_update_gcs_t temp_gcs_update{"Landing point not found. Hovering over PLP",
-                                                         Mav_Severities_E::MAV_SEVERITY_ALERT};
+					// Update the ground control computer
+					cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
+							"Landing point not found. Hovering over PLP",
+							Mav_Severities_E::MAV_SEVERITY_ALERT
+					);
 
-					message_boss_mission_update_t temp_boss{};
-                    temp_boss.update_message("MAN CTL", false, mission_number);
-					temp_boss.alt = plp.alt * FT_TO_METERS;
+					// Update BOSS display message
+					cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
+							mission_number,
+							plp.alt * FT_TO_METERS,
+							"MAN CTRL"
+					);
 
-                    boss_messages.push_back(temp_boss);
-					gcs_messages.push_back(temp_gcs_update);
-					plp_messages.push_back(plp);
-					cadmium::get_messages<typename defs::o_update_boss>(bags) = boss_messages;
-					cadmium::get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
-					cadmium::get_messages<typename defs::o_pilot_handover>(bags) = plp_messages;
+					cadmium::get_messages<typename defs::o_pilot_handover>(bags).push_back(plp);
 
 				}
 				break;
 			case States::NOTIFY_LP:
 				{
 					if (lp_count == 0) {
-						message_update_gcs_t temp_gcs_update{"LP timer started", Mav_Severities_E::MAV_SEVERITY_INFO};
-						cadmium::get_messages<typename defs::o_update_gcs>(bags).push_back(temp_gcs_update);
+						cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
+								"LP timer started",
+								Mav_Severities_E::MAV_SEVERITY_INFO
+						);
 					}
 					cadmium::get_messages<typename defs::o_lp_new>(bags).push_back(lp);
 				}
 				break;
 			case States::LP_APPROACH:
 				{
-					message_update_gcs_t temp_gcs_update;
-					temp_gcs_update.text = "LP accept timer expired";
-					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
-					gcs_messages.push_back(temp_gcs_update);
-					lp_messages.push_back(lp);
-					cadmium::get_messages<typename defs::o_lp_expired>(bags) = lp_messages;
-					cadmium::get_messages<typename defs::o_update_gcs>(bags) = gcs_messages;
+					cadmium::get_messages<typename defs::o_lp_expired>(bags).push_back(lp);
+
+					// Update the ground control computer
+					cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
+							"LP accept timer expired",
+							Mav_Severities_E::MAV_SEVERITY_INFO
+					);
 				}
 				break;
 			case States::REQUEST_STATE_LP: case States::REQUEST_STATE_PLP:
 				{
-					bool_messages.push_back(true);
-					cadmium::get_messages<typename defs::o_request_aircraft_state>(bags) = bool_messages;
+					cadmium::get_messages<typename defs::o_request_aircraft_state>(bags).emplace_back(true);
 				}
 				break;
 			default:

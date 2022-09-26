@@ -205,52 +205,44 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<bool> mission_complete_messages;
-		std::vector<bool> mission_item_messages;
-		std::vector<message_fcc_command_t> fcc_messages;
-		std::vector<message_boss_mission_update_t> boss_messages;
-		std::vector<message_update_gcs_t> gcs_messages;
 
 		switch (state.current_state) {
-			case States::REQUEST_LAND:
-				{
-					message_fcc_command_t temp_fcc_command = message_fcc_command_t();
-					temp_fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
+			case States::REQUEST_LAND: {
+				message_fcc_command_t fcc_command = message_fcc_command_t();
+				fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
+				cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags).push_back(fcc_command);
 
-					message_boss_mission_update_t temp_boss{};
-					temp_boss.update_landing_point(
-							landing_point.id,
-							landing_point.lat,
-							landing_point.lon,
-							landing_point.alt * FT_TO_METERS,
-							landing_point.hdg,
-							"LAND");
-					temp_boss.missionNo = mission_number;
-					temp_boss.missionItemNo = landing_point.missionItemNo;
-					message_update_gcs_t temp_gcs_update{"Landing", Mav_Severities_E::MAV_SEVERITY_ALERT};
+				// Update the boss displays landing point location
+				cadmium::get_messages<typename Landing_Routine::defs::o_update_boss>(bags).emplace_back(
+						landing_point.id,
+						landing_point.lat,
+						landing_point.lon,
+						mission_number,
+						landing_point.missionItemNo,
+						landing_point.alt * FT_TO_METERS,
+						landing_point.hdg,
+						0,
+						"LAND"
+				);
 
-					fcc_messages.push_back(temp_fcc_command);
-					boss_messages.push_back(temp_boss);
-					gcs_messages.push_back(temp_gcs_update);
-
-					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags) = fcc_messages;
-					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_boss>(bags) = boss_messages;
-					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
-				}
+				// Update the ground control computer
+				cadmium::get_messages<typename Landing_Routine::defs::o_update_gcs>(bags).emplace_back(
+						"Landing",
+						Mav_Severities_E::MAV_SEVERITY_ALERT
+				);
 				break;
-			case States::NOTIFY_LANDED:
-				{
-					message_update_gcs_t temp_gcs_update;
-					temp_gcs_update.text = "Just landed!";
-					temp_gcs_update.severity = Mav_Severities_E::MAV_SEVERITY_INFO;
-					gcs_messages.push_back(temp_gcs_update);
-					mission_complete_messages.push_back(true);
-					mission_item_messages.push_back(true);
-					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags) = mission_complete_messages;
-					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_mission_item>(bags) = mission_item_messages;
-					cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_gcs>(bags) = gcs_messages;
-				}
+			}
+			case States::NOTIFY_LANDED: {
+				cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags).emplace_back(true);
+				cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_mission_item>(bags).emplace_back(true);
+
+				// Update the ground control computer
+				cadmium::get_messages<typename Landing_Routine::defs::o_update_gcs>(bags).emplace_back(
+						"Just landed!",
+						Mav_Severities_E::MAV_SEVERITY_INFO
+				);
 				break;
+			}
 			default:
 				break;
 		}
