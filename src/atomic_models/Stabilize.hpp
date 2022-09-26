@@ -220,11 +220,9 @@ public:
 			return;
 		}
 
-        bool received_aircraft_state;
-        bool received_stabilize;
 		switch (state.current_state) {
-			case States::WAIT_STABILIZE:
-				received_stabilize = !cadmium::get_messages<typename defs::i_stabilize>(mbs).empty();
+			case States::WAIT_STABILIZE: {
+				bool received_stabilize = !cadmium::get_messages<typename defs::i_stabilize>(mbs).empty();
 				if (received_stabilize) {
 					// Get the most recent hover criteria input (found at the back of the vector of inputs)
 					hover_criteria = cadmium::get_messages<typename defs::i_stabilize>(mbs).back();
@@ -232,15 +230,17 @@ public:
 					state.current_state = States::REQUEST_AIRCRAFT_STATE;
 				}
 				break;
-			case States::GET_AIRCRAFT_STATE:
-				received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
+			}
+			case States::GET_AIRCRAFT_STATE: {
+				bool received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
 					aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(mbs)[0];
 					state.current_state = States::INIT_HOVER;
 				}
 				break;
-			case States::CHECK_STATE:
-				received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
+			}
+			case States::CHECK_STATE: {
+				bool received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
 					aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(mbs)[0];
 					state.in_tolerance = calculate_hover_criteria_met(aircraft_state);
@@ -253,6 +253,7 @@ public:
 					state.current_state = States::STABILIZING;
 				}
 				break;
+			}
 			default:
 				break;
 		}

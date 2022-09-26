@@ -162,25 +162,24 @@ public:
             return;
         }
 
-        bool received_pilot_handover;
-		bool received_hover_crit_met;
 		switch (state.current_state) {
-			case States::WAIT_PILOT_HANDOVER:
-				received_pilot_handover = !cadmium::get_messages<typename defs::i_pilot_handover>(mbs).empty();
+			case States::WAIT_PILOT_HANDOVER: {
+				bool received_pilot_handover = !cadmium::get_messages<typename defs::i_pilot_handover>(mbs).empty();
 				if (received_pilot_handover) {
 					// Set the hover location to the newest input (found at the back of the vector of inputs)
 					hover_location = cadmium::get_messages<typename defs::i_pilot_handover>(mbs).back();
 					state.current_state = States::HOVER;
 				}
 				break;
-			case States::STABILIZING:
-				received_hover_crit_met = !cadmium::get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
-                if (received_hover_crit_met) {
+			}
+			case States::STABILIZING: {
+				bool received_hover_crit_met = !cadmium::get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
+				if (received_hover_crit_met) {
 					state.current_state = States::NOTIFY_PILOT;
 				}
 				break;
+			}
 			case States::WAIT_FOR_PILOT:
-				received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 				if (received_pilot_takeover) {
 					state.current_state = States::YIELD_CONTROL;
 				}

@@ -113,7 +113,6 @@ public:
 			case States::SEND:
 				state.current_state = States::IDLE;
 				break;
-
 			default:
 				break;
 		}

@@ -195,10 +195,6 @@ public:
 
 	/// External transitions of the model
     void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        bool received_control_yielded;
-        bool received_lp_new;
-        bool received_lp_crit_met;
-
         bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
         if (received_pilot_takeover) {
             state.current_state = States::PILOT_CONTROL;
@@ -214,45 +210,48 @@ public:
         }
 
         switch (state.current_state) {
-            case States::WAIT_NEW_LP:
-                received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
-                if (received_lp_new) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
-                    // Get the most recent landing point input (found at the back of the vector of inputs)
-                    landing_point = new_landing_points.back();
-                    state.current_state = States::NOTIFY_UPDATE;
-                }
-                break;
-            case States::UPDATE_LP:
-                received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
-                if (received_lp_new) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
-                    // Get the most recent landing point input (found at the back of the vector of inputs)
-                    landing_point = new_landing_points.back();
-                    update_upd_time(e);
-                    state.current_state = States::NOTIFY_UPDATE;
-                }
-                break;
-            case States::LP_REPO:
-                received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
-                received_lp_crit_met = !cadmium::get_messages<typename defs::i_lp_crit_met>(mbs).empty();
-
-                if (received_lp_new) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
-                    // Get the most recent landing point input (found at the back of the vector of inputs)
-                    landing_point = new_landing_points.back();
-                    state.current_state = States::NEW_LP_REPO;
-                } else if (received_lp_crit_met) {
-                    state.current_state = States::REQUEST_LAND;
-                }
-                break;
-            case States::HANDOVER_CTRL:
-                received_control_yielded = !cadmium::get_messages<typename defs::i_control_yielded>(mbs).empty();
-
-                if (received_control_yielded) {
-                    state.current_state = States::PILOT_CONTROL;
-                }
-                break;
+            case States::WAIT_NEW_LP: {
+				bool received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
+				if (received_lp_new) {
+					std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(
+							mbs);
+					// Get the most recent landing point input (found at the back of the vector of inputs)
+					landing_point = new_landing_points.back();
+					state.current_state = States::NOTIFY_UPDATE;
+				}
+				break;
+			}
+            case States::UPDATE_LP: {
+				bool received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
+				if (received_lp_new) {
+					std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
+					// Get the most recent landing point input (found at the back of the vector of inputs)
+					landing_point = new_landing_points.back();
+					update_upd_time(e);
+					state.current_state = States::NOTIFY_UPDATE;
+				}
+				break;
+			}
+            case States::LP_REPO: {
+				bool received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
+				bool received_lp_crit_met = !cadmium::get_messages<typename defs::i_lp_crit_met>(mbs).empty();
+				if (received_lp_new) {
+					std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
+					// Get the most recent landing point input (found at the back of the vector of inputs)
+					landing_point = new_landing_points.back();
+					state.current_state = States::NEW_LP_REPO;
+				} else if (received_lp_crit_met) {
+					state.current_state = States::REQUEST_LAND;
+				}
+				break;
+			}
+            case States::HANDOVER_CTRL: {
+				bool received_control_yielded = !cadmium::get_messages<typename defs::i_control_yielded>(mbs).empty();
+				if (received_control_yielded) {
+					state.current_state = States::PILOT_CONTROL;
+				}
+				break;
+			}
             default:
                 break;
         }

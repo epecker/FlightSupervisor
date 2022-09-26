@@ -126,30 +126,28 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		bool received_pilot_takeover;
-		bool received_start_mission;
-		bool received_waypoint;
-
-		received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
+		bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_TAKEOVER;
 			return;
 		}
 
 		switch (state.current_state) {
-			case States::IDLE:
-				received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
+			case States::IDLE: {
+				bool received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
 				if (received_start_mission) {
 					state.current_state = States::WAIT_FOR_WAYPOINT;
 				}
+			}
 				break;
-			case States::WAIT_FOR_WAYPOINT:
-				received_waypoint = !cadmium::get_messages<typename defs::i_waypoint>(mbs).empty();
+			case States::WAIT_FOR_WAYPOINT: {
+				bool received_waypoint = !cadmium::get_messages<typename defs::i_waypoint>(mbs).empty();
 				if (received_waypoint) {
 					next_waypoint = cadmium::get_messages<typename defs::i_waypoint>(mbs);
 					state.current_state = States::UPDATE_FCC;
 				}
 				break;
+			}
 			default:
 				break;
 		}

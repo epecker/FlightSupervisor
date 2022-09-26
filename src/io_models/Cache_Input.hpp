@@ -117,18 +117,21 @@ public:
 
 	/// External transitions of the model
     void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        bool new_input = cadmium::get_messages<typename defs::i_new_input>(mbs).size() >= 1;
-        bool get_input = cadmium::get_messages<typename defs::i_get_input>(mbs).size() >= 1;
-        if (state.current_state == States::IDLE) {
-            if (new_input){
-                state.current_state = States::IDLE;
-				// Cache the most recent input (found at the back of the vector of inputs)
-                state.cached_input = cadmium::get_messages<typename defs::i_new_input>(mbs).back();
-            }
-			if (get_input) {
-				state.current_state = States::SEND;
-			}
-        }
+        bool new_input = !cadmium::get_messages<typename defs::i_new_input>(mbs).empty();
+        bool get_input = !cadmium::get_messages<typename defs::i_get_input>(mbs).empty();
+
+		switch (state.current_state) {
+			case States::IDLE:
+				if (new_input){
+					state.current_state = States::IDLE;
+					// Cache the most recent input (found at the back of the vector of inputs)
+					state.cached_input = cadmium::get_messages<typename defs::i_new_input>(mbs).back();
+				}
+				if (get_input) state.current_state = States::SEND;
+				break;
+			default:
+				break;
+		}
     }
 
 	/// Function used to decide precedence between internal and external transitions when both are scheduled simultaneously.

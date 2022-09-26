@@ -128,19 +128,19 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		bool received_data = !cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs).empty();
-
 		switch (state.current_state) {
-			case States::IDLE:
-				if (received_data){
-                    std::vector<TYPE> temp = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs);
-                    for (int i = 0; i < temp.size(); i++) {
-                        data.push_back(temp[i]);
-                        preprocess_data(&data[i]);
-                    }
+			case States::IDLE: {
+				bool received_data = !cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs).empty();
+				if (received_data) {
+					std::vector<TYPE> temp = cadmium::get_messages<typename Packet_Builder::defs::i_data>(mbs);
+					for (int i = 0; i < temp.size(); i++) {
+						data.push_back(temp[i]);
+						preprocess_data(&data[i]);
+					}
 					state.current_state = States::GENERATE_PACKET;
 				}
 				break;
+			}
 			default:
 				break;
 		}

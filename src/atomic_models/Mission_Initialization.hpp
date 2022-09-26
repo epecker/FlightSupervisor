@@ -171,36 +171,34 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		bool received_start_supervisor;
-		bool received_perception_status;
-		bool received_aircraft_state;
-
 		switch (state.current_state) {
-			case States::IDLE:
-				received_start_supervisor = !cadmium::get_messages<typename defs::i_start_supervisor>(mbs).empty();
+			case States::IDLE: {
+				bool received_start_supervisor = !cadmium::get_messages<typename defs::i_start_supervisor>(mbs).empty();
 				if (received_start_supervisor) {
 					// Get the most recent start supervisor input (found at the back of the vector of inputs)
 					mission_data = cadmium::get_messages<typename defs::i_start_supervisor>(mbs).back();
 					state.current_state = States::MISSION_STATUS;
 				}
 				break;
-			case States::CHECK_PERCEPTION_SYSTEM:
-				received_perception_status = !cadmium::get_messages<typename defs::i_perception_status>(mbs).empty();
+			}
+			case States::CHECK_PERCEPTION_SYSTEM: {
+				bool received_perception_status = !cadmium::get_messages<typename defs::i_perception_status>(mbs).empty();
 				if (received_perception_status) {
 					std::vector<bool> perception_status = cadmium::get_messages<typename defs::i_perception_status>(mbs);
 					perception_healthy = perception_status[0];
 					state.current_state = States::OUTPUT_PERCEPTION_STATUS;
 				}
 				break;
-			case States::CHECK_AIRCRAFT_STATE:
-				received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
-
+			}
+			case States::CHECK_AIRCRAFT_STATE: {
+				bool received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 				if (received_aircraft_state) {
 					std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(mbs);
 					aircraft_height = new_aircraft_state[0].alt_AGL;
 					state.current_state = States::OUTPUT_TAKEOFF_POSITION;
 				}
 				break;
+			}
 			default:
 				break;
 		}

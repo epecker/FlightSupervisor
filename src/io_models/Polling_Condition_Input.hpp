@@ -126,10 +126,12 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		if (cadmium::get_messages<typename defs::i_quit>(mbs).size() >= 1) {
+		bool received_quit = !cadmium::get_messages<typename defs::i_quit>(mbs).empty();
+		bool received_start = !cadmium::get_messages<typename defs::i_start>(mbs).empty();
+
+		if (received_quit) {
 			state.current_state = States::IDLE;
-		}
-		else if (cadmium::get_messages<typename defs::i_start>(mbs).size() >= 1) {
+		} else if (received_start) {
 			state.current_state = States::POLL;
 		}
 	}

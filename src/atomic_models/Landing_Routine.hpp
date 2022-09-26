@@ -168,23 +168,23 @@ public:
             return;
         }
 
-        bool received_land;
-        bool received_landing_achieved;
         switch (state.current_state) {
-            case States::WAIT_LAND_REQUEST:
-                received_land = !cadmium::get_messages<typename defs::i_land>(mbs).empty();
-                if (received_land) {
-                    landing_point = cadmium::get_messages<typename defs::i_land>(mbs).back();
-                    state.current_state = States::REQUEST_LAND;
-                }
-                break;
+            case States::WAIT_LAND_REQUEST: {
+				bool received_land = !cadmium::get_messages<typename defs::i_land>(mbs).empty();
+				if (received_land) {
+					landing_point = cadmium::get_messages<typename defs::i_land>(mbs).back();
+					state.current_state = States::REQUEST_LAND;
+				}
+				break;
+			}
             case States::LANDING:
-            case States::PILOT_CONTROL:
-                received_landing_achieved = !cadmium::get_messages<typename defs::i_landing_achieved>(mbs).empty();
-                if (received_landing_achieved) {
-                    state.current_state = States::NOTIFY_LANDED;
-                }
-                break;
+            case States::PILOT_CONTROL: {
+				bool received_landing_achieved = !cadmium::get_messages<typename defs::i_landing_achieved>(mbs).empty();
+				if (received_landing_achieved) {
+					state.current_state = States::NOTIFY_LANDED;
+				}
+				break;
+			}
             default:
                 break;
         }

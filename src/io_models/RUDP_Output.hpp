@@ -129,7 +129,8 @@ public:
 
 	/// External transitions of the model
     void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		if (cadmium::get_messages<typename defs::i_message>(mbs).size() >= 1){
+		bool received_message = !cadmium::get_messages<typename defs::i_message>(mbs).empty();
+		if (received_message){
 			state.current_state = States::SENDING;
 			for (std::vector<char> m : cadmium::get_messages<typename defs::i_message>(mbs)) {
 				state.messages.push_back(m);
