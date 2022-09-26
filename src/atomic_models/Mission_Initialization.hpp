@@ -85,9 +85,9 @@ public:
 	 * 	\param 	i_start_mission 	Port for receiving signal to start the supervisor.
 	 */
 	using input_ports = std::tuple<
-		typename Mission_Initialization::defs::i_aircraft_state,
-		typename Mission_Initialization::defs::i_perception_status,
-		typename Mission_Initialization::defs::i_start_supervisor
+		typename defs::i_aircraft_state,
+		typename defs::i_perception_status,
+		typename defs::i_start_supervisor
 	>;
 
 	/**
@@ -101,11 +101,11 @@ public:
 	 * 	\param	o_update_gcs 					Port for sending updates to the GCS.
 	 */
 	using output_ports = std::tuple<
-		typename Mission_Initialization::defs::o_request_perception_status,
-		typename Mission_Initialization::defs::o_request_aircraft_state,
-		typename Mission_Initialization::defs::o_set_mission_monitor_status,
-		typename Mission_Initialization::defs::o_start_mission,
-		typename Mission_Initialization::defs::o_update_gcs
+		typename defs::o_request_perception_status,
+		typename defs::o_request_aircraft_state,
+		typename defs::o_set_mission_monitor_status,
+		typename defs::o_start_mission,
+		typename defs::o_update_gcs
 	>;
 
 	/**
@@ -177,26 +177,26 @@ public:
 
 		switch (state.current_state) {
 			case States::IDLE:
-				received_start_supervisor = !cadmium::get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).empty();
+				received_start_supervisor = !cadmium::get_messages<typename defs::i_start_supervisor>(mbs).empty();
 				if (received_start_supervisor) {
 					// Get the most recent start supervisor input (found at the back of the vector of inputs)
-					mission_data = cadmium::get_messages<typename Mission_Initialization::defs::i_start_supervisor>(mbs).back();
+					mission_data = cadmium::get_messages<typename defs::i_start_supervisor>(mbs).back();
 					state.current_state = States::MISSION_STATUS;
 				}
 				break;
 			case States::CHECK_PERCEPTION_SYSTEM:
-				received_perception_status = !cadmium::get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs).empty();
+				received_perception_status = !cadmium::get_messages<typename defs::i_perception_status>(mbs).empty();
 				if (received_perception_status) {
-					std::vector<bool> perception_status = cadmium::get_messages<typename Mission_Initialization::defs::i_perception_status>(mbs);
+					std::vector<bool> perception_status = cadmium::get_messages<typename defs::i_perception_status>(mbs);
 					perception_healthy = perception_status[0];
 					state.current_state = States::OUTPUT_PERCEPTION_STATUS;
 				}
 				break;
 			case States::CHECK_AIRCRAFT_STATE:
-				received_aircraft_state = !cadmium::get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs).empty();
+				received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 
 				if (received_aircraft_state) {
-					std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename Mission_Initialization::defs::i_aircraft_state>(mbs);
+					std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(mbs);
 					aircraft_height = new_aircraft_state[0].alt_AGL;
 					state.current_state = States::OUTPUT_TAKEOFF_POSITION;
 				}
@@ -219,7 +219,7 @@ public:
 		switch (state.current_state) {
 			case States::CHECK_AUTONOMY: {
 				if (mission_data.autonomy_armed) {
-					cadmium::get_messages<typename Mission_Initialization::defs::o_request_perception_status>(bags).emplace_back(true);
+					cadmium::get_messages<typename defs::o_request_perception_status>(bags).emplace_back(true);
 				}
 				break;
 			}
@@ -230,21 +230,21 @@ public:
 				} else {
 					update_text = "The perception system is not operational!";
 				}
-				cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags).emplace_back(
+				cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
 						update_text,
 						Mav_Severities_E::MAV_SEVERITY_ALERT
 				);
 				break;
 			}
 			case States::REQUEST_AIRCRAFT_STATE: {
-				cadmium::get_messages<typename Mission_Initialization::defs::o_request_aircraft_state>(bags).emplace_back(true);
+				cadmium::get_messages<typename defs::o_request_aircraft_state>(bags).emplace_back(true);
 				break;
 			}
 			case States::OUTPUT_TAKEOFF_POSITION: {
-				cadmium::get_messages<typename Mission_Initialization::defs::o_set_mission_monitor_status>(bags).emplace_back(1);
+				cadmium::get_messages<typename defs::o_set_mission_monitor_status>(bags).emplace_back(1);
 
 				if (aircraft_height > 10.0) {
-					cadmium::get_messages<typename Mission_Initialization::defs::o_update_gcs>(bags).emplace_back(
+					cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
 							"Starting Mission in air!",
 							Mav_Severities_E::MAV_SEVERITY_ALERT
 					);
@@ -252,7 +252,7 @@ public:
 				break;
 			}
 			case States::START_MISSION: {
-				cadmium::get_messages<typename Mission_Initialization::defs::o_start_mission>(bags).push_back(mission_data.mission_number);
+				cadmium::get_messages<typename defs::o_start_mission>(bags).push_back(mission_data.mission_number);
 				break;
 			}
 			default:

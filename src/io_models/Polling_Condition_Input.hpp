@@ -68,8 +68,8 @@ public:
 	 * 	\param 	i_start	Port for to start polling the memory location.
 	 */
 	using input_ports = std::tuple<
-			typename Polling_Condition_Input::defs::i_quit,
-			typename Polling_Condition_Input::defs::i_start
+			typename defs::i_quit,
+			typename defs::i_start
 	>;
 
 	/**
@@ -78,7 +78,7 @@ public:
 	 * 	Definition of the output ports for the model.
 	 * 	\param	o_message	Port for outputting messages.
 	 */
-	using output_ports = std::tuple<typename Polling_Condition_Input::defs::o_message>;
+	using output_ports = std::tuple<typename defs::o_message>;
 
 	/**
 	 *	\anchor	Polling_Condition_Input_state_type
@@ -126,10 +126,10 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		if (cadmium::get_messages<typename Polling_Condition_Input::defs::i_quit>(mbs).size() >= 1) {
+		if (cadmium::get_messages<typename defs::i_quit>(mbs).size() >= 1) {
 			state.current_state = States::IDLE;
 		}
-		else if (cadmium::get_messages<typename Polling_Condition_Input::defs::i_start>(mbs).size() >= 1) {
+		else if (cadmium::get_messages<typename defs::i_start>(mbs).size() >= 1) {
 			state.current_state = States::POLL;
 		}
 	}
@@ -146,7 +146,7 @@ public:
 		std::vector<bool> bag_port_message;
 		if (state.current_state == States::POLL && state.condition_met) {
 			bag_port_message.push_back(true);
-			cadmium::get_messages<typename Polling_Condition_Input::defs::o_message>(bags) = bag_port_message;
+			cadmium::get_messages<typename defs::o_message>(bags) = bag_port_message;
 		}
 		return bags;
 	}

@@ -91,11 +91,11 @@ public:
 	 * 	\param 	i_start_mission 	[input] Port for receiving signal indicating the mission has started.
      */
     using input_ports = std::tuple<
-            typename Reposition_Timer::defs::i_control_yielded,
-            typename Reposition_Timer::defs::i_lp_crit_met,
-            typename Reposition_Timer::defs::i_lp_new,
-            typename Reposition_Timer::defs::i_pilot_takeover,
-            typename Reposition_Timer::defs::i_start_mission
+            typename defs::i_control_yielded,
+            typename defs::i_lp_crit_met,
+            typename defs::i_lp_new,
+            typename defs::i_pilot_takeover,
+            typename defs::i_start_mission
     >;
 
 	/**
@@ -110,12 +110,12 @@ public:
 	 * 	\param	o_update_gcs 			Port for sending updates to the GCS.
      */
     using output_ports = std::tuple<
-            typename Reposition_Timer::defs::o_land,
-            typename Reposition_Timer::defs::o_cancel_hover,
-            typename Reposition_Timer::defs::o_pilot_handover,
-            typename Reposition_Timer::defs::o_request_reposition,
-            typename Reposition_Timer::defs::o_update_boss,
-            typename Reposition_Timer::defs::o_update_gcs
+            typename defs::o_land,
+            typename defs::o_cancel_hover,
+            typename defs::o_pilot_handover,
+            typename defs::o_request_reposition,
+            typename defs::o_update_boss,
+            typename defs::o_update_gcs
     >;
 
 	/**
@@ -199,7 +199,7 @@ public:
         bool received_lp_new;
         bool received_lp_crit_met;
 
-        bool received_pilot_takeover = !cadmium::get_messages<typename Reposition_Timer::defs::i_pilot_takeover>(mbs).empty();
+        bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
         if (received_pilot_takeover) {
             state.current_state = States::PILOT_CONTROL;
             return;
@@ -215,18 +215,18 @@ public:
 
         switch (state.current_state) {
             case States::WAIT_NEW_LP:
-                received_lp_new = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
+                received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
                 if (received_lp_new) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::NOTIFY_UPDATE;
                 }
                 break;
             case States::UPDATE_LP:
-                received_lp_new = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
+                received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
                 if (received_lp_new) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
                     update_upd_time(e);
@@ -234,11 +234,11 @@ public:
                 }
                 break;
             case States::LP_REPO:
-                received_lp_new = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs).empty();
-                received_lp_crit_met = !cadmium::get_messages<typename Reposition_Timer::defs::i_lp_crit_met>(mbs).empty();
+                received_lp_new = !cadmium::get_messages<typename defs::i_lp_new>(mbs).empty();
+                received_lp_crit_met = !cadmium::get_messages<typename defs::i_lp_crit_met>(mbs).empty();
 
                 if (received_lp_new) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Reposition_Timer::defs::i_lp_new>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_lp_new>(mbs);
                     // Get the most recent landing point input (found at the back of the vector of inputs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::NEW_LP_REPO;
@@ -247,7 +247,7 @@ public:
                 }
                 break;
             case States::HANDOVER_CTRL:
-                received_control_yielded = !cadmium::get_messages<typename Reposition_Timer::defs::i_control_yielded>(mbs).empty();
+                received_control_yielded = !cadmium::get_messages<typename defs::i_control_yielded>(mbs).empty();
 
                 if (received_control_yielded) {
                     state.current_state = States::PILOT_CONTROL;
@@ -272,7 +272,7 @@ public:
 			case States::NOTIFY_UPDATE: {
 				if (last_lp == 0) {
 					// Update the ground control computer
-					cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).emplace_back(
+					cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
 							"LP found. Holding for " + std::to_string(upd_time.getSeconds()) + "s",
 							Mav_Severities_E::MAV_SEVERITY_ALERT
 					);
@@ -281,7 +281,7 @@ public:
 				if (landing_point.id != last_lp) {
 					last_lp = landing_point.id;
 					// Update the boss displays landing point location
-					cadmium::get_messages<typename Reposition_Timer::defs::o_update_boss>(bags).emplace_back(
+					cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
 							landing_point.id,
 							landing_point.lat,
 							landing_point.lon,
@@ -296,7 +296,7 @@ public:
 				break;
 			}
             case States::REQUEST_LAND: {
-                cadmium::get_messages<typename Reposition_Timer::defs::o_land>(bags).push_back(landing_point);
+                cadmium::get_messages<typename defs::o_land>(bags).push_back(landing_point);
                 break;
             }
             case States::LP_REPO: {
@@ -308,17 +308,17 @@ public:
 				);
 
 				// Update the ground control computer
-				cadmium::get_messages<typename Reposition_Timer::defs::o_update_gcs>(bags).emplace_back(
+				cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
 						"Repo timer expired, hovering over the last LP",
 						Mav_Severities_E::MAV_SEVERITY_ALERT
 				);
 
-                cadmium::get_messages<typename Reposition_Timer::defs::o_cancel_hover>(bags).emplace_back(true);
-                cadmium::get_messages<typename Reposition_Timer::defs::o_pilot_handover>(bags).push_back(landing_point);
+                cadmium::get_messages<typename defs::o_cancel_hover>(bags).emplace_back(true);
+                cadmium::get_messages<typename defs::o_pilot_handover>(bags).push_back(landing_point);
                 break;
             }
             case States::NEW_LP_REPO:
-                cadmium::get_messages<typename Reposition_Timer::defs::o_request_reposition>(bags).push_back(landing_point);
+                cadmium::get_messages<typename defs::o_request_reposition>(bags).push_back(landing_point);
                 break;
             default:
                 break;

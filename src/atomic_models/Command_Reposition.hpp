@@ -99,12 +99,12 @@ public:
 	 * 	\param 	i_start_mission 		Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
-		typename Command_Reposition::defs::i_aircraft_state,
-		typename Command_Reposition::defs::i_hover_criteria_met,
-		typename Command_Reposition::defs::i_pilot_handover,
-		typename Command_Reposition::defs::i_pilot_takeover,
-		typename Command_Reposition::defs::i_request_reposition,
-		typename Command_Reposition::defs::i_start_mission
+		typename defs::i_aircraft_state,
+		typename defs::i_hover_criteria_met,
+		typename defs::i_pilot_handover,
+		typename defs::i_pilot_takeover,
+		typename defs::i_request_reposition,
+		typename defs::i_start_mission
 	>;
 
 	/**
@@ -121,14 +121,14 @@ public:
 	 * 	\param	o_update_gcs 					Port for sending updates to the GCS.
 	 */
 	using output_ports = std::tuple<
-		typename Command_Reposition::defs::o_cancel_hover,
-		typename Command_Reposition::defs::o_fcc_command_velocity,
-		typename Command_Reposition::defs::o_lp_criteria_met,
-		typename Command_Reposition::defs::o_request_aircraft_state,
-		typename Command_Reposition::defs::o_set_mission_monitor_status,
-		typename Command_Reposition::defs::o_stabilize,
-		typename Command_Reposition::defs::o_update_boss,
-		typename Command_Reposition::defs::o_update_gcs
+		typename defs::o_cancel_hover,
+		typename defs::o_fcc_command_velocity,
+		typename defs::o_lp_criteria_met,
+		typename defs::o_request_aircraft_state,
+		typename defs::o_set_mission_monitor_status,
+		typename defs::o_stabilize,
+		typename defs::o_update_boss,
+		typename defs::o_update_gcs
 	>;
 
 	/**
@@ -190,21 +190,21 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        bool received_pilot_takeover =  !cadmium::get_messages<typename Command_Reposition::defs::i_pilot_takeover>(mbs).empty();
+        bool received_pilot_takeover =  !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
         if (received_pilot_takeover) {
             state.current_state = States::PILOT_CONTROL;
             return;
         }
 
-        bool received_start_mission = !cadmium::get_messages<typename Command_Reposition::defs::i_start_mission>(mbs).empty();
+        bool received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
             reset_state();
-            mission_number = cadmium::get_messages<typename Command_Reposition::defs::i_start_mission>(mbs).back();
+            mission_number = cadmium::get_messages<typename defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_REQUEST_REPOSITION;
             return;
         }
 
-        bool received_pilot_handover = !cadmium::get_messages<typename Command_Reposition::defs::i_pilot_handover>(mbs).empty();
+        bool received_pilot_handover = !cadmium::get_messages<typename defs::i_pilot_handover>(mbs).empty();
         if (received_pilot_handover && state.current_state != States::IDLE) {
 			state.current_state = States::TIMER_EXPIRED;
             return;
@@ -215,50 +215,50 @@ public:
         bool received_request_reposition;
         switch (state.current_state) {
             case States::WAIT_REQUEST_REPOSITION:
-                received_request_reposition = !cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
+                received_request_reposition = !cadmium::get_messages<typename defs::i_request_reposition>(mbs).empty();
 
                 if (received_request_reposition) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_request_reposition>(mbs);
                     // Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::REQUEST_STATE;
                 }
                 break;
             case States::GET_STATE:
-                received_aircraft_state = !cadmium::get_messages<typename Command_Reposition::defs::i_aircraft_state>(mbs).empty();
+                received_aircraft_state = !cadmium::get_messages<typename defs::i_aircraft_state>(mbs).empty();
 
                 if (received_aircraft_state) {
-                    std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename Command_Reposition::defs::i_aircraft_state>(mbs);
+                    std::vector<message_aircraft_state_t> new_aircraft_state = cadmium::get_messages<typename defs::i_aircraft_state>(mbs);
                     aircraft_state = new_aircraft_state[0];
                     state.current_state = States::COMMAND_VEL;
                 }
                 break;
             case States::COMMAND_VEL:
-                received_request_reposition = !cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
+                received_request_reposition = !cadmium::get_messages<typename defs::i_request_reposition>(mbs).empty();
 
                 if (received_request_reposition) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_request_reposition>(mbs);
                     // Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::REQUEST_STATE;
                 }
                 break;
             case States::COMMAND_HOVER:
-                received_request_reposition = !cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
+                received_request_reposition = !cadmium::get_messages<typename defs::i_request_reposition>(mbs).empty();
 
                 if (received_request_reposition) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_request_reposition>(mbs);
                     // Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::REQUEST_STATE;
                 }
                 break;
             case States::STABILIZING:
-                received_hover_criteria_met = !cadmium::get_messages<typename Command_Reposition::defs::i_hover_criteria_met>(mbs).empty();
-                received_request_reposition = !cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
+                received_hover_criteria_met = !cadmium::get_messages<typename defs::i_hover_criteria_met>(mbs).empty();
+                received_request_reposition = !cadmium::get_messages<typename defs::i_request_reposition>(mbs).empty();
 
                 if (received_request_reposition) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_request_reposition>(mbs);
                     // Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::CANCEL_HOVER;
@@ -267,10 +267,10 @@ public:
                 }
                 break;
             case States::LP_CRITERIA_MET:
-                received_request_reposition = !cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs).empty();
+                received_request_reposition = !cadmium::get_messages<typename defs::i_request_reposition>(mbs).empty();
 
                 if (received_request_reposition) {
-                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename Command_Reposition::defs::i_request_reposition>(mbs);
+                    std::vector<message_landing_point_t> new_landing_points = cadmium::get_messages<typename defs::i_request_reposition>(mbs);
                     // Set the landing point to reposition over to the newest input (found at the back of the vector of input LPs)
                     landing_point = new_landing_points.back();
                     state.current_state = States::CANCEL_HOVER;
@@ -292,7 +292,7 @@ public:
 
 		switch (state.current_state) {
 			case States::REQUEST_STATE:
-				cadmium::get_messages<typename Command_Reposition::defs::o_request_aircraft_state>(bags).emplace_back(true);
+				cadmium::get_messages<typename defs::o_request_aircraft_state>(bags).emplace_back(true);
 				break;
 			case States::COMMAND_VEL: {
 				float distance, altitude;
@@ -310,15 +310,15 @@ public:
 
 				message_fcc_command_t mfc = message_fcc_command_t();
 				mfc.change_velocity(velocity, aircraft_state.gps_time);
-				cadmium::get_messages<typename Command_Reposition::defs::o_fcc_command_velocity>(bags).push_back(mfc);
+				cadmium::get_messages<typename defs::o_fcc_command_velocity>(bags).push_back(mfc);
 				break;
 			}
 			case States::COMMAND_HOVER: {
-				cadmium::get_messages<typename Command_Reposition::defs::o_set_mission_monitor_status>(bags)
+				cadmium::get_messages<typename defs::o_set_mission_monitor_status>(bags)
 						.emplace_back(0);
 
 				// Send a hover criteria message
-				cadmium::get_messages<typename Command_Reposition::defs::o_stabilize>(bags).emplace_back(
+				cadmium::get_messages<typename defs::o_stabilize>(bags).emplace_back(
 								landing_point.lat,
 								landing_point.lon,
 								landing_point.alt,
@@ -334,7 +334,7 @@ public:
 						);
 
 				// Update the boss displays landing point location
-				cadmium::get_messages<typename Command_Reposition::defs::o_update_boss>(bags).emplace_back(
+				cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
 								landing_point.id,
 								landing_point.lat,
 								landing_point.lon,
@@ -347,17 +347,17 @@ public:
 						);
 
 				// Update the ground control computer
-				cadmium::get_messages<typename Command_Reposition::defs::o_update_gcs>(bags).emplace_back(
+				cadmium::get_messages<typename defs::o_update_gcs>(bags).emplace_back(
 								"Repositioning to LP!",
 								Mav_Severities_E::MAV_SEVERITY_ALERT
 						);
 				break;
 			}
 			case States::CANCEL_HOVER:
-				cadmium::get_messages<typename Command_Reposition::defs::o_cancel_hover>(bags).emplace_back(true);
+				cadmium::get_messages<typename defs::o_cancel_hover>(bags).emplace_back(true);
 				break;
 			case States::LP_CRITERIA_MET:
-				cadmium::get_messages<typename Command_Reposition::defs::o_lp_criteria_met>(bags).push_back(landing_point);
+				cadmium::get_messages<typename defs::o_lp_criteria_met>(bags).push_back(landing_point);
 				break;
 			default:
 				break;

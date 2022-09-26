@@ -85,10 +85,10 @@ public:
 	 * 	\param 	i_start_mission 	Port for receiving signal indicating the mission has started.
 	 */
 	using input_ports = std::tuple<
-		typename Landing_Routine<TIME>::defs::i_land,
-		typename Landing_Routine<TIME>::defs::i_landing_achieved,
-		typename Landing_Routine<TIME>::defs::i_pilot_takeover,
-		typename Landing_Routine<TIME>::defs::i_start_mission
+		typename defs::i_land,
+		typename defs::i_landing_achieved,
+		typename defs::i_pilot_takeover,
+		typename defs::i_start_mission
 	>;
 
 	/**
@@ -102,11 +102,11 @@ public:
 	 * 	\param	o_update_mission_item	Port for updating the mission manager that the last mission item has been reached.
 	 */
 	using output_ports = std::tuple<
-		typename Landing_Routine<TIME>::defs::o_fcc_command_land,
-		typename Landing_Routine<TIME>::defs::o_mission_complete,
-		typename Landing_Routine<TIME>::defs::o_update_boss,
-		typename Landing_Routine<TIME>::defs::o_update_gcs,
-		typename Landing_Routine<TIME>::defs::o_update_mission_item
+		typename defs::o_fcc_command_land,
+		typename defs::o_mission_complete,
+		typename defs::o_update_boss,
+		typename defs::o_update_gcs,
+		typename defs::o_update_mission_item
 	>;
 
 	/**
@@ -155,15 +155,15 @@ public:
 
 	/// External transitions of the model
 	void external_transition([[maybe_unused]] TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        bool received_pilot_takeover = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_pilot_takeover>(mbs).empty();
+        bool received_pilot_takeover = !cadmium::get_messages<typename defs::i_pilot_takeover>(mbs).empty();
 		if (received_pilot_takeover) {
 			state.current_state = States::PILOT_CONTROL;
             return;
 		}
 
-        bool received_start_mission = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).empty();
+        bool received_start_mission = !cadmium::get_messages<typename defs::i_start_mission>(mbs).empty();
         if (received_start_mission) {
-            mission_number = cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_start_mission>(mbs).back();
+            mission_number = cadmium::get_messages<typename defs::i_start_mission>(mbs).back();
             state.current_state = States::WAIT_LAND_REQUEST;
             return;
         }
@@ -172,20 +172,20 @@ public:
         bool received_landing_achieved;
         switch (state.current_state) {
             case States::WAIT_LAND_REQUEST:
-                received_land = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).empty();
+                received_land = !cadmium::get_messages<typename defs::i_land>(mbs).empty();
                 if (received_land) {
-                    landing_point = cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_land>(mbs).back();
+                    landing_point = cadmium::get_messages<typename defs::i_land>(mbs).back();
                     state.current_state = States::REQUEST_LAND;
                 }
                 break;
             case States::LANDING:
-                received_landing_achieved = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
+                received_landing_achieved = !cadmium::get_messages<typename defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {
                     state.current_state = States::NOTIFY_LANDED;
                 }
                 break;
             case States::PILOT_CONTROL:
-                received_landing_achieved = !cadmium::get_messages<typename Landing_Routine<TIME>::defs::i_landing_achieved>(mbs).empty();
+                received_landing_achieved = !cadmium::get_messages<typename defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {
                     state.current_state = States::NOTIFY_LANDED;
                 }
@@ -210,7 +210,7 @@ public:
 			case States::REQUEST_LAND: {
 				message_fcc_command_t fcc_command = message_fcc_command_t();
 				fcc_command.set_supervisor_status(Control_Mode_E::LANDING_REQUESTED);
-				cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_fcc_command_land>(bags).push_back(fcc_command);
+				cadmium::get_messages<typename defs::o_fcc_command_land>(bags).push_back(fcc_command);
 
 				// Update the boss displays landing point location
 				cadmium::get_messages<typename Landing_Routine::defs::o_update_boss>(bags).emplace_back(
@@ -233,8 +233,8 @@ public:
 				break;
 			}
 			case States::NOTIFY_LANDED: {
-				cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_mission_complete>(bags).emplace_back(true);
-				cadmium::get_messages<typename Landing_Routine<TIME>::defs::o_update_mission_item>(bags).emplace_back(true);
+				cadmium::get_messages<typename defs::o_mission_complete>(bags).emplace_back(true);
+				cadmium::get_messages<typename defs::o_update_mission_item>(bags).emplace_back(true);
 
 				// Update the ground control computer
 				cadmium::get_messages<typename Landing_Routine::defs::o_update_gcs>(bags).emplace_back(

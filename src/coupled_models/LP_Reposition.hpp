@@ -95,13 +95,13 @@ public:
 	 * 	\param 	i_start_mission			Port for receiving signal indicating the mission has started.
 	 */
  	cadmium::dynamic::modeling::Ports iports = {
-		typeid(LP_Reposition::defs::i_aircraft_state),
-		typeid(LP_Reposition::defs::i_control_yielded),
-		typeid(LP_Reposition::defs::i_hover_criteria_met),
-		typeid(LP_Reposition::defs::i_landing_achieved),
-		typeid(LP_Reposition::defs::i_lp_new),
-		typeid(LP_Reposition::defs::i_pilot_takeover),
-		typeid(LP_Reposition::defs::i_start_mission)
+		typeid(defs::i_aircraft_state),
+		typeid(defs::i_control_yielded),
+		typeid(defs::i_hover_criteria_met),
+		typeid(defs::i_landing_achieved),
+		typeid(defs::i_lp_new),
+		typeid(defs::i_pilot_takeover),
+		typeid(defs::i_start_mission)
 	};
 
 	/**
@@ -121,17 +121,17 @@ public:
 	 * 	\param 	o_update_mission_item			Port for updating the mission manager that the last mission item has been reached.
 	 */
  	cadmium::dynamic::modeling::Ports oports = {
-		typeid(LP_Reposition::defs::o_cancel_hover),
-		typeid(LP_Reposition::defs::o_fcc_command_land),
-		typeid(LP_Reposition::defs::o_fcc_command_velocity),
-		typeid(LP_Reposition::defs::o_mission_complete),
-		typeid(LP_Reposition::defs::o_pilot_handover),
-		typeid(LP_Reposition::defs::o_request_aircraft_state),
-		typeid(LP_Reposition::defs::o_set_mission_monitor_status),
-		typeid(LP_Reposition::defs::o_stabilize),
-		typeid(LP_Reposition::defs::o_update_boss),
-		typeid(LP_Reposition::defs::o_update_gcs),
-		typeid(LP_Reposition::defs::o_update_mission_item)
+		typeid(defs::o_cancel_hover),
+		typeid(defs::o_fcc_command_land),
+		typeid(defs::o_fcc_command_velocity),
+		typeid(defs::o_mission_complete),
+		typeid(defs::o_pilot_handover),
+		typeid(defs::o_request_aircraft_state),
+		typeid(defs::o_set_mission_monitor_status),
+		typeid(defs::o_stabilize),
+		typeid(defs::o_update_boss),
+		typeid(defs::o_update_gcs),
+		typeid(defs::o_update_mission_item)
 	};
 
 	/**
@@ -154,19 +154,19 @@ public:
 	 * 	\see 	LP_Reposition
 	 */
  	cadmium::dynamic::modeling::EICs eics = {
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_landing_achieved, Landing_Routine<TIME>::defs::i_landing_achieved>("landing_routine"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Landing_Routine<TIME>::defs::i_pilot_takeover>("landing_routine"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_start_mission, Landing_Routine<TIME>::defs::i_start_mission>("landing_routine"),
+		cadmium::dynamic::translate::make_EIC<defs::i_landing_achieved, Landing_Routine<TIME>::defs::i_landing_achieved>("landing_routine"),
+		cadmium::dynamic::translate::make_EIC<defs::i_pilot_takeover, Landing_Routine<TIME>::defs::i_pilot_takeover>("landing_routine"),
+		cadmium::dynamic::translate::make_EIC<defs::i_start_mission, Landing_Routine<TIME>::defs::i_start_mission>("landing_routine"),
 
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_hover_criteria_met, Command_Reposition<TIME>::defs::i_hover_criteria_met>("command_reposition"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Command_Reposition<TIME>::defs::i_pilot_takeover>("command_reposition"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_aircraft_state, Command_Reposition<TIME>::defs::i_aircraft_state>("command_reposition"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_start_mission, Command_Reposition<TIME>::defs::i_start_mission>("command_reposition"),
+		cadmium::dynamic::translate::make_EIC<defs::i_hover_criteria_met, Command_Reposition<TIME>::defs::i_hover_criteria_met>("command_reposition"),
+		cadmium::dynamic::translate::make_EIC<defs::i_pilot_takeover, Command_Reposition<TIME>::defs::i_pilot_takeover>("command_reposition"),
+		cadmium::dynamic::translate::make_EIC<defs::i_aircraft_state, Command_Reposition<TIME>::defs::i_aircraft_state>("command_reposition"),
+		cadmium::dynamic::translate::make_EIC<defs::i_start_mission, Command_Reposition<TIME>::defs::i_start_mission>("command_reposition"),
 
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_pilot_takeover, Reposition_Timer<TIME>::defs::i_pilot_takeover>("reposition_timer"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_control_yielded, Reposition_Timer<TIME>::defs::i_control_yielded>("reposition_timer"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_lp_new, Reposition_Timer<TIME>::defs::i_lp_new>("reposition_timer"),
-		cadmium::dynamic::translate::make_EIC<LP_Reposition::defs::i_start_mission, Reposition_Timer<TIME>::defs::i_start_mission>("reposition_timer")
+		cadmium::dynamic::translate::make_EIC<defs::i_pilot_takeover, Reposition_Timer<TIME>::defs::i_pilot_takeover>("reposition_timer"),
+		cadmium::dynamic::translate::make_EIC<defs::i_control_yielded, Reposition_Timer<TIME>::defs::i_control_yielded>("reposition_timer"),
+		cadmium::dynamic::translate::make_EIC<defs::i_lp_new, Reposition_Timer<TIME>::defs::i_lp_new>("reposition_timer"),
+		cadmium::dynamic::translate::make_EIC<defs::i_start_mission, Reposition_Timer<TIME>::defs::i_start_mission>("reposition_timer")
 	};
 
 	/**
@@ -176,26 +176,26 @@ public:
 	 */
  	cadmium::dynamic::modeling::EOCs eocs = {
 		// landing_routine
-		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_fcc_command_land, LP_Reposition::defs::o_fcc_command_land>("landing_routine"),
-		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_mission_complete, LP_Reposition::defs::o_mission_complete>("landing_routine"),
-		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("landing_routine"),
-		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("landing_routine"),
-		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_mission_item, LP_Reposition::defs::o_update_mission_item>("landing_routine"),
+		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_fcc_command_land, defs::o_fcc_command_land>("landing_routine"),
+		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_mission_complete, defs::o_mission_complete>("landing_routine"),
+		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_boss, defs::o_update_boss>("landing_routine"),
+		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_gcs, defs::o_update_gcs>("landing_routine"),
+		cadmium::dynamic::translate::make_EOC<Landing_Routine<TIME>::defs::o_update_mission_item, defs::o_update_mission_item>("landing_routine"),
 
 		// command_reposition
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_cancel_hover, LP_Reposition::defs::o_cancel_hover>("command_reposition"),
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_stabilize, LP_Reposition::defs::o_stabilize>("command_reposition"),
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_fcc_command_velocity, LP_Reposition::defs::o_fcc_command_velocity>("command_reposition"),
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_set_mission_monitor_status, LP_Reposition::defs::o_set_mission_monitor_status>("command_reposition"),
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_request_aircraft_state, LP_Reposition::defs::o_request_aircraft_state>("command_reposition"),
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("command_reposition"),
-		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_cancel_hover, defs::o_cancel_hover>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_stabilize, defs::o_stabilize>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_fcc_command_velocity, defs::o_fcc_command_velocity>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_set_mission_monitor_status, defs::o_set_mission_monitor_status>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_request_aircraft_state, defs::o_request_aircraft_state>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_update_boss, defs::o_update_boss>("command_reposition"),
+		cadmium::dynamic::translate::make_EOC<Command_Reposition<TIME>::defs::o_update_gcs, defs::o_update_gcs>("command_reposition"),
 
 		// reposition_timer
-		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_cancel_hover, LP_Reposition::defs::o_cancel_hover>("reposition_timer"),
-		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_pilot_handover, LP_Reposition::defs::o_pilot_handover>("reposition_timer"),
-		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_boss, LP_Reposition::defs::o_update_boss>("reposition_timer"),
-		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_gcs, LP_Reposition::defs::o_update_gcs>("reposition_timer")
+		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_cancel_hover, defs::o_cancel_hover>("reposition_timer"),
+		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_pilot_handover, defs::o_pilot_handover>("reposition_timer"),
+		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_boss, defs::o_update_boss>("reposition_timer"),
+		cadmium::dynamic::translate::make_EOC<Reposition_Timer<TIME>::defs::o_update_gcs, defs::o_update_gcs>("reposition_timer")
 	};
 
 	/**

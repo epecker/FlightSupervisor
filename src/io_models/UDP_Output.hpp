@@ -59,7 +59,7 @@ public:
 	 * 	Definition of the input ports for the model.
 	 * 	\param	i_message	Port for receiving byte vectors to send to a predefined address and port.
 	 */
-    using input_ports=std::tuple<typename UDP_Output::defs::i_message>;
+    using input_ports=std::tuple<typename defs::i_message>;
 
 	/**
 	 *	\anchor	RUDP_Output_output_ports
@@ -116,9 +116,9 @@ public:
 
 	/// External transitions of the model
     void external_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-		if (cadmium::get_messages<typename UDP_Output::defs::i_message>(mbs).size() >= 1){
+		if (cadmium::get_messages<typename defs::i_message>(mbs).size() >= 1){
 			state.current_state = States::SENDING;
-			for (std::vector<char> m : cadmium::get_messages<typename UDP_Output::defs::i_message>(mbs)) {
+			for (std::vector<char> m : cadmium::get_messages<typename defs::i_message>(mbs)) {
 				state.messages.push_back(m);
 			}
 		}
