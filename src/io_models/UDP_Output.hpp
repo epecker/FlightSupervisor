@@ -95,9 +95,9 @@ public:
 	 * \param	address			String IP version 4 address of the receiver.
 	 * \param	port			unsigned short port number of the receiver.
 	 */
-    UDP_Output(const std::string& address, unsigned short port, bool broadcast) {
+    UDP_Output(const std::string& address, unsigned short port, bool enable_broadcast) {
         state.current_state = States::IDLE;
-		this->broadcast = broadcast;
+		broadcast = enable_broadcast;
 		if (broadcast) {
         	network_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::broadcast(), port);
 		}

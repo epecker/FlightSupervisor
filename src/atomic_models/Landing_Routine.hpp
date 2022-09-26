@@ -179,11 +179,6 @@ public:
                 }
                 break;
             case States::LANDING:
-                received_landing_achieved = !cadmium::get_messages<typename defs::i_landing_achieved>(mbs).empty();
-                if (received_landing_achieved) {
-                    state.current_state = States::NOTIFY_LANDED;
-                }
-                break;
             case States::PILOT_CONTROL:
                 received_landing_achieved = !cadmium::get_messages<typename defs::i_landing_achieved>(mbs).empty();
                 if (received_landing_achieved) {

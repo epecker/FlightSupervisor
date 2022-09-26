@@ -92,8 +92,9 @@ public:
 			connection->setEndpointRemote(PEREGRINE_IP, MAVLINK_OVER_UDP_PORT);
 			connection->setSendRetriesLimit(10);
 		}
-		catch (std::runtime_error error) {
-			assert(false && error.what());
+		catch (std::runtime_error& error) {
+			std::cout << error.what();
+			assert(false);
 		}
     }
 
@@ -112,8 +113,9 @@ public:
 			connection->setEndpointRemote(address, port);
 			connection->setSendRetriesLimit(retries_limit);
 		}
-		catch (std::runtime_error error) {
-			assert(false && error.what());
+		catch (std::runtime_error& error) {
+			std::cout << error.what();
+			assert(false);
 		}
     }
 
@@ -187,7 +189,7 @@ private:
 			try {
             	connection->send(m.data(), m.size());
 			}
-            catch (std::runtime_error error) {
+            catch (std::runtime_error& error) {
                 std::cout << "[RUDP Output] (ERROR) Error sending packet using RUDP Output model: " << error.what() << std::endl;
             }
         }

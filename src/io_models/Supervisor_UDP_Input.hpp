@@ -204,27 +204,27 @@ public:
 			//If the lock is free and there are messages, send the messages.
 			std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 			if (state.has_messages && mutexLock.try_lock()) {
-				if (message_start_supervisor.size() > 0) {
+				if (!message_start_supervisor.empty()) {
 				 cadmium::get_messages<typename defs::o_start_supervisor>(bags) = message_start_supervisor;
 					message_start_supervisor.clear();
 				}
 
-				if (message_perception_status.size() > 0) {
+				if (!message_perception_status.empty()) {
 				 cadmium::get_messages<typename defs::o_perception_status>(bags) = message_perception_status;
 					message_perception_status.clear();
 				}
 
-				if (message_waypoint.size() > 0) {
+				if (!message_waypoint.empty()) {
 				 cadmium::get_messages<typename defs::o_waypoint>(bags) = message_waypoint;
 					message_waypoint.clear();
 				}
 
-				if (message_lp_recv.size() > 0) {
+				if (!message_lp_recv.empty()) {
 				 cadmium::get_messages<typename defs::o_lp_recv>(bags) = message_lp_recv;
 					message_lp_recv.clear();
 				}
 
-				if (message_plp_ach.size() > 0) {
+				if (!message_plp_ach.empty()) {
 				 cadmium::get_messages<typename defs::o_plp_ach>(bags) = message_plp_ach;
 					message_plp_ach.clear();
 				}
