@@ -20,7 +20,7 @@
 // Utility functions
 #include "../enum_string_conversion.hpp"
 #include "../Constants.hpp"
-#include "../component_macros.h"
+#include "../component_macros.hpp"
 
 // RUDP Library
 #include <RUDP/src/ConnectionController.hpp>
