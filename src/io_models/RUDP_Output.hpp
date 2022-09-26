@@ -145,8 +145,6 @@ public:
 
 	/// Function for generating output from the model before internal transitions.
     [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
-		typename cadmium::make_message_bags<output_ports>::type bags;
-
         switch(state.current_state) {
             case States::SENDING:
                 send_packets();
@@ -154,7 +152,7 @@ public:
             default:
                 break;
         }
-        return bags;
+        return {};
     }
 
 	/// Function to declare the time advance value for each state of the model.

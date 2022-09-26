@@ -198,16 +198,15 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<MSG> message_out;
+
 		std::unique_lock<std::mutex> mutexLock(input_mutex, std::defer_lock);
 		if (state.current_state == States::INPUT) {
 			//If the lock is free and there are messages, send the messages.
 			if (!state.message.empty() && mutexLock.try_lock()) {
-				for (auto msg : state.message) {
-					message_out.push_back(msg);
+				for (auto msg: state.message) {
+					cadmium::get_messages<typename defs::o_message>(bags).push_back(msg);
 				}
 				state.message.clear();
-			 cadmium::get_messages<typename defs::o_message>(bags) = message_out;
 			}
 		}
 		return bags;

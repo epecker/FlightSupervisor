@@ -156,7 +156,6 @@ public:
 	[[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
 		std::vector<std::vector<char>> packets;
-        std::vector<char> v;
 
 		switch (state.current_state) {
 			case States::GENERATE_PACKET:

@@ -140,12 +140,10 @@ public:
 	/// Function for generating output from the model before internal transitions.
     [[nodiscard]] typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<MSG> bag_port_message;
 
         switch(state.current_state) {
             case States::SEND:
-				bag_port_message.push_back(state.cached_input);
-				cadmium::get_messages<typename defs::o_cached_input>(bags) = bag_port_message;
+				cadmium::get_messages<typename defs::o_cached_input>(bags).push_back(state.cached_input);
 		        break;
             default:
                 break;

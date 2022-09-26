@@ -143,10 +143,8 @@ public:
 	/// Function for generating output from the model before internal transitions.
 	typename cadmium::make_message_bags<output_ports>::type output() const {
 		typename cadmium::make_message_bags<output_ports>::type bags;
-		std::vector<bool> bag_port_message;
 		if (state.current_state == States::POLL && state.condition_met) {
-			bag_port_message.push_back(true);
-			cadmium::get_messages<typename defs::o_message>(bags) = bag_port_message;
+			cadmium::get_messages<typename defs::o_message>(bags).emplace_back(true);
 		}
 		return bags;
 	}
