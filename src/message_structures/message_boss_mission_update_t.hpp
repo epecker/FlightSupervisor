@@ -117,23 +117,30 @@ struct message_boss_mission_update_t {
 
 	message_boss_mission_update_t(
 			int missionNumber,
+            int missionItemNumber,
+            double latitude,
+            double longitude,
 			float altitude,
+            float heading,
+            float velocity,
+            float AcceptRadiusHorz,
+            float AcceptRadiusVert,
 			const std::string &msg
 	) :
 			lpNo(0),
 			lpLat(0),
 			lpLon(0),
 			missionNo(missionNumber),
-			missionItemNo(0),
+			missionItemNo(missionItemNumber),
 			isMissionStarted(1),
 			isLandingLeg(0),
-			lat(0),
-			lon(0),
+			lat(latitude),
+			lon(longitude),
 			alt(altitude),
-			yaw(0),
-			speed(0),
-			horzAcceptRadiusM(0),
-			vertAcceptRadiusM(0),
+			yaw(heading),
+			speed(velocity),
+			horzAcceptRadiusM(AcceptRadiusHorz),
+			vertAcceptRadiusM(AcceptRadiusVert),
 			previewLength(0) {
 		strncpy(description, msg.c_str(), 10);
 	}

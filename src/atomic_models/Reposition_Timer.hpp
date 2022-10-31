@@ -301,9 +301,15 @@ public:
             case States::LP_REPO: {
 				// Update BOSS display message
 				cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
-						mission_number,
-						landing_point.alt * FT_TO_METERS,
-						"LZ SCAN"
+                       landing_point.id,
+                       landing_point.lat,
+                       landing_point.lon,
+                       mission_number,
+                       landing_point.missionItemNo,
+                       landing_point.alt * FT_TO_METERS,
+                       landing_point.hdg,
+                       0,
+                       "REPO EXP"
 				);
 
 				// Update the ground control computer
