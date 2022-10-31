@@ -36,6 +36,8 @@
 #define DEFAULT_LAND_CRITERIA_VERT_DIST 5.0  // feet , to meet landing criteria
 #define DEFAULT_LAND_CRITERIA_VEL 3.0 //knots, velocity to meet landing criteria
 #define DEFAULT_LAND_CRITERIA_HDG 15.0 // to meet heading criteria for landing
+#define DEFAULT_ACCEPTANCE_RADIUS_HORZ 30.0  // Defined in meters --- Changed to 10m for Peregrine ground testing
+#define DEFAULT_ACCEPTANCE_RADIUS_VERT 10.0  // Meters
 #define MAX_REPO_VEL 5.0 //knots -- This matches the FCC value
 #define MIN_REPO_VEL  1.0 //knots
 #define REPO_TRANSIT_TIME 10.0f

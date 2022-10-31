@@ -152,6 +152,7 @@ public:
 	 * \brief 	Default constructor for the model.
 	 */
 	LP_Manager() {
+        first_waypoint_number = -1;
 		state.current_state = States::IDLE;
 		lp_accept_time_prev = seconds_to_time<TIME>(LP_ACCEPT_TIMER);
 		orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
@@ -168,6 +169,7 @@ public:
 	 * \param	i_orbit_time		TIME length of the orbit timer.
 	 */
 	LP_Manager(TIME i_lp_accept_time, TIME i_orbit_time) {
+        first_waypoint_number = -1;
 		state.current_state = States::IDLE;
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
@@ -185,6 +187,7 @@ public:
 	 * \param	initial_state	States initial state of the model.
 	 */
 	LP_Manager(TIME i_lp_accept_time, TIME i_orbit_time, States initial_state) {
+        first_waypoint_number = -1;
 		state.current_state = initial_state;
 		lp_accept_time_prev = i_lp_accept_time;
 		orbit_time = i_orbit_time;
@@ -245,10 +248,17 @@ public:
                 bool received_plp_ach = !cadmium::get_messages<typename defs::i_plp_ach>(mbs).empty();
                 if (received_lp) {
                     set_lp_if_valid(&mbs);
+                    if (received_plp_ach) {
+                        first_waypoint_number = lp.missionItemNo;
+                    } else {
+                        first_waypoint_number = lp.missionItemNo + 1;
+                    }
+                    lp.missionItemNo = first_waypoint_number;
                     state.current_state = States::REQUEST_STATE_LP;
                 } else if (received_plp_ach) {
-                    state.current_state = States::REQUEST_STATE_PLP;
                     plp = cadmium::get_messages<typename defs::i_plp_ach>(mbs)[0];
+                    first_waypoint_number = plp.missionItemNo;
+                    state.current_state = States::REQUEST_STATE_PLP;
                 }
                 break;
             }
@@ -306,6 +316,7 @@ public:
                     state.current_state = States::LP_ACCEPT_EXP;
                 } else if (received_lp) {
                     set_lp_if_valid(&mbs);
+                    lp.missionItemNo = first_waypoint_number;
                     state.current_state = States::REQUEST_STATE_LP;
                 }
                 break;
@@ -354,9 +365,16 @@ public:
 
 				// Update BOSS display message
 				cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
-						mission_number,
-						plp.alt * FT_TO_METERS,
-						"LZ SCAN"
+                        mission_number,
+                        plp.missionItemNo,
+                        plp.lat,
+                        plp.lon,
+                        plp.alt * FT_TO_METERS,
+                        plp.hdg,
+                        0.1, // If set to 0 displays a doghouse, else displays a circle
+                        DEFAULT_ACCEPTANCE_RADIUS_HORZ,
+                        0,
+                        "LZ SCAN"
 				);
 
 				cadmium::get_messages<typename defs::o_set_mission_monitor_status>(bags).emplace_back(0);
@@ -372,9 +390,16 @@ public:
 
 					// Update BOSS display message
 					cadmium::get_messages<typename defs::o_update_boss>(bags).emplace_back(
-							mission_number,
-							plp.alt * FT_TO_METERS,
-							"MAN CTRL"
+                            mission_number,
+                            plp.missionItemNo,
+                            plp.lat,
+                            plp.lon,
+                            plp.alt * FT_TO_METERS,
+                            plp.hdg,
+                            0.1,
+                            DEFAULT_ACCEPTANCE_RADIUS_HORZ,
+                            0,
+                            "MAN CTRL"
 					);
 
 					cadmium::get_messages<typename defs::o_pilot_handover>(bags).push_back(plp);
@@ -460,6 +485,8 @@ public:
 	}
 
 private:
+    /// Required to display the landing point doghouses.
+    int first_waypoint_number;
     /// Variable to count the number of valid LPs that have been sent.
     int lp_count;
     /// Variable for storing the number of the mission for updating BOSS.
