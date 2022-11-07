@@ -33,6 +33,20 @@ closed-loop autonomy systems used by CVLAD.
 
 ## Prerequisites
 
+### Authorization
+
+To be able to fully utilise the Supervisor, access to the following dependancies is required:
+* The [CVLAD Shared Memory Model](https://bitbucket.org/frl-student/sharedmemorymodel)
+* The [Reliable UDP Library](https://github.com/jwehorner/RUDP) 
+
+RUDP is a publicly accessible repository, so no authorization is required to access it. The shared memory model however is intellectual property of the NRC and requires authorization. To gain access to the repository and make it available for initialisation:
+1. Create a Bitbucket account.
+2. Ask an admin of the Shared Memory Model repo to add you as a user. To do so contact James at jameshorner@cmail.carleton.ca and send your bitbucket email.
+3. Set up an SSH key on your machine and add the public key to your Bitbucket, following [this guide](https://support.atlassian.com/bitbucket-cloud/docs/set-up-an-ssh-key/).
+4. Continue on with the cloning of the repository.
+
+### CMake FindBoost Compatibility
+
 Note: For CMake to automatically find boost, the version of Boost used must be listed in the variable 
 _Boost_KNOWN_VERSIONS in CMake's FindBoost.cmake file. For example, CMake 3.24.1 supports up to Boost version 1.79.0.
 For CMake 3.24.1, this information can be found at [https://github.com/Kitware/CMake/blob/v3.24.1/Modules/FindBoost.cmake](https://github.com/Kitware/CMake/blob/v3.24.1/Modules/FindBoost.cmake).
@@ -66,11 +80,10 @@ Using a terminal perform the following.
 	apt install libboost-all-dev
 	```
 
-* Install CMake via snap
-
-	```bash
-	snap install cmake –classic
-	```
+* Install CMake
+	* Download the precompiled binary with the SH extension
+	* Allow the script to be executable (either using the terminal or in files)
+	* Run the script using the ```--skip-license``` and ```--prefix=/usr/local``` (change the prefix to whatever your desired installation directory is).
 
 * Install Git
 
@@ -216,6 +229,11 @@ Using the terminal perform the following.
 
 ### Windows 10 - Visual Studio Community
 
+* Initialise and update the git submodules:
+	```bash
+	git submodule init
+	git submodule update --remote --recursive
+	```
 * Open Visual Studio Community
 * Click "Open a local folder"
 * Open the repository
