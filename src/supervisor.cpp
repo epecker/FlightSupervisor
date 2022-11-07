@@ -31,7 +31,13 @@ using hclock = std::chrono::high_resolution_clock;
 using TIME = NDTime;
 
 int main() {
-	const std::string out_directory = std::string(PROJECT_DIRECTORY) + std::string("/test/simulation_results/supervisor/0");
+	std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	char folder_name[64] = {0};
+	std::strftime(folder_name, sizeof(folder_name), "%F-%H%M", std::localtime(&now));
+	
+	const std::string out_directory = std::string(PROJECT_DIRECTORY) + std::string("/test/flight_test_results/") + std::string(folder_name);
+    
+	std::cout << "[Supervisor] (INFO) Log files will be saved under: " << out_directory << std::endl;
 
 	std::string out_messages_file = out_directory + std::string("/output_messages.txt");
 	std::string out_state_file = out_directory + std::string("/output_state.txt");
