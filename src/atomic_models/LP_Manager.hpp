@@ -177,6 +177,7 @@ public:
         mission_number = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
+		new_lp_set = false;
 	}
 
 	/**
@@ -195,6 +196,7 @@ public:
         mission_number = 0;
 		lp = message_landing_point_t();
 		plp = message_landing_point_t();
+		new_lp_set = false;
 	}
 
 	/// Internal transitions of the model
@@ -214,6 +216,7 @@ public:
 				break;
 			case States::NOTIFY_LP:
 				state.current_state = States::LP_APPROACH;
+				new_lp_set = false;
 				break;
 			case States::LP_APPROACH:
 				state.current_state = States::LP_ACCEPT_EXP;
@@ -414,7 +417,9 @@ public:
 								Mav_Severities_E::MAV_SEVERITY_INFO
 						);
 					}
-					cadmium::get_messages<typename defs::o_lp_new>(bags).push_back(lp);
+					if (new_lp_set) {
+						cadmium::get_messages<typename defs::o_lp_new>(bags).push_back(lp);
+					}
 				}
 				break;
 			case States::LP_APPROACH:
@@ -493,6 +498,8 @@ private:
     int mission_number;
     /// Variable for storing the location of the current valid landing point.
     message_landing_point_t lp;
+	/// Variable set when a new lp has been received, indicating that one should be sent.
+	bool new_lp_set;
     /// Variable for storing the location of the planned landing point.
     message_landing_point_t plp;
     /// Variable for storing the current aircraft state.
@@ -516,6 +523,7 @@ private:
             lp = landing_points.back(); // Pick the newest landing point for the first new LP (found at the back of the vector of inputs)
             lp_count++;
             lp.id = lp_count;
+			new_lp_set = true;
         } else {
             for (message_landing_point_t new_lp : landing_points) {
                 float distance_xy;
@@ -531,6 +539,7 @@ private:
                     lp = new_lp;
                     lp_count++;
                     lp.id = lp_count;
+					new_lp_set = true;
                     break;
                 }
             }
@@ -558,6 +567,7 @@ private:
         orbit_time = seconds_to_time<TIME>(ORBIT_TIMER);
         mission_number = 0;
         lp_count = 0;
+		new_lp_set = false;
     }
 };
 
