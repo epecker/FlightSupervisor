@@ -59,31 +59,35 @@ Using a terminal perform the following.
 * Update the Ubuntu repositories
 
 	```bash
-	apt update
+	sudo apt update
 	```
 
 * Upgrade the Ubuntu System
 
 	```bash
-	apt upgrade
+	sudo apt upgrade
 	```
 
 * Install the ubuntu development tools
 
 	```bash
-	apt install build-essential
+	sudo apt install build-essential
 	```
 
 * Install Boost
 
 	```bash
-	apt install libboost-all-dev
+	sudo apt install libboost-all-dev
 	```
 
 * Install CMake
-	* Download the precompiled binary with the SH extension
+	* Download the precompiled binary with the SH extension from the [CMake Download Page](https://cmake.org/download/)
 	* Allow the script to be executable (either using the terminal or in files)
-	* Run the script using the ```--skip-license``` and ```--prefix=/usr/local``` (change the prefix to whatever your desired installation directory is).
+		* In the Downloads folder of Files, right click on the script and select "Properties", then "Permissions" and enable the "Execute" checkbox.
+	* Run the script in a terminal using the ```--skip-license``` and ```--prefix=/usr/local``` (change the prefix to whatever your desired installation directory is).
+	```bash
+	sudo ./cmake.sh --skip-license --prefix=/usr/local
+	```
 
 * Install Git
 
