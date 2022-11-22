@@ -3,4 +3,4 @@
 	url = git@bitbucket.org:frl-student/sharedmemorymodel.git
 [submodule "deps/RUDP"]
 	path = deps/RUDP
-	url = https://github.com/jwehorner/RUDP.git
+	url = git@git-collab.nrc-cnrc.gc.ca:cvlad/rudp.git
