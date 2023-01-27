@@ -8,7 +8,7 @@
  *	\author		James Horner
  */
 
-#ifdef RT_LINUX
+#ifdef RT_WIN
 #ifndef AIRCRAFT_STATE_INPUT_HPP
 #define AIRCRAFT_STATE_INPUT_HPP
 
@@ -177,4 +177,4 @@ private:
 };
 
 #endif // AIRCRAFT_STATE_INPUT_HPP
-#endif // RT_LINUX
+#endif // RT_WIN

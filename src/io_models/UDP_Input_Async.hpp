@@ -32,7 +32,7 @@
 #include <string>
 
 // Guard to ensure that the model is run in real-time.
-#ifdef RT_LINUX
+#ifdef RT_WIN
 
 /**
  * 	\class		UDP_Input_Async
@@ -314,5 +314,5 @@ private:
 	}
 };
 
-#endif // RT_LINUX
+#endif // RT_WIN
 #endif // UDP_INPUT_ASYNC_HPP

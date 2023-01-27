@@ -33,7 +33,7 @@
 #include <csignal>
 
 // Guard to ensure that the model is run in real-time.
-#ifdef RT_LINUX
+#ifdef RT_WIN
 
 /**
  * 	\class		UDP_Input
@@ -318,5 +318,5 @@ private:
 	}
 };
 
-#endif // RT_LINUX
+#endif // RT_WIN
 #endif // UDP_INPUT_HPP

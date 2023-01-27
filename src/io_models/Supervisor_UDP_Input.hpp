@@ -43,7 +43,7 @@
 #include <thread>
 
 // Guard to ensure that the model is run in real-time.
-#ifdef RT_LINUX
+#ifdef RT_WIN
 
 /**
  * 	\class		Supervisor_UDP_Input
@@ -407,5 +407,5 @@ private:
 	}
 };
 
-#endif /* RT_LINUX */
+#endif /* RT_WIN */
 #endif /* SUPERVISOR_UDP_INPUT_HPP */
