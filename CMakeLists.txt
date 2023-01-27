@@ -23,6 +23,9 @@ add_compile_definitions(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION)
 add_compile_definitions(BOOST_THREAD_PROVIDES_EXECUTORS)
 add_compile_definitions(BOOST_THREAD_USES_MOVE)
 
+add_compile_definitions(WIN64)
+# add_compile_definitions(bigobj)
+add_compile_definitions(_HAS_STD_BYTE=0) # Workardound for std::byte override: https://developercommunity.visualstudio.com/t/error-c2872-byte-ambiguous-symbol/93889
 
 ##########################
 ###  Dependency Setup  ###
@@ -38,7 +41,9 @@ include(deps/boost.cmake) 		# Searches system for Boost and sets up variables fo
 set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/deps" "${CMAKE_SOURCE_DIR}/deps/RUDP/include")
 set(MavNRC_GEO 	"${CMAKE_SOURCE_DIR}/deps/mavNRC/geo.cpp")
 set(SHARED_MEM 	"${CMAKE_SOURCE_DIR}/deps/sharedmemorymodel/SharedMemoryModel.cpp")
-set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/librudp.a")
+# TODO: use an if statement here
+# set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/librudp.a") # UHNIX
+set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/rudp.lib") # WIN
 
 #################################
 ###  Compiler Specific Fixes  ###
@@ -51,5 +56,5 @@ endif()
 ########################
 ###  Subdirectories  ###
 ########################
-add_subdirectory(src)
+# add_subdirectory(src)
 add_subdirectory(test)

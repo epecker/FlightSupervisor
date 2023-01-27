@@ -11,8 +11,10 @@ add_executable(td_mission_initialization            "td_mission_initialization.c
 add_executable(td_on_route                          "td_on_route.cpp")
 add_executable(td_packet_builder_bool               "td_packet_builder_bool.cpp")
 add_executable(td_packet_builder_boss               "td_packet_builder_boss.cpp")
+# add_executable(td_packet_builder_boss_temp          "td_packet_builder_boss_temp.cpp") # debug
 add_executable(td_packet_builder_gcs                "td_packet_builder_gcs.cpp")
 add_executable(td_packet_builder_landing_point      "td_packet_builder_landing_point.cpp")
+# add_executable(td_packet_builder_landing_point_temp      "td_packet_builder_landing_point_temp.cpp") # debug
 add_executable(td_polling_condition_input_landing   "td_polling_condition_input_landing.cpp")
 add_executable(td_polling_condition_input_takeover  "td_polling_condition_input_takeover.cpp")
 add_executable(td_polling_condition_input_test      "td_polling_condition_input_test.cpp")
@@ -52,8 +54,10 @@ target_sources(td_mission_initialization            PRIVATE "${CMAKE_SOURCE_DIR}
 target_sources(td_on_route                          PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_packet_builder_bool               PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_packet_builder_boss               PRIVATE "${CMAKE_SOURCE_DIR}/src")
+# target_sources(td_packet_builder_boss_temp          PRIVATE "${CMAKE_SOURCE_DIR}/src") # debug
 target_sources(td_packet_builder_gcs                PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_sources(td_packet_builder_landing_point      PRIVATE "${CMAKE_SOURCE_DIR}/src")
+# target_sources(td_packet_builder_landing_point_temp      PRIVATE "${CMAKE_SOURCE_DIR}/src") # debug
 target_sources(td_polling_condition_input_landing   PRIVATE "${CMAKE_SOURCE_DIR}/src" "${SHARED_MEM}")
 target_sources(td_polling_condition_input_takeover  PRIVATE "${CMAKE_SOURCE_DIR}/src" "${SHARED_MEM}")
 target_sources(td_polling_condition_input_test      PRIVATE "${CMAKE_SOURCE_DIR}/src")
@@ -82,8 +86,10 @@ target_include_directories(td_mission_initialization            PUBLIC ${include
 target_include_directories(td_on_route                          PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_bool               PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_boss               PUBLIC ${includes_list})
+# target_include_directories(td_packet_builder_boss_temp          PUBLIC ${includes_list}) # debug
 target_include_directories(td_packet_builder_gcs                PUBLIC ${includes_list})
 target_include_directories(td_packet_builder_landing_point      PUBLIC ${includes_list})
+# target_include_directories(td_packet_builder_landing_point_temp      PUBLIC ${includes_list}) # debug
 target_include_directories(td_polling_condition_input_landing   PUBLIC ${includes_list})
 target_include_directories(td_polling_condition_input_takeover  PUBLIC ${includes_list})
 target_include_directories(td_polling_condition_input_test      PUBLIC ${includes_list})
@@ -112,8 +118,10 @@ target_link_libraries(td_mission_initialization             ${Boost_LIBRARIES})
 target_link_libraries(td_on_route                           ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_bool                ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_boss                ${Boost_LIBRARIES})
+# target_link_libraries(td_packet_builder_boss_temp           ${Boost_LIBRARIES}) # debug
 target_link_libraries(td_packet_builder_gcs                 ${Boost_LIBRARIES})
 target_link_libraries(td_packet_builder_landing_point       ${Boost_LIBRARIES})
+# target_link_libraries(td_packet_builder_landing_point_temp       ${Boost_LIBRARIES}) # debug
 target_link_libraries(td_polling_condition_input_landing    ${Boost_LIBRARIES})
 target_link_libraries(td_polling_condition_input_takeover   ${Boost_LIBRARIES})
 target_link_libraries(td_polling_condition_input_test       ${Boost_LIBRARIES})

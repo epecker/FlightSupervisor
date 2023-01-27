@@ -2,7 +2,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   cadmium
-  URL https://codeload.github.com/SimulationEverywhere/cadmium/zip/refs/heads/main
+  # URL https://codeload.github.com/SimulationEverywhere/cadmium/zip/refs/heads/main
+  URL https://codeload.github.com/epecker/cadmium/zip/refs/heads/main
 )
 
 FetchContent_GetProperties(cadmium)
