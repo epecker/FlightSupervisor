@@ -315,15 +315,15 @@ private:
 			uint8_t sysid;
 			uint8_t compid;
 			uint8_t sigid;
-			std::vector<std::byte>byte_cache;
+			std::vector<char>byte_cache;
 			int offset = 0;
 			int data_length = bytes_received - 3 * (int)sizeof(uint8_t);
 
             // Parse the bytes of the received system ID.
-            byte_cache = std::vector<std::byte>(sizeof(sysid));
+            byte_cache = std::vector<char>(sizeof(sysid));
             for (int i = 0; i < sizeof(sysid); i++)
             {
-                byte_cache[i] = (std::byte)recv_buffer[i + offset];
+                byte_cache[i] = (char)recv_buffer[i + offset];
             }
             offset += sizeof(sysid);
             if (!std::memcpy(&sysid, byte_cache.data(), sizeof(sysid))) {
@@ -334,10 +334,10 @@ private:
 
 			if (!error_occured) {
 				// Parse the bytes of the received component ID.
-				byte_cache = std::vector<std::byte>(sizeof(compid));
+				byte_cache = std::vector<char>(sizeof(compid));
 				for (int i = 0; i < sizeof(compid); i++)
 				{
-					byte_cache[i] = (std::byte)recv_buffer[i + offset];
+					byte_cache[i] = (char)recv_buffer[i + offset];
 				}
 				offset += sizeof(compid);
 				if (!std::memcpy(&compid, byte_cache.data(), sizeof(compid))) {
@@ -349,10 +349,10 @@ private:
 
 			if (!error_occured) {
 				// Parse the bytes of the received signal ID.
-				byte_cache = std::vector<std::byte>(sizeof(sigid));
+				byte_cache = std::vector<char>(sizeof(sigid));
 				for (int i = 0; i < sizeof(sigid); i++)
 				{
-					byte_cache[i] = (std::byte)recv_buffer[i + offset];
+					byte_cache[i] = (char)recv_buffer[i + offset];
 				}
 				offset += sizeof(sigid);
 				if (!std::memcpy(&sigid, byte_cache.data(), sizeof(sigid))) {
@@ -364,10 +364,10 @@ private:
 
 			if (!error_occured) {
 				// Parse the bytes of the payload.
-				byte_cache = std::vector<std::byte>(data_length);
+				byte_cache = std::vector<char>(data_length);
 				for (int i = 0; i < data_length; i++)
 				{
-					byte_cache[i] = (std::byte)recv_buffer[i + offset];
+					byte_cache[i] = (char)recv_buffer[i + offset];
 				}
 
 				message_start_supervisor_t temp_start_supervisor;
