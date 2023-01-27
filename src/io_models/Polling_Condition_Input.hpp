@@ -194,7 +194,12 @@ protected:
 template<typename TIME>
 class Polling_Condition_Input_Test : public Polling_Condition_Input<bool, bool, TIME> {
 public:
-    Polling_Condition_Input_Test() = default;
+    Polling_Condition_Input_Test() {
+		if (!setup()) {
+			throw(std::runtime_error("Could not set up polling condition input for landing achieved."));
+		}
+	}
+
     explicit Polling_Condition_Input_Test(TIME rate) : Polling_Condition_Input<bool, bool, TIME>(rate) {
 		this->polling_rate = rate;
 		number_polls = 0;
@@ -227,7 +232,18 @@ private:
 template<typename TIME>
 class Polling_Condition_Input_Landing_Achieved : public Polling_Condition_Input<message_fcc_command_t, bool, TIME> {
 public:
-    Polling_Condition_Input_Landing_Achieved() = default;
+    Polling_Condition_Input_Landing_Achieved() : landing_height_ft(0.0) {
+		if (!setup()) {
+			throw(std::runtime_error("Could not set up polling condition input for landing achieved."));
+		}
+	}
+
+	Polling_Condition_Input_Landing_Achieved(float landing_height_ft) : landing_height_ft(landing_height_ft) {
+		if (!setup()) {
+			throw(std::runtime_error("Could not set up polling condition input for landing achieved."));
+		}
+	}
+
     Polling_Condition_Input_Landing_Achieved(TIME rate, float landing_height_ft) :
 		Polling_Condition_Input<message_fcc_command_t, bool, TIME>(rate),
 		landing_height_ft(landing_height_ft) {
@@ -264,7 +280,12 @@ private:
 template<typename TIME>
 class Polling_Condition_Input_Pilot_Takeover : public Polling_Condition_Input<message_start_supervisor_t, bool, TIME> {
 public:
-    Polling_Condition_Input_Pilot_Takeover() = default;
+    Polling_Condition_Input_Pilot_Takeover() {
+		if (!setup()) {
+			throw(std::runtime_error("Could not set up polling condition input for landing achieved."));
+		}
+	}
+
     explicit Polling_Condition_Input_Pilot_Takeover(TIME rate) :
 		Polling_Condition_Input<message_start_supervisor_t, bool, TIME>(rate) {
 		if (!setup()) {
