@@ -29,7 +29,7 @@ if(WIN32)
 	add_compile_definitions(WIN64)
 	add_compile_definitions(_HAS_STD_BYTE=0) # Workardound for std::byte override: https://developercommunity.visualstudio.com/t/error-c2872-byte-ambiguous-symbol/93889
 else()
-	add_compile_options(-Wa,-mbig-obj)
+	# add_compile_options(-Wa,-mbig-obj)
 endif()
 
 ##########################
