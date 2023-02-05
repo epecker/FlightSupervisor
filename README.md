@@ -266,13 +266,12 @@ Error LNK1104: cannot open file 'libboost_regex-vc142-mt-gd-x64-1_75.lib
 ``` 
 then edit the **CMakeLists.txt** to find the `regex` component for boost, as follows:
 
-	```C++
-	find_package(
-		Boost 1.65 REQUIRED
-		COMPONENTS system thread regex
+```
+find_package(
+	Boost 1.65 REQUIRED
+	COMPONENTS system thread regex
 	)
-	```
-
+```
 * Then, still in Visual Studio Community click "Open a local folder"
 * Open the repository
 * Generate the build files
