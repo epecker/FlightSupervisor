@@ -240,7 +240,8 @@ To build the models there are two alternatives:
 #### Visual Studio Community
 
 * Initialise and update the git submodules:
-	```bash
+
+	```powershell
 	git submodule init
 	git submodule update --remote --recursive
 	```
@@ -257,14 +258,20 @@ To build the models there are two alternatives:
 	```
 	build > build all
 	```
-**Disclaimer**: if you got the following error: `Error LNK1104: cannot open file 'libboost_regex-vc142-mt-gd-x64-1_75.lib` edit the CMakeLists file to add the `regex` component such as follows:
-	```c++
-	find_package(
-		Boost 1.65 REQUIRED
-		COMPONENTS system thread regex
-	)
-	```
+* The static library `rudp.lib` should have been created in the directory `deps\RUDP\build\Debug\`.
 
+**Disclaimer**: if you got the following error: 
+```
+Error LNK1104: cannot open file 'libboost_regex-vc142-mt-gd-x64-1_75.lib
+``` 
+then edit the **CMakeLists.txt** to find the `regex` component for boost, as follows:
+
+```
+find_package(
+	Boost 1.65 REQUIRED
+	COMPONENTS system thread regex
+	)
+```
 * Then, still in Visual Studio Community click "Open a local folder"
 * Open the repository
 * Generate the build files
@@ -283,15 +290,16 @@ To build the models there are two alternatives:
 
 #### PowerShell script
 
-Using the PowerShell terminal perform the following. Make sure that scripts can be run as a user, otherwise run PowerShell as Administrator and type: 
-```PowerShell
-PS> Set-ExecutionPolicy RemoteSigned to make sure that you can run PowerShell scripts
-```
+Using the PowerShell terminal perform the following. 
 
+* Make sure that scripts can be run as a standard user, otherwise run PowerShell as Administrator and type: 
+```PowerShell
+Set-ExecutionPolicy RemoteSigned
+```
 * Navigate to the repository
 
 	```PowerShell
-	cd ./FlightSupervisor
+	cd .\FlightSupervisor
 	```
 
 * Execute the setup script
@@ -303,10 +311,10 @@ PS> Set-ExecutionPolicy RemoteSigned to make sure that you can run PowerShell sc
    * b - build the submodules
    * m - build the supervisor model and test drivers
 
-* You can now run the supervisor executable. You will find it under `build/make/src/Debug/`.
+* You can now run the supervisor executable. You will find it under `build\make\src\Debug\`.
 
 * If you make any changes to the **CMakeLists.txt** you have two options to regenerate the make files
-  1. Run `cmake ../..` while within the make folder
+  1. Run `cmake ..\..` while within the make folder
   2. Run `.\setup.ps1 -m` while within the FlightSupervisor folder
 
 ## Contact
