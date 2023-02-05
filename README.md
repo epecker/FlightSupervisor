@@ -109,7 +109,7 @@ Using a terminal perform the following.
 	brew install boost
 	```
 
-### Windows 10 - Visual Studio Community
+### Windows 10 / 11 - Visual Studio Community
 
 Managing Visual Studio Community
 
@@ -231,7 +231,13 @@ Using the terminal perform the following.
   1. Run `cmake -G Xcode ../..` from within the xcode folder
   2. Run `./setup.sh -m` while within the FlightSupervisor folder
 
-### Windows 10 - Visual Studio Community
+### Windows 10 / 11 - Visual Studio Community
+
+To build the models there are two alternatives:
+1) Use Visual Studio Community
+2) Use a PowerShell script.
+
+#### Visual Studio Community
 
 * Initialise and update the git submodules:
 	```bash
@@ -240,6 +246,26 @@ Using the terminal perform the following.
 	```
 * Open Visual Studio Community
 * Click "Open a local folder"
+* Open the module RUDP
+* Generate the build files
+	* Visual Studio Community does this automatically
+	* If it doesn't
+		```
+		Project > Configure Cache
+		```
+* Build the project
+	```
+	build > build all
+	```
+**Disclaimer**: if you got the following error: `Error LNK1104: cannot open file 'libboost_regex-vc142-mt-gd-x64-1_75.lib` edit the CMakeLists file to add the `regex` component such as follows:
+	```c++
+	find_package(
+		Boost 1.65 REQUIRED
+		COMPONENTS system thread regex
+	)
+	```
+
+* Then, still in Visual Studio Community click "Open a local folder"
 * Open the repository
 * Generate the build files
 	* Visual Studio Community does this automatically
@@ -251,8 +277,37 @@ Using the terminal perform the following.
 	```
 	build > build all
 	```
+
 * Select a startup item to run the project
 * Visual Studio Community will regenerate the cmake cache on **CMakeList.txt** changes.
+
+#### PowerShell script
+
+Using the PowerShell terminal perform the following. Make sure that scripts can be run as a user, otherwise run PowerShell as Administrator and type: 
+```PowerShell
+PS> Set-ExecutionPolicy RemoteSigned to make sure that you can run PowerShell scripts
+```
+
+* Navigate to the repository
+
+	```PowerShell
+	cd ./FlightSupervisor
+	```
+
+* Execute the setup script
+
+	```PowerShell
+	.\setup.ps1 -i -b -m
+	```
+   * i - initialize the submodules
+   * b - build the submodules
+   * m - build the supervisor model and test drivers
+
+* You can now run the supervisor executable. You will find it under `build/make/src/Debug/`.
+
+* If you make any changes to the **CMakeLists.txt** you have two options to regenerate the make files
+  1. Run `cmake ../..` while within the make folder
+  2. Run `.\setup.ps1 -m` while within the FlightSupervisor folder
 
 ## Contact
 
