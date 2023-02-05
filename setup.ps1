@@ -96,11 +96,11 @@ function initSubmodules {
         exit 1
     }
 
-    Write-Host "   Complete\n"
+    Write-Host "   Complete"
     Write-Host " ###   Initialize Submodules   ###"
 
     git submodule init   > $null
-    git submodule update > $null
+    git submodule update --remote --recursive > $null
 
     if ( $? -eq $false ) {
         Write-Host "   Initialization failed"
@@ -160,7 +160,7 @@ function rudp {
     Write-Host "Complete`n"
     Write-Host "###   Generate RUDP Build Files   ###"
 
-    cd ./deps/RUDP_test/build
+    cd ./deps/RUDP/build
     cmake ..
 
     if ($? -eq $false ) {
