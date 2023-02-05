@@ -46,9 +46,11 @@ include(deps/boost.cmake) 		# Searches system for Boost and sets up variables fo
 set(includes_list ${Boost_INCLUDE_DIRS} ${CADMIUM_INCLUDE_DIR} ${DESTIMES_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/deps" "${CMAKE_SOURCE_DIR}/deps/RUDP/include")
 set(MavNRC_GEO 	"${CMAKE_SOURCE_DIR}/deps/mavNRC/geo.cpp")
 set(SHARED_MEM 	"${CMAKE_SOURCE_DIR}/deps/sharedmemorymodel/SharedMemoryModel.cpp")
-# TODO: use an if statement here
-# set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/librudp.a") # UHNIX
-set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/Debug/rudp.lib") # WIN
+if (UNIX)
+	set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/librudp.a") # UHNIX
+elseif (WIN32)
+	set(rudp_LIBRARY "${CMAKE_SOURCE_DIR}/deps/RUDP/build/Debug/rudp.lib") # WIN
+endif()
 
 #################################
 ###  Compiler Specific Fixes  ###
